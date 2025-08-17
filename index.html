@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกข้อมูลลาชั่วโมง</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background-color: #fff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            padding: 0.85rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.3);
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .modern-table th, .modern-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modern-table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .modern-table tbody tr:hover {
+            background-color: #f3f4f6;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-leave { background-color: #fee2e2; color: #b91c1c; }
+        .badge-return { background-color: #dcfce7; color: #166534; }
+        
+        .badge-pharmacist { background-color: #dcfce7; color: #166534; } 
+        .badge-officer { background-color: #e0e7ff; color: #3730a3; } 
+        .badge-staff { background-color: #ffedd5; color: #9a3412; } 
+
+        .status-ok { color: #16a34a; font-weight: 600; }
+        .status-warning { color: #d97706; font-weight: 600; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom PIN Pad Styles */
+        .pin-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding-top: 1rem;
+        }
+        .pin-dots {
+            display: flex;
+            gap: 1rem;
+        }
+        .pin-dot {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            transition: background-color 0.2s;
+        }
+        .pin-dot.filled {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 280px;
+        }
+        .pin-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            background-color: #fff;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .pin-btn:hover {
+            background-color: #f0f2f5;
+        }
+        .pin-btn.text-btn {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #555;
+            border: none;
+            background-color: transparent;
+        }
+        .pin-btn.text-btn:hover {
+            background-color: #f0f2f5;
+        }
+
+        /* [NEW] Meteor Shower Animation */
+        .shooting-stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            background: linear-gradient(-45deg, rgba(147, 112, 219, 1), rgba(147, 112, 219, 0));
+            width: 150px;
+            height: 2px;
+            border-radius: 999px;
+            filter: drop-shadow(0 0 6px rgba(183, 142, 255, 0.8));
+            animation: animateStar linear infinite;
+        }
+        @keyframes animateStar {
+            0% { transform: translateX(100vw) translateY(-50vh) rotate(-45deg); opacity: 1; }
+            100% { transform: translateX(-50vw) translateY(100vh) rotate(-45deg); opacity: 0; }
+        }
+        .star:nth-child(1) { top: 0; left: 0; animation-delay: 0s; animation-duration: 3s; }
+        .star:nth-child(2) { top: 0; left: 30%; animation-delay: 1.2s; animation-duration: 4s; }
+        .star:nth-child(3) { top: 80%; left: 0; animation-delay: 1.8s; animation-duration: 2.5s; }
+        .star:nth-child(4) { top: 0; left: 70%; animation-delay: 3.2s; animation-duration: 3.5s; }
+        .star:nth-child(5) { top: 0; left: 90%; animation-delay: 4.5s; animation-duration: 2.8s; }
+
+    </style>
+</head>
+<body>
+    <!-- [NEW] Meteor Shower Container -->
+    <div class="shooting-stars">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-card">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">ระบบบันทึกข้อมูลลาชั่วโมง</h1>
+            <p class="text-lg text-white/80">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์</p>
+        </div>
+
+        <!-- Form Section -->
+        <div class="card">
+            <h2 class="text-2xl font-bold gradient-text mb-6">บันทึกข้อมูล</h2>
+            <form id="leaveForm" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                <!-- Row 1 -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
+                    <input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อ..." 
+                           class="form-input" autocomplete="off">
+                    <div id="nameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">วันที่ลา</label>
+                    <input type="date" id="leaveDate" class="form-input" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">เวลาเริ่มต้น</label>
+                    <input type="time" id="startTime" class="form-input" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">เวลาสิ้นสุด</label>
+                    <input type="time" id="endTime" class="form-input" required>
+                </div>
+
+                <!-- Row 2 -->
+                 <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
+                    <textarea id="notes" class="form-input" rows="1" placeholder="ไม่บังคับ"></textarea>
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ประเภท</label>
+                    <div class="flex space-x-2 p-1 bg-gray-100 rounded-lg">
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="leaveType" value="ลา" class="sr-only peer" checked>
+                            <span class="block py-2 px-3 rounded-md transition-colors duration-200 peer-checked:bg-red-100 peer-checked:text-red-800 peer-checked:font-semibold">ลา</span>
+                        </label>
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="leaveType" value="ใช้ชั่วโมง" class="sr-only peer">
+                            <span class="block py-2 px-3 rounded-md transition-colors duration-200 peer-checked:bg-green-100 peer-checked:text-green-800 peer-checked:font-semibold">ใช้ชั่วโมง</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" class="btn-primary w-full">บันทึก</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filter and Add Personnel Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="card">
+                <h2 class="text-2xl font-bold gradient-text mb-6">กรองข้อมูล</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ปีงบประมาณ</label>
+                        <select id="fiscalYearFilter" class="form-input"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
+                        <select id="positionFilter" class="form-input"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="text-2xl font-bold gradient-text mb-6">เพิ่มบุคลากร</h2>
+                <form id="userForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
+                        <input type="text" id="userName" class="form-input" placeholder="กรอกชื่อ" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
+                        <select id="userPosition" class="form-input" required>
+                            <option value="">เลือกตำแหน่ง</option>
+                            <option value="เภสัช">เภสัช</option>
+                            <option value="จพง">จพง</option>
+                            <option value="จนท">จนท</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" id="userFormSubmitButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg mt-2">เพิ่มบุคลากร</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div class="card">
+            <h2 class="text-2xl font-bold gradient-text mb-6">Dashboard สรุปข้อมูล</h2>
+            <div class="overflow-x-auto">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ชื่อบุคลากร</th>
+                            <th class="text-center">ตำแหน่ง</th>
+                            <th class="text-center">ชั่วโมงที่ลา</th>
+                            <th class="text-center">ชั่วโมงที่ใช้</th>
+                            <th class="text-center">ผลรวม</th>
+                            <th class="text-center">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Records Section -->
+        <div class="card">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold gradient-text">รายการล่าสุด</h2>
+                <div class="flex flex-col md:flex-row gap-2 items-center">
+                    <div class="relative w-full md:w-48">
+                         <input type="text" id="searchNameInput" placeholder="ค้นหาชื่อ..." class="form-input" autocomplete="off">
+                         <div id="searchNameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
+                    </div>
+                    <select id="recordPositionFilter" class="form-input w-full md:w-auto"></select>
+                    <input type="date" id="startDateFilter" class="form-input w-full md:w-auto">
+                    <input type="date" id="endDateFilter" class="form-input w-full md:w-auto">
+                    <button id="clearRecordFiltersBtn" class="bg-red-100 text-red-600 hover:bg-red-200 w-10 h-10 flex items-center justify-center rounded-lg font-bold text-xl transition-colors">&times;</button>
+                </div>
+                <div class="flex space-x-2 items-center">
+                    <button id="prevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
+                    <span id="pageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold"></span>
+                    <button id="nextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th>ชื่อ</th>
+                            <th class="text-center">ตำแหน่ง</th>
+                            <th class="text-center">ประเภท</th>
+                            <th class="text-center">เวลา</th>
+                            <th class="text-center">ระยะเวลา</th>
+                            <th>หมายเหตุ</th>
+                            <th class="text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User List Section -->
+        <div class="card">
+             <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-800">รายชื่อบุคลากร</h3>
+                <div class="flex items-center gap-4">
+                    <select id="userPositionFilter" class="form-input w-48"></select>
+                    <div class="flex space-x-2 items-center" id="userPaginationControls">
+                        <!-- User pagination will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ชื่อบุคลากร</th>
+                            <th class="text-center">ตำแหน่ง</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] transform transition-all duration-300 scale-95 opacity-0" id="modalContainer">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                    <h3 id="modalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
+                </div>
+                <div id="modalContent" class="max-h-[70vh] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allRecords = [];
+        let allUsers = [];
+        let filteredRecords = [];
+        let currentPage = 1;
+        const recordsPerPage = 10;
+        let userCurrentPage = 1; 
+        const usersPerPage = 15;
+        let modalCurrentPage = 1;
+        
+        // --- PIN Verification System ---
+        const CORRECT_PIN = "1412";
+
+        function promptForPin() {
+            return new Promise((resolve, reject) => {
+                let currentPin = '';
+                
+                const handleKeyPress = (key) => {
+                    if (/\d/.test(key) && currentPin.length < 4) {
+                        currentPin += key;
+                    } else if (key === 'Backspace') {
+                        currentPin = currentPin.slice(0, -1);
+                    }
+                    updateDots();
+                };
+
+                const updateDots = () => {
+                    const dots = document.querySelectorAll('#swal-pin-dots .pin-dot');
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('filled', index < currentPin.length);
+                    });
+                };
+
+                const keydownListener = (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        Swal.clickConfirm();
+                    } else {
+                        handleKeyPress(event.key);
+                    }
+                };
+
+                Swal.fire({
+                    title: 'กรุณาใส่ PIN',
+                    html: `
+                        <div class="pin-container">
+                            <div class="pin-dots" id="swal-pin-dots">
+                                <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+                            </div>
+                            <div class="pin-keypad" id="swal-pin-keypad">
+                                ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button class="pin-btn">${n}</button>`).join('')}
+                                <button class="pin-btn text-btn" data-action="cancel">ยกเลิก</button>
+                                <button class="pin-btn">0</button>
+                                <button class="pin-btn text-btn" data-action="delete">ลบ</button>
+                            </div>
+                        </div>
+                    `,
+                    showConfirmButton: true,
+                    confirmButtonText: 'ยืนยัน',
+                    showCancelButton: false,
+                    allowOutsideClick: false,
+                    stopKeydownPropagation: false, 
+                    customClass: { popup: 'w-auto' },
+                    didOpen: () => {
+                        document.addEventListener('keydown', keydownListener);
+                        const keypad = document.getElementById('swal-pin-keypad');
+                        keypad.addEventListener('click', (e) => {
+                            const button = e.target.closest('.pin-btn');
+                            if (!button) return;
+
+                            const action = button.dataset.action;
+                            if (action === 'delete') {
+                                handleKeyPress('Backspace');
+                            } else if (action === 'cancel') {
+                                Swal.close();
+                                reject();
+                            } else {
+                                handleKeyPress(button.textContent);
+                            }
+                        });
+                    },
+                    willClose: () => {
+                        document.removeEventListener('keydown', keydownListener);
+                    },
+                    preConfirm: () => {
+                        if (currentPin.length < 4) {
+                            Swal.showValidationMessage('กรุณาใส่ PIN ให้ครบ 4 หลัก');
+                            return false;
+                        }
+                        if (currentPin === CORRECT_PIN) {
+                            return true;
+                        } else {
+                            currentPin = '';
+                            updateDots();
+                            Swal.showValidationMessage('PIN ไม่ถูกต้อง');
+                            return false;
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) resolve();
+                    else reject();
+                });
+            });
+        }
+
+
+        // --- UTILITY FUNCTIONS ---
+        const calculateHours = (startTime, endTime) => {
+            const start = new Date(`2000-01-01T${startTime}:00`);
+            let end = new Date(`2000-01-01T${endTime}:00`);
+            if (end <= start) end.setDate(end.getDate() + 1);
+            return Math.round((end - start) / (1000 * 60 * 60) * 100) / 100;
+        };
+
+        const formatTimeDisplay = (hours) => {
+            if (hours === 0) return "0 ชั่วโมง";
+            const h = Math.floor(hours);
+            const m = Math.round((hours - h) * 60);
+            return `${h > 0 ? `${h} ชั่วโมง` : ''} ${m > 0 ? `${m} นาที` : ''}`.trim();
+        };
+        
+        const formatThaiDate = (dateString) => {
+            if (!dateString) return '-';
+            let date = new Date(dateString);
+            if (isNaN(date.getTime()) && typeof dateString === 'string') {
+                const year = parseInt(dateString.substring(0, 4), 10);
+                if (year > 2500) {
+                    const gregorianYear = year - 543;
+                    const correctedDateString = gregorianYear + dateString.substring(4);
+                    date = new Date(correctedDateString);
+                }
+            }
+            if (isNaN(date.getTime())) return 'วันที่ผิดพลาด';
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                timeZone: 'Asia/Bangkok'
+            });
+        };
+
+        const formatShortTime = (timeString) => {
+            if (!timeString || typeof timeString !== 'string') return '';
+            if (/^\d{2}:\d{2}$/.test(timeString)) return timeString;
+            if (timeString.includes('T')) {
+                try {
+                    const date = new Date(timeString);
+                    if (isNaN(date.getTime())) return 'เวลาผิดพลาด';
+                    return date.toLocaleTimeString('en-GB', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZone: 'Asia/Bangkok'
+                    });
+                } catch (e) { return 'เวลาผิดพลาด'; }
+            }
+            return timeString;
+        };
+
+        const getFiscalYear = (dateString) => {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            return month >= 10 ? year + 544 : year + 543;
+        };
+        
+        const getCurrentFiscalYear = () => {
+            const today = new Date();
+            return getFiscalYear(today.toISOString().split('T')[0]);
+        };
+
+        // --- APP INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadData();
+        });
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            document.getElementById('leaveForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('userForm').addEventListener('submit', handleUserFormSubmit);
+            
+            document.getElementById('fiscalYearFilter').addEventListener('change', applyFilter);
+            document.getElementById('positionFilter').addEventListener('change', applyFilter);
+            document.getElementById('userPositionFilter').addEventListener('change', updateUsersDisplay);
+            
+            document.getElementById('searchNameInput').addEventListener('input', applyFilter);
+            document.getElementById('startDateFilter').addEventListener('change', applyFilter);
+            document.getElementById('endDateFilter').addEventListener('change', applyFilter);
+            document.getElementById('clearRecordFiltersBtn').addEventListener('click', clearRecordFilters);
+            document.getElementById('recordPositionFilter').addEventListener('change', applyFilter);
+
+            document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+            document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('userModal').addEventListener('click', (e) => e.target.id === 'userModal' && closeModal());
+            
+            const nameInput = document.getElementById('nameInput');
+            const nameDropdown = document.getElementById('nameDropdown');
+            nameInput.addEventListener('focus', () => nameDropdown.classList.remove('hidden'));
+            nameInput.addEventListener('input', filterNames);
+            document.addEventListener('click', (e) => {
+                if (!nameInput.contains(e.target) && !nameDropdown.contains(e.target)) {
+                    nameDropdown.classList.add('hidden');
+                }
+            });
+            nameDropdown.addEventListener('click', (e) => {
+                if (e.target.closest('.dropdown-item')) {
+                    nameInput.value = e.target.closest('.dropdown-item').dataset.name;
+                    nameDropdown.classList.add('hidden');
+                }
+            });
+
+            const searchNameInput = document.getElementById('searchNameInput');
+            const searchNameDropdown = document.getElementById('searchNameDropdown');
+            searchNameInput.addEventListener('focus', () => searchNameDropdown.classList.remove('hidden'));
+            searchNameInput.addEventListener('input', () => {
+                filterSearchNames();
+                applyFilter();
+            });
+            document.addEventListener('click', (e) => {
+                if (!searchNameInput.contains(e.target) && !searchNameDropdown.contains(e.target)) {
+                    searchNameDropdown.classList.add('hidden');
+                }
+            });
+            searchNameDropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.dropdown-item');
+                if (item) {
+                    searchNameInput.value = item.dataset.name;
+                    searchNameDropdown.classList.add('hidden');
+                    applyFilter();
+                }
+            });
+        }
+
+        // --- DATA HANDLING (GOOGLE SHEETS) ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLF0Xu5AdyQo4f9lVDqWPw6N_kh77Y2Fpr_bay3i4bs-_pe6qRpA2Qk2D9dQccGQ3v/exec';
+
+        async function apiCall(action, data) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, data })
+                });
+                return { success: true };
+            } catch (error) {
+                console.error(`API call failed for action: ${action}`, error);
+                throw new Error(`Failed to execute action: ${action}`);
+            }
+        }
+
+        async function loadData() {
+            Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=loadData`);
+                const data = await response.json();
+                if (data.success) {
+                    allUsers = data.users || [];
+                    allRecords = data.records || [];
+                    initializeFilters();
+                    applyFilter();
+                    if (allUsers.length === 0 && allRecords.length === 0) {
+                        Swal.fire('ยินดีต้อนรับ!', 'เริ่มต้นใช้งานโดยการเพิ่มบุคลากร', 'info');
+                    }
+                } else {
+                    throw new Error(data.message || 'Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading from Google Sheets:', error);
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้', 'error');
+            } finally {
+                Swal.close();
+            }
+        }
+
+        // --- FORM HANDLERS ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            try {
+                await promptForPin();
+                
+                const name = document.getElementById('nameInput').value.trim();
+                const user = allUsers.find(u => u.name === name);
+                if (!user) {
+                    Swal.fire('ข้อผิดพลาด', 'ไม่พบบุคลากรชื่อนี้ กรุณาเพิ่มบุคลากรก่อน', 'error');
+                    return;
+                }
+                
+                const record = {
+                    leaveDate: document.getElementById('leaveDate').value,
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value,
+                    type: document.querySelector('input[name="leaveType"]:checked').value,
+                    name: user.name,
+                    position: user.position,
+                    notes: document.getElementById('notes').value, // [NEW] Get notes value
+                    timestamp: new Date().toISOString()
+                };
+                record.hours = calculateHours(record.startTime, record.endTime);
+                record.date = new Date(record.leaveDate).toLocaleDateString('th-TH');
+
+                if (record.hours <= 0) {
+                    Swal.fire('ข้อผิดพลาด', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
+                    return;
+                }
+
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await apiCall('saveRecord', record);
+                allRecords.unshift(record);
+                applyFilter();
+                document.getElementById('leaveForm').reset();
+                Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+
+            } catch (error) {
+                if (error) {
+                    console.error("Error in handleFormSubmit:", error);
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+                }
+            }
+        }
+
+        async function handleUserFormSubmit(e) {
+            e.preventDefault();
+            try {
+                await promptForPin();
+
+                const name = document.getElementById('userName').value.trim();
+                const position = document.getElementById('userPosition').value;
+
+                if (allUsers.some(u => u.name === name && u.position === position)) {
+                    Swal.fire('ข้อผิดพลาด', 'บุคลากรชื่อนี้ในตำแหน่งนี้มีอยู่แล้ว', 'error');
+                    return;
+                }
+                
+                const user = { name, position, timestamp: new Date().toISOString() };
+                Swal.fire({ title: 'กำลังเพิ่มบุคลากร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await apiCall('saveUser', user);
+                allUsers.push(user);
+                Swal.fire('สำเร็จ!', 'เพิ่มบุคลากรเรียบร้อยแล้ว', 'success');
+                document.getElementById('userForm').reset();
+                updateUsersDisplay();
+                updateNameDropdown();
+                initializeFilters();
+                
+            } catch (error) {
+                 if (error) {
+                    console.error("Error in handleUserFormSubmit:", error);
+                    Swal.fire('ข้อผิดพลาด', 'การดำเนินการล้มเหลว', 'error');
+                }
+            }
+        }
+
+        // --- UI UPDATE FUNCTIONS ---
+        function updateDashboard() {
+            const summary = {};
+            filteredRecords.forEach(record => {
+                const key = `${record.name}_${record.position}`;
+                if (!summary[key]) {
+                    summary[key] = { name: record.name, position: record.position, leave: 0, return: 0 };
+                }
+                if (record.type && record.type.trim() === 'ลา') summary[key].leave += record.hours;
+                else if (record.type && record.type.trim() === 'ใช้ชั่วโมง') summary[key].return += record.hours;
+            });
+
+            const tbody = document.getElementById('dashboardTable');
+            tbody.innerHTML = '';
+            Object.values(summary).forEach(data => {
+                const total = data.return - data.leave;
+                const statusClass = total >= 0 ? 'status-ok' : 'status-warning';
+                const statusText = total >= 0 ? 'OK' : 'ต้องใช้คืน';
+                const row = `
+                    <tr>
+                        <td><button class="text-indigo-600 hover:underline" onclick="showUserDetail('${data.name}')">${data.name}</button></td>
+                        <td class="text-center"><span class="badge ${getPositionBadgeClass(data.position)}">${data.position}</span></td>
+                        <td class="text-center">${formatTimeDisplay(data.leave)}</td>
+                        <td class="text-center">${formatTimeDisplay(data.return)}</td>
+                        <td class="text-center font-semibold">${formatTimeDisplay(total)}</td>
+                        <td class="text-center ${statusClass}">${statusText}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+        
+        function updateRecordsTable() {
+            const tbody = document.getElementById('recordsTable');
+            tbody.innerHTML = '';
+            const pageRecords = filteredRecords.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+
+            pageRecords.forEach(record => {
+                const badgeClass = record.type.trim() === 'ลา' ? 'badge-leave' : 'badge-return';
+                const row = `
+                    <tr>
+                        <td>${formatThaiDate(record.leaveDate)}</td>
+                        <td>${record.name}</td>
+                        <td class="text-center"><span class="badge ${getPositionBadgeClass(record.position)}">${record.position}</span></td>
+                        <td class="text-center"><span class="badge ${badgeClass}">${record.type}</span></td>
+                        <td class="text-center">${formatShortTime(record.startTime)} - ${formatShortTime(record.endTime)}</td>
+                        <td class="text-center">${formatTimeDisplay(record.hours)}</td>
+                        <td>${record.notes || '-'}</td>
+                        <td class="text-center">
+                            <button onclick="deleteRecord('${record.timestamp}')" class="text-red-500 hover:underline">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function updateUsersDisplay() {
+            const tbody = document.getElementById('usersTable');
+            const positionFilter = document.getElementById('userPositionFilter').value;
+            tbody.innerHTML = '';
+
+            let filteredUsers = allUsers.filter(user => 
+                !positionFilter || user.position === positionFilter
+            );
+
+            const positionOrder = { 'เภสัช': 1, 'จพง': 2, 'จนท': 3 };
+            filteredUsers.sort((a, b) => {
+                const posA = positionOrder[a.position] || 99;
+                const posB = positionOrder[b.position] || 99;
+                if (posA !== posB) return posA - posB;
+                return a.name.localeCompare(b.name, 'th');
+            });
+            
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
+            const pageUsers = filteredUsers.slice((userCurrentPage - 1) * usersPerPage, userCurrentPage * usersPerPage);
+
+            pageUsers.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.name}</td>
+                        <td class="text-center"><span class="badge ${getPositionBadgeClass(user.position)}">${user.position}</span></td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+
+            const paginationControls = document.getElementById('userPaginationControls');
+            paginationControls.innerHTML = `
+                <button id="userPrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
+                <span id="userPageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold">${userCurrentPage} / ${totalPages}</span>
+                <button id="userNextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
+            `;
+
+            document.getElementById('userPrevPage').disabled = userCurrentPage === 1;
+            document.getElementById('userNextPage').disabled = userCurrentPage === totalPages;
+
+            document.getElementById('userPrevPage').onclick = () => changeUserPage(-1);
+            document.getElementById('userNextPage').onclick = () => changeUserPage(1);
+        }
+        
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        function filterNames() {
+            const input = document.getElementById('nameInput').value.toLowerCase();
+            document.querySelectorAll('#nameDropdown .dropdown-item').forEach(item => {
+                item.style.display = item.dataset.name.toLowerCase().includes(input) ? '' : 'none';
+            });
+        }
+
+        function updateNameDropdown() {
+            const dropdown = document.getElementById('nameDropdown');
+            dropdown.innerHTML = '';
+            allUsers.forEach(user => {
+                const item = `
+                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.name}">
+                        ${user.name} <span class="text-gray-500 text-sm">(${user.position})</span>
+                    </div>`;
+                dropdown.insertAdjacentHTML('beforeend', item);
+            });
+        }
+
+        function updateSearchNameDropdown() {
+            const dropdown = document.getElementById('searchNameDropdown');
+            dropdown.innerHTML = '';
+            allUsers.forEach(user => {
+                const item = `
+                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.name}">
+                        ${user.name} <span class="text-gray-500 text-sm">(${user.position})</span>
+                    </div>`;
+                dropdown.insertAdjacentHTML('beforeend', item);
+            });
+        }
+
+        function filterSearchNames() {
+            const input = document.getElementById('searchNameInput').value.toLowerCase();
+            document.querySelectorAll('#searchNameDropdown .dropdown-item').forEach(item => {
+                const textContent = item.textContent.toLowerCase();
+                item.style.display = textContent.includes(input) ? '' : 'none';
+            });
+        }
+
+        // --- FILTERING ---
+        function initializeFilters() {
+            const fiscalYearFilter = document.getElementById('fiscalYearFilter');
+            const positionFilter = document.getElementById('positionFilter');
+            const userPositionFilter = document.getElementById('userPositionFilter');
+            const recordPositionFilter = document.getElementById('recordPositionFilter');
+            
+            fiscalYearFilter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
+            positionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+            userPositionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+            recordPositionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+
+            const fiscalYears = [...new Set(allRecords.map(r => getFiscalYear(r.leaveDate)))].sort((a, b) => b - a);
+            fiscalYears.forEach(year => fiscalYearFilter.add(new Option(year, year)));
+
+            const positions = [...new Set(allUsers.map(u => u.position))];
+            positions.forEach(pos => {
+                positionFilter.add(new Option(pos, pos));
+                userPositionFilter.add(new Option(pos, pos));
+                recordPositionFilter.add(new Option(pos, pos));
+            });
+
+            const currentFiscalYear = getCurrentFiscalYear();
+            if (fiscalYears.includes(currentFiscalYear)) {
+                fiscalYearFilter.value = currentFiscalYear;
+            }
+        }
+
+        function applyFilter() {
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const position = document.getElementById('positionFilter').value;
+            const searchName = document.getElementById('searchNameInput').value.toLowerCase();
+            const startDate = document.getElementById('startDateFilter').value;
+            const endDate = document.getElementById('endDateFilter').value;
+            const recordPosition = document.getElementById('recordPositionFilter').value;
+            
+            filteredRecords = allRecords.filter(r => {
+                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate).toString() === fiscalYear;
+                const matchPosition = !position || r.position === position;
+                const matchName = !searchName || r.name.toLowerCase().includes(searchName);
+                const matchRecordPosition = !recordPosition || r.position === recordPosition;
+                let matchDate = true;
+                if (startDate) matchDate = matchDate && r.leaveDate >= startDate;
+                if (endDate) matchDate = matchDate && r.leaveDate <= endDate;
+
+                return matchFiscal && matchPosition && matchName && matchDate && matchRecordPosition;
+            });
+            
+            currentPage = 1;
+            userCurrentPage = 1;
+            updateDashboard();
+            updateRecordsTable();
+            updatePagination();
+            updateUsersDisplay();
+            updateNameDropdown();
+            updateSearchNameDropdown();
+        }
+
+        function clearRecordFilters() {
+            document.getElementById('searchNameInput').value = '';
+            document.getElementById('startDateFilter').value = '';
+            document.getElementById('endDateFilter').value = '';
+            document.getElementById('recordPositionFilter').value = '';
+            applyFilter();
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                updateRecordsTable();
+                updatePagination();
+            }
+        }
+
+        function changeUserPage(direction) {
+            const positionFilter = document.getElementById('userPositionFilter').value;
+            const filteredUsers = allUsers.filter(user => !positionFilter || user.position === positionFilter);
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
+            const newPage = userCurrentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                userCurrentPage = newPage;
+                updateUsersDisplay();
+            }
+        }
+
+        function getPositionBadgeClass(position) {
+            switch (position) {
+                case 'เภสัช': return 'badge-pharmacist';
+                case 'จพง': return 'badge-officer';
+                case 'จนท': return 'badge-staff';
+                default: return 'bg-gray-200 text-gray-800';
+            }
+        }
+
+        // --- USER & RECORD ACTIONS ---
+        async function deleteRecord(timestamp) {
+            try {
+                await promptForPin(); // [PIN CHECK]
+
+                const { isConfirmed } = await Swal.fire({
+                    title: 'ยืนยันการลบ', text: 'ต้องการลบรายการนี้?', icon: 'warning', showCancelButton: true
+                });
+                if (isConfirmed) {
+                    Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    await apiCall('deleteRecord', { timestamp });
+                    allRecords = allRecords.filter(r => r.timestamp !== timestamp);
+                    applyFilter();
+                    Swal.fire('สำเร็จ!', 'ลบข้อมูลเรียบร้อย', 'success');
+                }
+            } catch (error) {
+                if(error) {
+                    console.error("Error in deleteRecord:", error);
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถลบได้', 'error');
+                }
+            }
+        }
+
+        // --- MODAL ---
+        function showUserDetail(name) {
+            modalCurrentPage = 1; // Reset to first page
+            renderUserDetailModal(name);
+        }
+
+        function renderUserDetailModal(name) {
+            const userRecords = allRecords.filter(r => r.name === name);
+            let leaveHours = 0, returnHours = 0;
+            userRecords.forEach(r => {
+                if (r.type.trim() === 'ลา') leaveHours += r.hours;
+                else if (r.type.trim() === 'ใช้ชั่วโมง') returnHours += r.hours;
+            });
+            const balance = returnHours - leaveHours;
+
+            const modalRecordsPerPage = 10;
+            const totalPages = Math.ceil(userRecords.length / modalRecordsPerPage) || 1;
+            const pageRecords = userRecords.slice((modalCurrentPage - 1) * modalRecordsPerPage, modalCurrentPage * modalRecordsPerPage);
+
+            let tableRows = pageRecords.map(r => `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${formatThaiDate(r.leaveDate)}</td>
+                    <td class="px-4 py-2 text-center">${formatShortTime(r.startTime)} - ${formatShortTime(r.endTime)}</td>
+                    <td class="px-4 py-2 text-center">${formatTimeDisplay(r.hours)}</td>
+                    <td class="px-4 py-2 text-center"><span class="badge ${r.type.trim() === 'ลา' ? 'badge-leave' : 'badge-return'}">${r.type}</span></td>
+                    <td class="px-4 py-2">${r.notes || '-'}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('modalTitle').textContent = `รายละเอียดของ ${name}`;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                    <div class="bg-red-50 p-3 rounded-lg"><div class="text-sm text-red-700">ลาทั้งหมด</div><div class="text-xl font-bold text-red-800">${formatTimeDisplay(leaveHours)}</div></div>
+                    <div class="bg-green-50 p-3 rounded-lg"><div class="text-sm text-green-700">ชั่วโมงที่ใช้</div><div class="text-xl font-bold text-green-800">${formatTimeDisplay(returnHours)}</div></div>
+                    <div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-blue-700">คงเหลือ</div><div class="text-xl font-bold text-blue-800">${formatTimeDisplay(balance)}</div></div>
+                    <div class="bg-yellow-50 p-3 rounded-lg"><div class="text-sm text-yellow-700">สถานะ</div><div class="text-xl font-bold ${balance >= 0 ? 'text-green-800' : 'text-yellow-800'}">${balance >= 0 ? 'OK' : 'ต้องใช้คืน'}</div></div>
+                </div>
+                <div class="flex justify-end items-center mb-4">
+                    <div class="flex space-x-2 items-center">
+                        <button id="modalPrevPage" class="bg-gray-200 text-gray-700 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
+                        <span id="modalPageInfo" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg font-semibold">${modalCurrentPage} / ${totalPages}</span>
+                        <button id="modalNextPage" class="bg-gray-200 text-gray-700 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
+                    </div>
+                </div>
+                <table class="modern-table w-full"><thead><tr><th>วันที่</th><th class="text-center">เวลา</th><th class="text-center">ระยะเวลา</th><th class="text-center">ประเภท</th><th>หมายเหตุ</th></tr></thead><tbody>${tableRows}</tbody></table>
+            `;
+            
+            document.getElementById('modalPrevPage').disabled = modalCurrentPage === 1;
+            document.getElementById('modalNextPage').disabled = modalCurrentPage === totalPages;
+
+            document.getElementById('modalPrevPage').onclick = () => {
+                if (modalCurrentPage > 1) {
+                    modalCurrentPage--;
+                    renderUserDetailModal(name);
+                }
+            };
+            document.getElementById('modalNextPage').onclick = () => {
+                if (modalCurrentPage < totalPages) {
+                    modalCurrentPage++;
+                    renderUserDetailModal(name);
+                }
+            };
+
+            const modal = document.getElementById('userModal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('modalContainer').classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('userModal');
+            const modalContainer = document.getElementById('modalContainer');
+            modalContainer.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- IMPORT/EXPORT ---
+        function exportData() {
+            const dataStr = JSON.stringify({ users: allUsers, records: allRecords }, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `leave-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            Swal.fire('สำเร็จ', 'ส่งออกข้อมูลเรียบร้อย', 'success');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.users && data.records) {
+                        const { isConfirmed } = await Swal.fire({
+                            title: 'ยืนยันการนำเข้า', text: 'ข้อมูลเดิมจะถูกเขียนทับทั้งหมด', icon: 'warning', showCancelButton: true
+                        });
+                        if (isConfirmed) {
+                            Swal.fire({ title: 'กำลังนำเข้า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                            await apiCall('importData', data);
+                            allUsers = data.users;
+                            allRecords = data.records;
+                            initializeFilters();
+                            applyFilter();
+                            Swal.fire('สำเร็จ', 'นำเข้าข้อมูลเรียบร้อย', 'success');
+                        }
+                    } else {
+                        Swal.fire('ข้อผิดพลาด', 'ไฟล์ข้อมูลไม่ถูกต้อง', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>
