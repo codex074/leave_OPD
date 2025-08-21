@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบันทึกข้อมูลลาชั่วโมง</title>
+    <title>ลาชั่วโมง OPD</title>
     <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,17 +28,21 @@
         .main-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem; /* Adjusted for mobile */
             position: relative;
             z-index: 1;
         }
+        @media (min-width: 768px) {
+            .main-container {
+                padding: 2rem; /* Restore for larger screens */
+            }
+        }
+
 
         .header-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #ffffff;
             border-radius: 1.5rem;
-            padding: 3rem 2rem;
+            padding: 2rem 1rem;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
@@ -48,7 +52,7 @@
         .card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 1.5rem;
-            padding: 2rem;
+            padding: 1.5rem;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
             margin-bottom: 2rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -98,9 +102,10 @@
         }
 
         .modern-table th, .modern-table td {
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap; /* Prevent text wrapping in cells */
         }
 
         .modern-table th {
@@ -123,10 +128,9 @@
         .badge-leave { background-color: #fee2e2; color: #b91c1c; }
         .badge-return { background-color: #dcfce7; color: #166534; }
         
-        /* [REVISED] Position Badge Colors */
-        .badge-pharmacist { background-color: #e9d5ff; color: #7e22ce; } /* Purple */
-        .badge-officer { background-color: #e0e7ff; color: #3730a3; } /* Blue */
-        .badge-staff { background-color: #ffedd5; color: #9a3412; } /* Orange */
+        .badge-pharmacist { background-color: #e9d5ff; color: #7e22ce; } 
+        .badge-officer { background-color: #e0e7ff; color: #3730a3; } 
+        .badge-staff { background-color: #ffedd5; color: #9a3412; } 
 
         .status-ok { color: #16a34a; font-weight: 600; }
         .status-warning { color: #d97706; font-weight: 600; }
@@ -136,6 +140,15 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+
+        .app-title {
+            background: linear-gradient(135deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            line-height: 1.5;
         }
 
         @keyframes fadeInDown {
@@ -160,7 +173,7 @@
             height: 1.25rem;
             border-radius: 50%;
             border: 2px solid #ccc;
-            transition: background-color 0.2s;
+            transition: background-color: 0.2s;
         }
         .pin-dot.filled {
             background-color: #667eea;
@@ -215,7 +228,7 @@
             background: linear-gradient(-45deg, rgba(147, 112, 219, 1), rgba(147, 112, 219, 0));
             width: 150px;
             height: 2px;
-            border-radius: 999px;
+            border-radius: 9999px;
             filter: drop-shadow(0 0 6px rgba(183, 142, 255, 0.8));
             animation: animateStar linear infinite;
         }
@@ -243,99 +256,56 @@
     <div class="main-container">
         <!-- Header -->
         <div class="header-card">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">ระบบบันทึกข้อมูลลาชั่วโมง</h1>
-            <p class="text-lg text-white/80">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์</p>
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-3 app-title">OPD Leave Hour System</h1>
+            <p class="text-base sm:text-lg text-gray-600">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์</p>
         </div>
 
-        <!-- Form Section -->
+        <!-- Form Section changed to Buttons -->
         <div class="card">
-            <h2 class="text-2xl font-bold gradient-text mb-6">บันทึกข้อมูล</h2>
-            <form id="leaveForm" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                <!-- Row 1 -->
-                <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
-                    <input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อ..." 
-                           class="form-input" autocomplete="off">
-                    <div id="nameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">วันที่ลา</label>
-                    <input type="date" id="leaveDate" class="form-input" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">เวลาเริ่มต้น</label>
-                    <input type="time" id="startTime" class="form-input" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">เวลาสิ้นสุด</label>
-                    <input type="time" id="endTime" class="form-input" required>
-                </div>
-
-                <!-- Row 2 -->
-                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
-                    <textarea id="notes" class="form-input" rows="1" placeholder="ไม่บังคับ"></textarea>
-                </div>
-                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ประเภท</label>
-                    <div class="flex space-x-2 p-1 bg-gray-100 rounded-lg">
-                        <label class="flex-1 text-center cursor-pointer">
-                            <input type="radio" name="leaveType" value="ลา" class="sr-only peer" checked>
-                            <span class="block py-2 px-3 rounded-md transition-colors duration-200 peer-checked:bg-red-100 peer-checked:text-red-800 peer-checked:font-semibold">ลา</span>
-                        </label>
-                        <label class="flex-1 text-center cursor-pointer">
-                            <input type="radio" name="leaveType" value="ใช้ชั่วโมง" class="sr-only peer">
-                            <span class="block py-2 px-3 rounded-md transition-colors duration-200 peer-checked:bg-green-100 peer-checked:text-green-800 peer-checked:font-semibold">ใช้ชั่วโมง</span>
-                        </label>
-                    </div>
-                </div>
-                <div>
-                    <button type="submit" class="btn-primary w-full">บันทึก</button>
-                </div>
-            </form>
+            <h2 class="text-2xl font-bold gradient-text mb-6 text-center">บันทึกข้อมูล</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button id="openLeaveModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                    บันทึกการลา
+                </button>
+                <button id="openUsageModalBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                    บันทึกการใช้ชั่วโมง
+                </button>
+            </div>
         </div>
 
-        <!-- Filter and Add Personnel Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Rankings Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="rankingsSection">
+            <!-- Top Negative Balance -->
             <div class="card">
-                <h2 class="text-2xl font-bold gradient-text mb-6">กรองข้อมูล</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ปีงบประมาณ</label>
-                        <select id="fiscalYearFilter" class="form-input"></select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
-                        <select id="positionFilter" class="form-input"></select>
-                    </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-red-600 mb-4 text-center">🏆 Top 3 ชั่วโมงติดลบ 🏆</h2>
+                <div id="leaveRankingContainer" class="flex items-end justify-center gap-2 md:gap-4 pt-4 min-h-[240px]">
+                    <!-- Ranking will be injected here by JS -->
                 </div>
             </div>
+            <!-- Top Positive Balance -->
             <div class="card">
-                <h2 class="text-2xl font-bold gradient-text mb-6">เพิ่มบุคลากร</h2>
-                <form id="userForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
-                        <input type="text" id="userName" class="form-input" placeholder="กรอกชื่อ" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
-                        <select id="userPosition" class="form-input" required>
-                            <option value="">เลือกตำแหน่ง</option>
-                            <option value="เภสัช">เภสัช</option>
-                            <option value="จพง">จพง</option>
-                            <option value="จนท">จนท</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit" id="userFormSubmitButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg mt-2">เพิ่มบุคลากร</button>
-                    </div>
-                </form>
+                <h2 class="text-xl sm:text-2xl font-bold text-green-600 mb-4 text-center">🏅 Top 3 ชั่วโมงคงเหลือ 🏅</h2>
+                <div id="hourUsageRankingContainer" class="flex items-end justify-center gap-2 md:gap-4 pt-4 min-h-[240px]">
+                    <!-- Ranking will be injected here by JS -->
+                </div>
             </div>
         </div>
 
         <!-- Dashboard Section -->
         <div class="card">
-            <h2 class="text-2xl font-bold gradient-text mb-6">Dashboard สรุปข้อมูล</h2>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold gradient-text">Dashboard สรุปข้อมูล</h2>
+                <div class="flex flex-wrap items-center justify-center md:justify-end gap-4">
+                    <div class="w-full sm:w-40">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ</label>
+                        <select id="fiscalYearFilter" class="form-input"></select>
+                    </div>
+                    <div class="w-full sm:w-40">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ตำแหน่ง</label>
+                        <select id="positionFilter" class="form-input"></select>
+                    </div>
+                </div>
+            </div>
             <div class="overflow-x-auto">
                 <table class="modern-table">
                     <thead>
@@ -356,18 +326,22 @@
         <!-- Records Section -->
         <div class="card">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold gradient-text">รายการล่าสุด</h2>
-                <div class="flex flex-col md:flex-row gap-2 items-center">
-                    <div class="relative w-full md:w-48">
+                <h2 class="text-2xl font-bold gradient-text">รายการ</h2>
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 items-center w-full">
+                    <div class="relative w-full sm:w-48">
                          <input type="text" id="searchNameInput" placeholder="ค้นหาชื่อ..." class="form-input" autocomplete="off">
                          <div id="searchNameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
                     </div>
-                    <select id="recordPositionFilter" class="form-input w-full md:w-auto"></select>
-                    <input type="date" id="startDateFilter" class="form-input w-full md:w-auto">
-                    <input type="date" id="endDateFilter" class="form-input w-full md:w-auto">
-                    <button id="clearRecordFiltersBtn" class="bg-red-100 text-red-600 hover:bg-red-200 w-10 h-10 flex items-center justify-center rounded-lg font-bold text-xl transition-colors">&times;</button>
+                    <select id="recordPositionFilter" class="form-input w-full sm:w-auto flex-grow"></select>
+                    <input type="date" id="startDateFilter" class="form-input w-full sm:w-auto flex-grow">
+                    <input type="date" id="endDateFilter" class="form-input w-full sm:w-auto flex-grow">
+                    <button id="clearRecordFiltersBtn" class="bg-red-500 text-white w-10 h-10 flex items-center justify-center rounded-lg shadow-md hover:bg-red-600 transition-all duration-300 transform hover:scale-105" title="ล้างตัวกรอง">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
-                <div class="flex space-x-2 items-center">
+                <div class="flex space-x-2 items-center self-center md:self-auto mt-4 md:mt-0">
                     <button id="prevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
                     <span id="pageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold"></span>
                     <button id="nextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
@@ -384,6 +358,7 @@
                             <th class="text-center">เวลา</th>
                             <th class="text-center">ระยะเวลา</th>
                             <th>หมายเหตุ</th>
+                            <th class="text-center">ยืนยัน</th>
                             <th class="text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -392,18 +367,24 @@
             </div>
         </div>
 
-        <!-- User List Section -->
+        <!-- User List & Add Personnel Section -->
         <div class="card">
-             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-800">รายชื่อบุคลากร</h3>
-                <div class="flex items-center gap-4">
-                    <select id="userPositionFilter" class="form-input w-48"></select>
-                    <div class="flex space-x-2 items-center" id="userPaginationControls">
-                        <!-- User pagination will be inserted here -->
-                    </div>
+             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                <h2 class="text-2xl font-bold gradient-text">จัดการบุคลากร</h2>
+                <button id="openAddPersonnelModalBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors w-full sm:w-auto">
+                    เพิ่มบุคลากร +
+                </button>
+             </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                <h3 class="text-xl font-semibold text-gray-700">รายชื่อบุคลากร</h3>
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <select id="userPositionFilter" class="form-input w-full sm:w-48"></select>
                 </div>
             </div>
-            <div class="overflow-x-auto">
+             <div class="flex justify-center sm:justify-end" id="userPaginationControls">
+                 <!-- User pagination will be inserted here -->
+             </div>
+            <div class="overflow-x-auto mt-4">
                 <table class="modern-table">
                     <thead>
                         <tr>
@@ -416,6 +397,78 @@
             </div>
         </div>
     </div>
+
+    <!-- Record Modal -->
+    <div id="recordModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="recordModalContainer">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                    <h3 id="recordModalTitle" class="text-xl font-semibold"></h3>
+                    <button id="closeRecordModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
+                </div>
+                <form id="leaveForm" class="space-y-4">
+                    <input type="hidden" id="leaveTypeInput">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
+                        <input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อ..." class="form-input" autocomplete="off" required>
+                        <div id="nameDropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">วันที่</label>
+                        <input type="date" id="leaveDate" class="form-input" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เวลาเริ่มต้น</label>
+                            <input type="time" id="startTime" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เวลาสิ้นสุด</label>
+                            <input type="time" id="endTime" class="form-input" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
+                        <textarea id="notes" class="form-input" rows="2" placeholder="ไม่บังคับ"></textarea>
+                    </div>
+                    <div>
+                        <button type="submit" id="submitRecordBtn" class="w-full text-white font-medium py-3 px-6 rounded-lg mt-2">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Personnel Modal -->
+    <div id="addPersonnelModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="addPersonnelModalContainer">
+            <div class="p-6">
+                 <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">เพิ่มบุคลากร</h3>
+                    <button id="closeAddPersonnelModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
+                </div>
+                <form id="userForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
+                        <input type="text" id="userName" class="form-input" placeholder="กรอกชื่อ" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
+                        <select id="userPosition" class="form-input" required>
+                            <option value="">เลือกตำแหน่ง</option>
+                            <option value="เภสัช">เภสัช</option>
+                            <option value="จพง">จพง</option>
+                            <option value="จนท">จนท</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" id="userFormSubmitButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg mt-2">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <!-- User Detail Modal -->
     <div id="userModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
@@ -506,7 +559,7 @@
                                 handleKeyPress('Backspace');
                             } else if (action === 'cancel') {
                                 Swal.close();
-                                reject();
+                                reject(new Error('User cancelled PIN entry.'));
                             } else {
                                 handleKeyPress(button.textContent);
                             }
@@ -530,8 +583,11 @@
                         }
                     }
                 }).then((result) => {
-                    if (result.isConfirmed) resolve();
-                    else reject();
+                    if (result.isConfirmed) {
+                        resolve();
+                    } else {
+                        reject(new Error('User cancelled PIN entry.'));
+                    }
                 });
             });
         }
@@ -547,9 +603,33 @@
 
         const formatTimeDisplay = (hours) => {
             if (hours === 0) return "0 ชั่วโมง";
-            const h = Math.floor(hours);
-            const m = Math.round((hours - h) * 60);
-            return `${h > 0 ? `${h} ชั่วโมง` : ''} ${m > 0 ? `${m} นาที` : ''}`.trim();
+            
+            const absHours = Math.abs(hours);
+            
+            let h = Math.floor(absHours);
+            let m = Math.round((absHours - h) * 60);
+
+            if (m === 60) {
+                h += 1;
+                m = 0;
+            }
+
+            let result = '';
+            if (h > 0) {
+                result += `${h} ชั่วโมง `;
+            }
+            if (m > 0) {
+                result += `${m} นาที`;
+            }
+            
+            return result.trim();
+        };
+
+        const formatBalanceDisplay = (balance) => {
+            if (balance === 0) return "0 ชั่วโมง";
+            const prefix = balance < 0 ? '-' : '+';
+            const timeStr = formatTimeDisplay(Math.abs(balance));
+            return `${prefix} ${timeStr}`;
         };
         
         const formatThaiDate = (dateString) => {
@@ -572,21 +652,26 @@
             });
         };
 
-        const formatShortTime = (timeString) => {
-            if (!timeString || typeof timeString !== 'string') return '';
-            if (/^\d{2}:\d{2}$/.test(timeString)) return timeString;
-            if (timeString.includes('T')) {
-                try {
-                    const date = new Date(timeString);
-                    if (isNaN(date.getTime())) return 'เวลาผิดพลาด';
-                    return date.toLocaleTimeString('en-GB', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZone: 'Asia/Bangkok'
-                    });
-                } catch (e) { return 'เวลาผิดพลาด'; }
+        const formatShortTime = (timeValue) => {
+            if (!timeValue) return '';
+
+            if (typeof timeValue === 'string' && /^\d{2}:\d{2}$/.test(timeValue)) {
+                return timeValue;
             }
-            return timeString;
+
+            try {
+                const date = new Date(timeValue);
+                if (isNaN(date.getTime())) {
+                    return timeValue.toString();
+                }
+                
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                
+                return `${hours}:${minutes}`;
+            } catch (e) {
+                return timeValue.toString();
+            }
         };
 
         const getFiscalYear = (dateString) => {
@@ -600,6 +685,27 @@
             const today = new Date();
             return getFiscalYear(today.toISOString().split('T')[0]);
         };
+
+        function isOverlapping(newRecord) {
+            const newStart = new Date(`1970-01-01T${newRecord.startTime}`);
+            const newEnd = new Date(`1970-01-01T${newRecord.endTime}`);
+
+            const recordsForPersonOnDate = allRecords.filter(record =>
+                record.name === newRecord.name &&
+                record.leaveDate === newRecord.leaveDate
+            );
+
+            for (const existingRecord of recordsForPersonOnDate) {
+                const existingStart = new Date(`1970-01-01T${formatShortTime(existingRecord.startTime)}`);
+                const existingEnd = new Date(`1970-01-01T${formatShortTime(existingRecord.endTime)}`);
+
+                if (newStart < existingEnd && newEnd > existingStart) {
+                    return true; 
+                }
+            }
+            return false;
+        }
+
 
         // --- APP INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -624,9 +730,23 @@
 
             document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
             document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+            
+            // User Detail Modal
             document.getElementById('closeModal').addEventListener('click', closeModal);
             document.getElementById('userModal').addEventListener('click', (e) => e.target.id === 'userModal' && closeModal());
             
+            // Record Modal
+            document.getElementById('openLeaveModalBtn').addEventListener('click', () => openRecordModal('ลา'));
+            document.getElementById('openUsageModalBtn').addEventListener('click', () => openRecordModal('ใช้ชั่วโมง'));
+            document.getElementById('closeRecordModal').addEventListener('click', closeRecordModal);
+            document.getElementById('recordModal').addEventListener('click', (e) => e.target.id === 'recordModal' && closeRecordModal());
+
+            // Add Personnel Modal
+            document.getElementById('openAddPersonnelModalBtn').addEventListener('click', openAddPersonnelModal);
+            document.getElementById('closeAddPersonnelModal').addEventListener('click', closeAddPersonnelModal);
+            document.getElementById('addPersonnelModal').addEventListener('click', (e) => e.target.id === 'addPersonnelModal' && closeAddPersonnelModal());
+
+
             const nameInput = document.getElementById('nameInput');
             const nameDropdown = document.getElementById('nameDropdown');
             nameInput.addEventListener('focus', () => nameDropdown.classList.remove('hidden'));
@@ -663,23 +783,52 @@
                     applyFilter();
                 }
             });
+
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+
+            startTimeInput.addEventListener('change', () => {
+                if (startTimeInput.value) {
+                    endTimeInput.min = startTimeInput.value;
+                    if (endTimeInput.value && endTimeInput.value < startTimeInput.value) {
+                        endTimeInput.value = '';
+                    }
+                }
+            });
+
+            endTimeInput.addEventListener('blur', () => {
+                if (endTimeInput.value && startTimeInput.value && endTimeInput.value < startTimeInput.value) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เวลาไม่ถูกต้อง',
+                        text: 'เวลาสิ้นสุดต้องไม่น้อยกว่าเวลาเริ่มต้น',
+                    });
+                    endTimeInput.value = '';
+                }
+            });
         }
 
         // --- DATA HANDLING (GOOGLE SHEETS) ---
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLF0Xu5AdyQo4f9lVDqWPw6N_kh77Y2Fpr_bay3i4bs-_pe6qRpA2Qk2D9dQccGQ3v/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuHOzS6xa_7Kwa0jrfNygfl8lh0nfIT5Z6wa5SSiWZcuACYF7tm87O51oSzXRQ8veT/exec';
 
         async function apiCall(action, data) {
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action, data })
                 });
-                return { success: true };
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                if (!result.success) {
+                   throw new Error(result.message || 'API call returned an error.');
+                }
+                return result;
             } catch (error) {
                 console.error(`API call failed for action: ${action}`, error);
-                throw new Error(`Failed to execute action: ${action}`);
+                throw new Error(`Failed to execute action: ${action}. ${error.message}`);
             }
         }
 
@@ -687,6 +836,9 @@
             Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=loadData`);
+                 if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
                 if (data.success) {
                     allUsers = data.users || [];
@@ -701,7 +853,7 @@
                 }
             } catch (error) {
                 console.error('Error loading from Google Sheets:', error);
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้', 'error');
+                Swal.fire('ข้อผิดพลาด', `ไม่สามารถโหลดข้อมูลได้: ${error.message}`, 'error');
             } finally {
                 Swal.close();
             }
@@ -711,8 +863,6 @@
         async function handleFormSubmit(e) {
             e.preventDefault();
             try {
-                await promptForPin();
-                
                 const name = document.getElementById('nameInput').value.trim();
                 const user = allUsers.find(u => u.name === name);
                 if (!user) {
@@ -724,32 +874,60 @@
                     leaveDate: document.getElementById('leaveDate').value,
                     startTime: document.getElementById('startTime').value,
                     endTime: document.getElementById('endTime').value,
-                    type: document.querySelector('input[name="leaveType"]:checked').value,
+                    type: document.getElementById('leaveTypeInput').value,
                     name: user.name,
                     position: user.position,
-                    notes: document.getElementById('notes').value, // [NEW] Get notes value
+                    notes: document.getElementById('notes').value,
+                    confirmed: false, 
                     timestamp: new Date().toISOString()
                 };
                 record.hours = calculateHours(record.startTime, record.endTime);
-                record.date = new Date(record.leaveDate).toLocaleDateString('th-TH');
 
                 if (record.hours <= 0) {
                     Swal.fire('ข้อผิดพลาด', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
                     return;
                 }
 
-                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                await apiCall('saveRecord', record);
-                allRecords.unshift(record);
-                applyFilter();
-                document.getElementById('leaveForm').reset();
-                Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+                if (isOverlapping(record)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ข้อมูลซ้ำซ้อน',
+                        text: 'มีข้อมูลการลาหรือใช้ชั่วโมงในช่วงเวลานี้แล้ว',
+                    });
+                    return;
+                }
+                
+                const typeColorClass = record.type === 'ลา' ? 'text-red-600' : 'text-green-600';
+                const { isConfirmed } = await Swal.fire({
+                    title: 'ยืนยันการบันทึก?',
+                    html: `
+                        คุณต้องการบันทึกข้อมูล:<br>
+                        <b class="mr-2">ชื่อ:</b> ${record.name}<br>
+                        <b class="mr-2">ประเภท:</b> <span class="font-bold ${typeColorClass}">${record.type}</span><br>
+                        <b class="mr-2">วันที่:</b> ${formatThaiDate(record.leaveDate)}<br>
+                        <b class="mr-2">เวลา:</b> ${record.startTime} - ${record.endTime}
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก'
+                });
+
+                if (isConfirmed) {
+                    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    await apiCall('saveRecord', record);
+                    
+                    allRecords.unshift(record); 
+                    applyFilter(); 
+                    closeRecordModal();
+                    Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+                }
 
             } catch (error) {
-                if (error) {
-                    console.error("Error in handleFormSubmit:", error);
-                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
-                }
+                console.error("Error in handleFormSubmit:", error);
+                Swal.fire('ข้อผิดพลาด', `ไม่สามารถบันทึกข้อมูลได้: ${error.message}`, 'error');
             }
         }
 
@@ -771,44 +949,142 @@
                 await apiCall('saveUser', user);
                 allUsers.push(user);
                 Swal.fire('สำเร็จ!', 'เพิ่มบุคลากรเรียบร้อยแล้ว', 'success');
-                document.getElementById('userForm').reset();
+                closeAddPersonnelModal();
                 updateUsersDisplay();
                 updateNameDropdown();
                 initializeFilters();
                 
             } catch (error) {
-                 if (error) {
+                if (error && error.message.includes('User cancelled')) {
+                    console.log('PIN entry cancelled for adding user.');
+                } else {
                     console.error("Error in handleUserFormSubmit:", error);
-                    Swal.fire('ข้อผิดพลาด', 'การดำเนินการล้มเหลว', 'error');
+                    Swal.fire('ข้อผิดพลาด', `การดำเนินการล้มเหลว: ${error ? error.message : 'Unknown error'}`, 'error');
                 }
             }
         }
 
         // --- UI UPDATE FUNCTIONS ---
+        // *** Ranking Functions ***
+        function updateRankings() {
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const position = document.getElementById('positionFilter').value;
+
+            const rankingRecords = allRecords.filter(r => {
+                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
+                const matchPosition = !position || r.position === position;
+                return matchFiscal && matchPosition;
+            });
+
+            const balanceSummary = {};
+            rankingRecords.forEach(record => {
+                const name = record.name;
+                const hours = record.type === 'ลา' ? -record.hours : record.hours;
+                balanceSummary[name] = (balanceSummary[name] || 0) + hours;
+            });
+
+            const allBalances = Object.entries(balanceSummary)
+                .map(([name, balance]) => ({ name, balance }));
+
+            const topNegative = allBalances
+                .sort((a, b) => a.balance - b.balance) 
+                .slice(0, 3);
+
+            const topPositive = allBalances
+                .sort((a, b) => b.balance - a.balance) 
+                .slice(0, 3);
+            
+            renderRankingPodium('leaveRankingContainer', topNegative, {
+                podiumColors: ['bg-gradient-to-b from-amber-400 to-amber-600', 'bg-gradient-to-b from-amber-500 to-amber-700', 'bg-gradient-to-b from-amber-300 to-amber-500'],
+                textColor: 'text-amber-800'
+            });
+            renderRankingPodium('hourUsageRankingContainer', topPositive, {
+                podiumColors: ['bg-gradient-to-b from-slate-400 to-slate-600', 'bg-gradient-to-b from-slate-500 to-slate-700', 'bg-gradient-to-b from-slate-300 to-slate-500'],
+                textColor: 'text-slate-800'
+            });
+        }
+
+        function renderRankingPodium(containerId, topUsers, theme) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; 
+
+            if (topUsers.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 self-center">ไม่มีข้อมูล</p>`;
+                return;
+            }
+
+            const podiumOrder = [topUsers[1], topUsers[0], topUsers[2]];
+            const heights = ['h-32', 'h-40', 'h-24'];
+            const ranks = [2, 1, 3];
+            
+            if (topUsers.length === 1) {
+                const user = topUsers[0];
+                const balanceColor = user.balance < 0 ? 'text-red-600' : 'text-green-600';
+                container.innerHTML = `
+                    <div class="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105">
+                        <div class="font-black text-2xl truncate w-full ${theme.textColor}" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">${user.name}</div>
+                        <div class="text-lg font-semibold ${balanceColor}">${formatBalanceDisplay(user.balance)}</div>
+                        <div class="relative ${heights[1]} w-24 ${theme.podiumColors[1]} rounded-t-lg flex items-center justify-center text-6xl font-extrabold text-white shadow-lg" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                            1
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            podiumOrder.forEach((user, index) => {
+                if (user) {
+                    const balanceColor = user.balance < 0 ? 'text-red-600' : 'text-green-600';
+                    const podiumEl = `
+                        <div class="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105">
+                            <div class="font-black text-2xl truncate w-full ${theme.textColor}" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">${user.name}</div>
+                            <div class="text-lg font-semibold ${balanceColor}">${formatBalanceDisplay(user.balance)}</div>
+                            <div class="relative ${heights[index]} w-24 ${theme.podiumColors[index]} rounded-t-lg flex items-center justify-center text-6xl font-extrabold text-white shadow-lg" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                                ${ranks[index]}
+                                 <svg class="absolute top-1 right-1 w-5 h-5 text-yellow-300 opacity-75 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += podiumEl;
+                }
+            });
+        }
+
+
         function updateDashboard() {
             const summary = {};
-            filteredRecords.forEach(record => {
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const position = document.getElementById('positionFilter').value;
+
+            const dashboardRecords = allRecords.filter(r => {
+                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
+                const matchPosition = !position || r.position === position;
+                return matchFiscal && matchPosition;
+            });
+
+            dashboardRecords.forEach(record => {
                 const key = `${record.name}_${record.position}`;
                 if (!summary[key]) {
                     summary[key] = { name: record.name, position: record.position, leave: 0, return: 0 };
                 }
-                if (record.type && record.type.trim() === 'ลา') summary[key].leave += record.hours;
-                else if (record.type && record.type.trim() === 'ใช้ชั่วโมง') summary[key].return += record.hours;
+                if (record.type && (record.type.trim() === 'ลา')) summary[key].leave += record.hours;
+                else if (record.type && (record.type.trim() === 'ใช้ชั่วโมง')) summary[key].return += record.hours;
             });
 
             const tbody = document.getElementById('dashboardTable');
             tbody.innerHTML = '';
             Object.values(summary).forEach(data => {
                 const total = data.return - data.leave;
+                const totalColorClass = total < 0 ? 'text-red-600' : 'text-green-600';
                 const statusClass = total >= 0 ? 'status-ok' : 'status-warning';
                 const statusText = total >= 0 ? 'OK' : 'ต้องใช้คืน';
+                const buttonColorClasses = getPositionButtonClass(data.position);
                 const row = `
                     <tr>
-                        <td><button class="text-indigo-600 hover:underline" onclick="showUserDetail('${data.name}')">${data.name}</button></td>
+                        <td><button class="font-semibold py-1 px-4 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${buttonColorClasses}" onclick="showUserDetail('${data.name}')">${data.name}</button></td>
                         <td class="text-center"><span class="badge ${getPositionBadgeClass(data.position)}">${data.position}</span></td>
                         <td class="text-center">${formatTimeDisplay(data.leave)}</td>
                         <td class="text-center">${formatTimeDisplay(data.return)}</td>
-                        <td class="text-center font-semibold">${formatTimeDisplay(total)}</td>
+                        <td class="text-center font-semibold ${totalColorClass}">${formatTimeDisplay(total)}</td>
                         <td class="text-center ${statusClass}">${statusText}</td>
                     </tr>
                 `;
@@ -822,7 +1098,17 @@
             const pageRecords = filteredRecords.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
 
             pageRecords.forEach(record => {
-                const badgeClass = record.type.trim() === 'ลา' ? 'badge-leave' : 'badge-return';
+                const badgeClass = (record.type || '').trim() === 'ลา' ? 'badge-leave' : 'badge-return';
+                const confirmButton = record.confirmed 
+                    ? `<div class="bg-green-100 text-green-600 p-2 rounded-full inline-flex items-center justify-center" title="ยืนยันแล้ว">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                           </svg>
+                       </div>`
+                    : `<button onclick="confirmRecord('${record.timestamp}')" class="bg-gray-200 text-gray-600 p-2 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors" title="คลิกเพื่อยืนยัน">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                       </button>`;
+
                 const row = `
                     <tr>
                         <td>${formatThaiDate(record.leaveDate)}</td>
@@ -832,8 +1118,13 @@
                         <td class="text-center">${formatShortTime(record.startTime)} - ${formatShortTime(record.endTime)}</td>
                         <td class="text-center">${formatTimeDisplay(record.hours)}</td>
                         <td>${record.notes || '-'}</td>
+                        <td class="text-center">${confirmButton}</td>
                         <td class="text-center">
-                            <button onclick="deleteRecord('${record.timestamp}')" class="text-red-500 hover:underline">ลบ</button>
+                            <button onclick="deleteRecord('${record.timestamp}')" class="bg-red-100 text-red-600 p-2 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors" title="ลบรายการ">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -859,6 +1150,7 @@
             });
             
             const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
+            userCurrentPage = Math.min(userCurrentPage, totalPages) || 1;
             const pageUsers = filteredUsers.slice((userCurrentPage - 1) * usersPerPage, userCurrentPage * usersPerPage);
 
             pageUsers.forEach(user => {
@@ -887,6 +1179,7 @@
         
         function updatePagination() {
             const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            currentPage = Math.min(currentPage, totalPages) || 1;
             document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
             document.getElementById('prevPage').disabled = currentPage === 1;
             document.getElementById('nextPage').disabled = currentPage === totalPages;
@@ -902,7 +1195,8 @@
         function updateNameDropdown() {
             const dropdown = document.getElementById('nameDropdown');
             dropdown.innerHTML = '';
-            allUsers.forEach(user => {
+            const sortedUsers = [...allUsers].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+            sortedUsers.forEach(user => {
                 const item = `
                     <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.name}">
                         ${user.name} <span class="text-gray-500 text-sm">(${user.position})</span>
@@ -914,7 +1208,8 @@
         function updateSearchNameDropdown() {
             const dropdown = document.getElementById('searchNameDropdown');
             dropdown.innerHTML = '';
-            allUsers.forEach(user => {
+            const sortedUsers = [...allUsers].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+            sortedUsers.forEach(user => {
                 const item = `
                     <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.name}">
                         ${user.name} <span class="text-gray-500 text-sm">(${user.position})</span>
@@ -938,6 +1233,7 @@
             const userPositionFilter = document.getElementById('userPositionFilter');
             const recordPositionFilter = document.getElementById('recordPositionFilter');
             
+            // Clear existing options
             fiscalYearFilter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
             positionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
             userPositionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
@@ -946,13 +1242,13 @@
             const fiscalYears = [...new Set(allRecords.map(r => getFiscalYear(r.leaveDate)))].sort((a, b) => b - a);
             fiscalYears.forEach(year => fiscalYearFilter.add(new Option(year, year)));
 
-            const positions = [...new Set(allUsers.map(u => u.position))];
+            const positions = [...new Set(allUsers.map(u => u.position))].sort((a, b) => a.localeCompare(b, 'th'));
             positions.forEach(pos => {
                 positionFilter.add(new Option(pos, pos));
                 userPositionFilter.add(new Option(pos, pos));
                 recordPositionFilter.add(new Option(pos, pos));
             });
-
+            
             const currentFiscalYear = getCurrentFiscalYear();
             if (fiscalYears.includes(currentFiscalYear)) {
                 fiscalYearFilter.value = currentFiscalYear;
@@ -961,27 +1257,26 @@
 
         function applyFilter() {
             const fiscalYear = document.getElementById('fiscalYearFilter').value;
-            const position = document.getElementById('positionFilter').value;
+            const position = document.getElementById('positionFilter').value; // For dashboard
             const searchName = document.getElementById('searchNameInput').value.toLowerCase();
             const startDate = document.getElementById('startDateFilter').value;
             const endDate = document.getElementById('endDateFilter').value;
             const recordPosition = document.getElementById('recordPositionFilter').value;
             
             filteredRecords = allRecords.filter(r => {
-                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate).toString() === fiscalYear;
-                const matchPosition = !position || r.position === position;
+                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
                 const matchName = !searchName || r.name.toLowerCase().includes(searchName);
                 const matchRecordPosition = !recordPosition || r.position === recordPosition;
+                
                 let matchDate = true;
                 if (startDate) matchDate = matchDate && r.leaveDate >= startDate;
                 if (endDate) matchDate = matchDate && r.leaveDate <= endDate;
 
-                return matchFiscal && matchPosition && matchName && matchDate && matchRecordPosition;
+                return matchFiscal && matchName && matchDate && matchRecordPosition;
             });
             
-            currentPage = 1;
-            userCurrentPage = 1;
-            updateDashboard();
+            updateRankings(); 
+            updateDashboard(); 
             updateRecordsTable();
             updatePagination();
             updateUsersDisplay();
@@ -998,7 +1293,7 @@
         }
 
         function changePage(direction) {
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
             const newPage = currentPage + direction;
             if (newPage >= 1 && newPage <= totalPages) {
                 currentPage = newPage;
@@ -1027,6 +1322,15 @@
             }
         }
 
+        function getPositionButtonClass(position) {
+            switch (position) {
+                case 'เภสัช': return 'bg-purple-100 text-purple-700 hover:bg-purple-200 focus:ring-purple-500';
+                case 'จพง': return 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:ring-indigo-500';
+                case 'จนท': return 'bg-orange-100 text-orange-700 hover:bg-orange-200 focus:ring-orange-500';
+                default: return 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500';
+            }
+        }
+
         // --- USER & RECORD ACTIONS ---
         async function deleteRecord(timestamp) {
             try {
@@ -1043,25 +1347,101 @@
                     Swal.fire('สำเร็จ!', 'ลบข้อมูลเรียบร้อย', 'success');
                 }
             } catch (error) {
-                if(error) {
+                if (error && error.message.includes('User cancelled')) {
+                    console.log('PIN entry cancelled for deleting record.');
+                } else {
                     console.error("Error in deleteRecord:", error);
-                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถลบได้', 'error');
+                    Swal.fire('ข้อผิดพลาด', `ไม่สามารถลบได้: ${error ? error.message : 'Unknown error'}`, 'error');
                 }
             }
         }
 
-        // --- MODAL ---
+        async function confirmRecord(timestamp) {
+            try {
+                await promptForPin();
+                Swal.fire({ title: 'กำลังยืนยัน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await apiCall('confirmRecord', { timestamp });
+                const record = allRecords.find(r => r.timestamp === timestamp);
+                if (record) record.confirmed = true;
+                applyFilter();
+                Swal.fire('สำเร็จ!', 'ยืนยันรายการเรียบร้อย', 'success');
+            } catch (error) {
+                if (error && error.message.includes('User cancelled')) {
+                    console.log('PIN entry cancelled for confirming record.');
+                } else {
+                    console.error("Error in confirmRecord:", error);
+                    Swal.fire('ข้อผิดพลาด', `ไม่สามารถยืนยันรายการได้: ${error ? error.message : 'Unknown error'}`, 'error');
+                }
+            }
+        }
+
+        // --- MODAL FUNCTIONS ---
+        function openRecordModal(type) {
+            const modal = document.getElementById('recordModal');
+            const title = document.getElementById('recordModalTitle');
+            const submitBtn = document.getElementById('submitRecordBtn');
+            const typeInput = document.getElementById('leaveTypeInput');
+
+            document.getElementById('leaveForm').reset();
+            typeInput.value = type;
+
+            if (type === 'ลา') {
+                title.innerHTML = `<div class="flex items-center gap-3"><div class="bg-red-100 text-red-600 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><span class="text-red-700">บันทึกการลา</span></div>`;
+                submitBtn.className = 'w-full text-white font-medium py-3 px-6 rounded-lg mt-2 bg-red-500 hover:bg-red-600';
+            } else {
+                title.innerHTML = `<div class="flex items-center gap-3"><div class="bg-green-100 text-green-600 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><span class="text-green-700">บันทึกการใช้ชั่วโมง</span></div>`;
+                submitBtn.className = 'w-full text-white font-medium py-3 px-6 rounded-lg mt-2 bg-green-500 hover:bg-green-600';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('recordModalContainer').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeRecordModal() {
+            const modal = document.getElementById('recordModal');
+            const modalContainer = document.getElementById('recordModalContainer');
+            modalContainer.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openAddPersonnelModal() {
+            const modal = document.getElementById('addPersonnelModal');
+            document.getElementById('userForm').reset();
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('addPersonnelModalContainer').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeAddPersonnelModal() {
+            const modal = document.getElementById('addPersonnelModal');
+            const modalContainer = document.getElementById('addPersonnelModalContainer');
+            modalContainer.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
         function showUserDetail(name) {
-            modalCurrentPage = 1; // Reset to first page
+            modalCurrentPage = 1; 
             renderUserDetailModal(name);
         }
 
         function renderUserDetailModal(name) {
-            const userRecords = allRecords.filter(r => r.name === name);
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const userRecords = allRecords.filter(r => 
+                r.name === name &&
+                (!fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear)
+            );
+
             let leaveHours = 0, returnHours = 0;
             userRecords.forEach(r => {
-                if (r.type.trim() === 'ลา') leaveHours += r.hours;
-                else if (r.type.trim() === 'ใช้ชั่วโมง') returnHours += r.hours;
+                if ((r.type || '').trim() === 'ลา') leaveHours += r.hours;
+                else if ((r.type || '').trim() === 'ใช้ชั่วโมง') returnHours += r.hours;
             });
             const balance = returnHours - leaveHours;
 
@@ -1074,17 +1454,19 @@
                     <td class="px-4 py-2">${formatThaiDate(r.leaveDate)}</td>
                     <td class="px-4 py-2 text-center">${formatShortTime(r.startTime)} - ${formatShortTime(r.endTime)}</td>
                     <td class="px-4 py-2 text-center">${formatTimeDisplay(r.hours)}</td>
-                    <td class="px-4 py-2 text-center"><span class="badge ${r.type.trim() === 'ลา' ? 'badge-leave' : 'badge-return'}">${r.type}</span></td>
+                    <td class="px-4 py-2 text-center"><span class="badge ${(r.type || '').trim() === 'ลา' ? 'badge-leave' : 'badge-return'}">${r.type}</span></td>
                     <td class="px-4 py-2">${r.notes || '-'}</td>
                 </tr>
             `).join('');
 
-            document.getElementById('modalTitle').textContent = `รายละเอียดของ ${name}`;
+            const balanceColorClass = balance < 0 ? 'text-red-600' : 'text-green-600';
+
+            document.getElementById('modalTitle').textContent = `รายละเอียดของ ${name} (ปีงบ ${fiscalYear || 'ทั้งหมด'})`;
             document.getElementById('modalContent').innerHTML = `
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
                     <div class="bg-red-50 p-3 rounded-lg"><div class="text-sm text-red-700">ลาทั้งหมด</div><div class="text-xl font-bold text-red-800">${formatTimeDisplay(leaveHours)}</div></div>
                     <div class="bg-green-50 p-3 rounded-lg"><div class="text-sm text-green-700">ชั่วโมงที่ใช้</div><div class="text-xl font-bold text-green-800">${formatTimeDisplay(returnHours)}</div></div>
-                    <div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-blue-700">คงเหลือ</div><div class="text-xl font-bold text-blue-800">${formatTimeDisplay(balance)}</div></div>
+                    <div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-blue-700">คงเหลือ</div><div class="text-xl font-bold ${balanceColorClass}">${formatTimeDisplay(balance)}</div></div>
                     <div class="bg-yellow-50 p-3 rounded-lg"><div class="text-sm text-yellow-700">สถานะ</div><div class="text-xl font-bold ${balance >= 0 ? 'text-green-800' : 'text-yellow-800'}">${balance >= 0 ? 'OK' : 'ต้องใช้คืน'}</div></div>
                 </div>
                 <div class="flex justify-end items-center mb-4">
@@ -1131,49 +1513,6 @@
             }, 300);
         }
 
-        // --- IMPORT/EXPORT ---
-        function exportData() {
-            const dataStr = JSON.stringify({ users: allUsers, records: allRecords }, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `leave-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            Swal.fire('สำเร็จ', 'ส่งออกข้อมูลเรียบร้อย', 'success');
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.users && data.records) {
-                        const { isConfirmed } = await Swal.fire({
-                            title: 'ยืนยันการนำเข้า', text: 'ข้อมูลเดิมจะถูกเขียนทับทั้งหมด', icon: 'warning', showCancelButton: true
-                        });
-                        if (isConfirmed) {
-                            Swal.fire({ title: 'กำลังนำเข้า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                            await apiCall('importData', data);
-                            allUsers = data.users;
-                            allRecords = data.records;
-                            initializeFilters();
-                            applyFilter();
-                            Swal.fire('สำเร็จ', 'นำเข้าข้อมูลเรียบร้อย', 'success');
-                        }
-                    } else {
-                        Swal.fire('ข้อผิดพลาด', 'ไฟล์ข้อมูลไม่ถูกต้อง', 'error');
-                    }
-                } catch (error) {
-                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้', 'error');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
     </script>
 </body>
 </html>
