@@ -9,6 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+        /* *** NEW: Import digital clock font *** */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
         
         * {
             margin: 0;
@@ -73,6 +75,23 @@
         }
 
         .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background-color: #fff;
+        }
+        
+        .form-input-sm {
+            width: 100%;
+            padding: 0.5rem 0.75rem; /* Reduced padding */
+            border-radius: 0.5rem; /* Slightly smaller radius */
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+            font-size: 0.875rem; /* Smaller font */
+        }
+
+        .form-input-sm:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
@@ -255,23 +274,50 @@
 
     <div class="main-container">
         <!-- Header -->
-        <div class="header-card">
-            <h1 class="text-4xl sm:text-5xl font-extrabold mb-3 app-title">OPD Leave Hour System</h1>
-            <p class="text-base sm:text-lg text-gray-600">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์</p>
-        </div>
-
-        <!-- Form Section changed to Buttons -->
-        <div class="card">
-            <h2 class="text-2xl font-bold gradient-text mb-6 text-center">บันทึกข้อมูล</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button id="openLeaveModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                    บันทึกการลา
-                </button>
-                <button id="openUsageModalBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                    บันทึกการใช้ชั่วโมง
-                </button>
+        <div class="header-card flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl sm:text-5xl font-extrabold mb-3 app-title">Welcome to OPD</h1>
+                <p class="text-base sm:text-lg text-gray-600">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์</p>
+            </div>
+            <!-- Clock Container -->
+            <div class="text-center p-3 bg-gray-100 rounded-lg shadow-inner">
+                <div id="digital-clock" class="font-bold text-3xl md:text-5xl" style="font-family: 'Orbitron', sans-serif; background: linear-gradient(135deg, #ff8c00, #ff4500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    00:00:00
+                </div>
+                <div id="digital-date" class="text-gray-600 text-sm md:text-base font-semibold mt-1">
+                    <!-- Date will be injected here -->
+                </div>
             </div>
         </div>
+
+        <!-- New Layout for Record and Personnel Management -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Record Data Section -->
+            <div class="card">
+                <h2 class="text-2xl font-bold gradient-text mb-6 text-center">บันทึกข้อมูล</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <button id="openLeaveModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                        บันทึกการลา
+                    </button>
+                    <button id="openUsageModalBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                        บันทึกการใช้ชั่วโมง
+                    </button>
+                </div>
+            </div>
+            <!-- Personnel Management Section -->
+            <div class="card">
+                <h2 class="text-2xl font-bold gradient-text mb-6 text-center">จัดการบุคลากร</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                     <button id="openAddPersonnelModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                        เพิ่มบุคลากร
+                    </button>
+                    <button id="showUserListModalBtn" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                        แสดงรายชื่อ
+                    </button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Rankings Section -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="rankingsSection">
@@ -294,7 +340,7 @@
         <!-- Dashboard Section -->
         <div class="card">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold gradient-text">Dashboard สรุปข้อมูล</h2>
+                <h2 class="text-2xl font-bold gradient-text">Dashboard</h2>
                 <div class="flex flex-wrap items-center justify-center md:justify-end gap-4">
                     <div class="w-full sm:w-40">
                         <label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ</label>
@@ -328,22 +374,22 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h2 class="text-2xl font-bold gradient-text">รายการ</h2>
                 <div class="flex flex-wrap justify-center md:justify-start gap-2 items-center w-full">
-                    <div class="relative w-full sm:w-48">
-                         <input type="text" id="searchNameInput" placeholder="ค้นหาชื่อ..." class="form-input" autocomplete="off">
+                    <div class="relative w-full sm:w-auto sm:flex-grow">
+                         <input type="text" id="searchNameInput" placeholder="ค้นหาชื่อ..." class="form-input-sm" autocomplete="off">
                          <div id="searchNameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
                     </div>
-                    <select id="recordPositionFilter" class="form-input w-full sm:w-auto flex-grow"></select>
-                    <input type="date" id="startDateFilter" class="form-input w-full sm:w-auto flex-grow">
-                    <input type="date" id="endDateFilter" class="form-input w-full sm:w-auto flex-grow">
-                    <button id="clearRecordFiltersBtn" class="bg-red-500 text-white w-10 h-10 flex items-center justify-center rounded-lg shadow-md hover:bg-red-600 transition-all duration-300 transform hover:scale-105" title="ล้างตัวกรอง">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <select id="recordPositionFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow"></select>
+                    <input type="date" id="startDateFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow">
+                    <input type="date" id="endDateFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow">
+                    <button id="clearRecordFiltersBtn" class="bg-red-500 text-white w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg shadow-md hover:bg-red-600 transition-all duration-300 transform hover:scale-105" title="ล้างตัวกรอง">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
                 <div class="flex space-x-2 items-center self-center md:self-auto mt-4 md:mt-0">
                     <button id="prevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
-                    <span id="pageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold"></span>
+                    <span id="pageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold flex-shrink-0"></span>
                     <button id="nextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
                 </div>
             </div>
@@ -363,36 +409,6 @@
                         </tr>
                     </thead>
                     <tbody id="recordsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- User List & Add Personnel Section -->
-        <div class="card">
-             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                <h2 class="text-2xl font-bold gradient-text">จัดการบุคลากร</h2>
-                <button id="openAddPersonnelModalBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors w-full sm:w-auto">
-                    เพิ่มบุคลากร +
-                </button>
-             </div>
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                <h3 class="text-xl font-semibold text-gray-700">รายชื่อบุคลากร</h3>
-                <div class="flex items-center gap-4 w-full sm:w-auto">
-                    <select id="userPositionFilter" class="form-input w-full sm:w-48"></select>
-                </div>
-            </div>
-             <div class="flex justify-center sm:justify-end" id="userPaginationControls">
-                 <!-- User pagination will be inserted here -->
-             </div>
-            <div class="overflow-x-auto mt-4">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>ชื่อบุคลากร</th>
-                            <th class="text-center">ตำแหน่ง</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTable"></tbody>
                 </table>
             </div>
         </div>
@@ -482,6 +498,36 @@
             </div>
         </div>
     </div>
+    
+    <!-- User List Modal -->
+    <div id="userListModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] transform transition-all duration-300 scale-95 opacity-0" id="userListModalContainer">
+            <div class="p-6 flex flex-col">
+                 <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                    <h3 class="text-xl font-semibold text-gray-800">รายชื่อบุคลากร</h3>
+                    <button id="closeUserListModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
+                </div>
+                <div class="flex justify-end items-center mb-4">
+                    <select id="userPositionFilter" class="form-input w-48"></select>
+                </div>
+                <div class="overflow-y-auto flex-grow">
+                    <table class="modern-table w-full">
+                        <thead>
+                            <tr>
+                                <th>ชื่อบุคลากร</th>
+                                <th class="text-center">ตำแหน่ง</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-center mt-4 space-x-2" id="userListPaginationControls">
+                     <!-- User list pagination will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // Global variables
@@ -745,6 +791,11 @@
             document.getElementById('openAddPersonnelModalBtn').addEventListener('click', openAddPersonnelModal);
             document.getElementById('closeAddPersonnelModal').addEventListener('click', closeAddPersonnelModal);
             document.getElementById('addPersonnelModal').addEventListener('click', (e) => e.target.id === 'addPersonnelModal' && closeAddPersonnelModal());
+            
+            // User List Modal
+            document.getElementById('showUserListModalBtn').addEventListener('click', openUserListModal);
+            document.getElementById('closeUserListModal').addEventListener('click', closeUserListModal);
+            document.getElementById('userListModal').addEventListener('click', (e) => e.target.id === 'userListModal' && closeUserListModal());
 
 
             const nameInput = document.getElementById('nameInput');
@@ -806,6 +857,27 @@
                     endTimeInput.value = '';
                 }
             });
+             
+            setInterval(() => {
+                const now = new Date();
+                const clockElement = document.getElementById('digital-clock');
+                const dateElement = document.getElementById('digital-date');
+
+                if (clockElement) {
+                    const hours = now.getHours().toString().padStart(2, '0');
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    const seconds = now.getSeconds().toString().padStart(2, '0');
+                    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+                }
+                if (dateElement) {
+                    dateElement.textContent = now.toLocaleDateString('th-TH', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+            }, 1000);
         }
 
         // --- DATA HANDLING (GOOGLE SHEETS) ---
@@ -835,7 +907,11 @@
         async function loadData() {
             Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=loadData`);
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'loadData' })
+                });
                  if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -999,8 +1075,8 @@
                 textColor: 'text-amber-800'
             });
             renderRankingPodium('hourUsageRankingContainer', topPositive, {
-                podiumColors: ['bg-gradient-to-b from-slate-400 to-slate-600', 'bg-gradient-to-b from-slate-500 to-slate-700', 'bg-gradient-to-b from-slate-300 to-slate-500'],
-                textColor: 'text-slate-800'
+                podiumColors: ['bg-gradient-to-b from-teal-400 to-teal-600', 'bg-gradient-to-b from-teal-500 to-teal-700', 'bg-gradient-to-b from-teal-300 to-teal-500'],
+                textColor: 'text-teal-800'
             });
         }
 
@@ -1133,7 +1209,7 @@
         }
 
         function updateUsersDisplay() {
-            const tbody = document.getElementById('usersTable');
+            const tbody = document.getElementById('userListTableBody');
             const positionFilter = document.getElementById('userPositionFilter').value;
             tbody.innerHTML = '';
 
@@ -1163,7 +1239,7 @@
                 tbody.insertAdjacentHTML('beforeend', row);
             });
 
-            const paginationControls = document.getElementById('userPaginationControls');
+            const paginationControls = document.getElementById('userListPaginationControls');
             paginationControls.innerHTML = `
                 <button id="userPrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
                 <span id="userPageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold">${userCurrentPage} / ${totalPages}</span>
@@ -1420,6 +1496,24 @@
         function closeAddPersonnelModal() {
             const modal = document.getElementById('addPersonnelModal');
             const modalContainer = document.getElementById('addPersonnelModalContainer');
+            modalContainer.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        
+        function openUserListModal() {
+            const modal = document.getElementById('userListModal');
+            updateUsersDisplay(); // Populate the list
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('userListModalContainer').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeUserListModal() {
+            const modal = document.getElementById('userListModal');
+            const modalContainer = document.getElementById('userListModalContainer');
             modalContainer.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
