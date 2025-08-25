@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลาชั่วโมง OPD</title>
+    <title>ลาชั่วโมง OPD - โรงพยาบาลอุตรดิตถ์</title>
     <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,13 +29,13 @@
         .main-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 1rem;
+            padding: 1rem; /* Adjusted for mobile */
             position: relative;
             z-index: 1;
         }
         @media (min-width: 768px) {
             .main-container {
-                padding: 2rem;
+                padding: 2rem; /* Restore for larger screens */
             }
         }
 
@@ -82,12 +82,12 @@
         
         .form-input-sm {
             width: 100%;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem; /* Reduced padding */
+            border-radius: 0.5rem; /* Slightly smaller radius */
             border: 1px solid #d1d5db;
             background-color: #f9fafb;
             transition: all 0.3s ease;
-            font-size: 0.875rem;
+            font-size: 0.875rem; /* Smaller font */
         }
 
         .form-input-sm:focus {
@@ -123,7 +123,7 @@
             padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap;
+            white-space: nowrap; /* Prevent text wrapping in cells */
         }
 
         .modern-table th {
@@ -425,8 +425,8 @@
                     <form id="leaveForm" class="space-y-4">
                         <input type="hidden" id="leaveTypeInput">
                         <div class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
-                            <input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อ..." class="form-input" autocomplete="off" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร (ชื่อเล่น)</label>
+                            <input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อเล่น..." class="form-input" autocomplete="off" required>
                             <div id="nameDropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
                         </div>
                         <div>
@@ -466,8 +466,12 @@
                 </div>
                 <form id="userForm" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร</label>
-                        <input type="text" id="userName" class="form-input" placeholder="กรอกชื่อ" required>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อ-สกุล</label>
+                        <input type="text" id="userFullName" class="form-input" placeholder="กรอกชื่อ-สกุล" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อเล่น</label>
+                        <input type="text" id="userNickname" class="form-input" placeholder="กรอกชื่อเล่น" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
@@ -515,7 +519,8 @@
                     <table class="modern-table w-full">
                         <thead>
                             <tr>
-                                <th>ชื่อบุคลากร</th>
+                                <th>ชื่อ-สกุล</th>
+                                <th>ชื่อเล่น</th>
                                 <th class="text-center">ตำแหน่ง</th>
                             </tr>
                         </thead>
@@ -528,6 +533,11 @@
             </div>
         </div>
     </div>
+
+    <!-- *** NEW: Footer Section *** -->
+    <footer class="text-center py-8">
+        <p class="text-white/50 text-sm">ลาชั่วโมง OPD - ภก.ธีรเดช วิชัย โรงพยาบาลอุตรดิตถ์</p>
+    </footer>
 
 
     <script>
@@ -940,10 +950,10 @@
         async function handleFormSubmit(e) {
             e.preventDefault();
             try {
-                const name = document.getElementById('nameInput').value.trim();
-                const user = allUsers.find(u => u.name === name);
+                const nickname = document.getElementById('nameInput').value.trim();
+                const user = allUsers.find(u => u.nickname === nickname);
                 if (!user) {
-                    Swal.fire('ข้อผิดพลาด', 'ไม่พบบุคลากรชื่อนี้ กรุณาเพิ่มบุคลากรก่อน', 'error');
+                    Swal.fire('ข้อผิดพลาด', 'ไม่พบบุคลากรชื่อเล่นนี้ กรุณาเพิ่มบุคลากรก่อน', 'error');
                     return;
                 }
                 
@@ -952,7 +962,7 @@
                     startTime: document.getElementById('startTime').value,
                     endTime: document.getElementById('endTime').value,
                     type: document.getElementById('leaveTypeInput').value,
-                    name: user.name,
+                    name: user.nickname, // Use nickname for records
                     position: user.position,
                     notes: document.getElementById('notes').value,
                     confirmed: false, 
@@ -1013,15 +1023,16 @@
             try {
                 await promptForPin();
 
-                const name = document.getElementById('userName').value.trim();
+                const fullName = document.getElementById('userFullName').value.trim();
+                const nickname = document.getElementById('userNickname').value.trim();
                 const position = document.getElementById('userPosition').value;
 
-                if (allUsers.some(u => u.name === name && u.position === position)) {
-                    Swal.fire('ข้อผิดพลาด', 'บุคลากรชื่อนี้ในตำแหน่งนี้มีอยู่แล้ว', 'error');
+                if (allUsers.some(u => u.nickname === nickname)) {
+                    Swal.fire('ข้อผิดพลาด', 'มีบุคลากรที่ใช้ชื่อเล่นนี้อยู่แล้ว', 'error');
                     return;
                 }
                 
-                const user = { name, position, timestamp: new Date().toISOString() };
+                const user = { fullName, nickname, position, timestamp: new Date().toISOString() };
                 Swal.fire({ title: 'กำลังเพิ่มบุคลากร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 await apiCall('saveUser', user);
                 allUsers.push(user);
@@ -1055,7 +1066,7 @@
 
             const balanceSummary = {};
             rankingRecords.forEach(record => {
-                const name = record.name;
+                const name = record.name; // This is the nickname
                 const hours = record.type === 'ลา' ? -record.hours : record.hours;
                 balanceSummary[name] = (balanceSummary[name] || 0) + hours;
             });
@@ -1223,7 +1234,7 @@
                 const posA = positionOrder[a.position] || 99;
                 const posB = positionOrder[b.position] || 99;
                 if (posA !== posB) return posA - posB;
-                return a.name.localeCompare(b.name, 'th');
+                return a.nickname.localeCompare(b.nickname, 'th');
             });
             
             const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
@@ -1233,7 +1244,8 @@
             pageUsers.forEach(user => {
                 const row = `
                     <tr>
-                        <td>${user.name}</td>
+                        <td>${user.fullName}</td>
+                        <td>${user.nickname}</td>
                         <td class="text-center"><span class="badge ${getPositionBadgeClass(user.position)}">${user.position}</span></td>
                     </tr>
                 `;
@@ -1272,11 +1284,11 @@
         function updateNameDropdown() {
             const dropdown = document.getElementById('nameDropdown');
             dropdown.innerHTML = '';
-            const sortedUsers = [...allUsers].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+            const sortedUsers = [...allUsers].sort((a, b) => a.nickname.localeCompare(b.nickname, 'th'));
             sortedUsers.forEach(user => {
                 const item = `
-                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.name}">
-                        ${user.name} <span class="text-gray-500 text-sm">(${user.position})</span>
+                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.nickname}">
+                        ${user.nickname} <span class="text-gray-500 text-sm">(${user.fullName})</span>
                     </div>`;
                 dropdown.insertAdjacentHTML('beforeend', item);
             });
@@ -1285,11 +1297,11 @@
         function updateSearchNameDropdown() {
             const dropdown = document.getElementById('searchNameDropdown');
             dropdown.innerHTML = '';
-            const sortedUsers = [...allUsers].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+            const sortedUsers = [...allUsers].sort((a, b) => a.nickname.localeCompare(b.nickname, 'th'));
             sortedUsers.forEach(user => {
                 const item = `
-                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.name}">
-                        ${user.name} <span class="text-gray-500 text-sm">(${user.position})</span>
+                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.nickname}">
+                        ${user.nickname} <span class="text-gray-500 text-sm">(${user.fullName})</span>
                     </div>`;
                 dropdown.insertAdjacentHTML('beforeend', item);
             });

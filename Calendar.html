@@ -3,419 +3,648 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ปฏิทิน OPD</title>
+    <title>ปฏิทินลา OPD - โรงพยาบาลอุตรดิตถ์</title>
     <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
-    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for a clean look -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Sarabun', sans-serif;
-            /* Animated Gradient Background */
-            background: linear-gradient(-45deg, #e0f2fe, #d1fae5, #fef3c7, #fee2e2);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            font-family: 'Kanit', sans-serif;
         }
-
-        @keyframes gradientBG {
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+        }
+        
+        .calendar-day {
+            background: white;
+            min-height: 120px;
+            padding: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .weekend-day {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+        
+        .weekend-day:hover {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+        }
+        
+        .holiday-day {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #f87171;
+        }
+        
+        .holiday-day:hover {
+            background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+        }
+        
+        .event-item {
+            font-size: 11px;
+            padding: 2px 6px;
+            margin: 1px 0;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .event-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .show-more-btn {
+            font-size: 10px;
+            padding: 2px 6px;
+            margin: 1px 0;
+            border-radius: 8px;
+            background: #6b7280;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .show-more-btn:hover {
+            background: #4b5563;
+            transform: scale(1.05);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .floating-animation {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+            to { box-shadow: 0 0 30px rgba(102, 126, 234, 0.8); }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 300%;
+            animation: gradient-shift 4s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @keyframes gradient-shift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
-        /* Gradient text for the header */
-        .gradient-text {
-            background: linear-gradient(to right, #2563eb, #059669);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-fill-color: transparent;
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
         }
         
-        /* Fade-in and slide-up animation for the main card */
-        .card-animation {
-            animation: fadeInUp 0.8s ease-out forwards;
-            opacity: 0;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
-        /* Custom scrollbar for event list inside day cells */
-        .event-list::-webkit-scrollbar { width: 4px; }
-        .event-list::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 20px; }
-        .event-list::-webkit-scrollbar-track { background-color: #e5e7eb; }
-
-        /* Animation for modal */
-        .modal-fade-enter { opacity: 0; transform: scale(0.95); }
-        .modal-fade-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s ease-out; }
-        .modal-fade-leave-active { opacity: 0; transform: scale(0.95); transition: all 0.2s ease-in; }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="text-gray-800 flex items-center justify-center min-h-screen p-4">
-
-    <!-- Main Content Card -->
-    <div class="w-full max-w-5xl bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-8 card-animation">
-
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
         <!-- Header -->
-        <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-4xl font-bold gradient-text">
-                ปฏิทินแจ้งลา OPD
-            </h1>
-            <p class="text-gray-600 mt-2">
-                ปฏิทินลาและแจ้งลาล่วงหน้าบุคลากรห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์
-            </p>
-        </header>
-        
-        <!-- Calendar Controls -->
-        <div class="flex items-center justify-between mb-4">
-            <button id="prev-month" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <h2 id="month-year" class="text-xl md:text-2xl font-bold text-center text-gray-700"></h2>
-            <button id="next-month" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-            </button>
+        <div class="text-center mb-12 fade-in">
+            <div class="relative inline-block">
+                <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-xl opacity-30 floating-animation"></div>
+                <h1 class="relative text-5xl font-bold gradient-text mb-4 floating-animation">
+                    📅 ปฏิทินลา OPD
+                </h1>
+            </div>
+            <div class="glass-effect rounded-2xl p-6 mx-auto max-w-2xl pulse-glow">
+                <p class="text-gray-700 text-xl font-medium">ปฏิทินลาและแจ้งลาล่วงหน้าห้องจ่ายยาผู้ป่วยนอก</p>
+                <p class="text-purple-600 text-lg font-semibold mt-2">🏥 โรงพยาบาลอุตรดิตถ์</p>
+            </div>
+        </div>
+
+        <!-- Calendar Navigation -->
+        <div class="glass-effect rounded-3xl shadow-2xl p-8 mb-8 fade-in border-2 border-white/20">
+            <div class="flex justify-between items-center mb-4">
+                <button id="prevMonth" class="bg-white/80 backdrop-blur-sm text-gray-600 w-12 h-12 rounded-full hover:bg-white hover:text-gray-800 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center">
+                    ←
+                </button>
+                <div class="flex items-center space-x-4">
+                    <select id="monthSelector" class="bg-white/90 backdrop-blur-sm border-2 border-purple-200 rounded-xl px-6 py-3 text-gray-800 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                    <select id="yearSelector" class="bg-white/90 backdrop-blur-sm border-2 border-purple-200 rounded-xl px-6 py-3 text-gray-800 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <button id="nextMonth" class="bg-white/80 backdrop-blur-sm text-gray-600 w-12 h-12 rounded-full hover:bg-white hover:text-gray-800 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center">
+                    →
+                </button>
+            </div>
+            
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center py-4 hidden">
+                <div class="loading-spinner mx-auto mb-2"></div>
+                <p class="text-gray-600">กำลังโหลดข้อมูล...</p>
+            </div>
+            
+            <!-- Error message -->
+            <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg hidden">
+                <p>⚠️ ไม่สามารถโหลดข้อมูลปฏิทินได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</p>
+            </div>
         </div>
 
         <!-- Calendar Grid -->
-        <div id="calendar-container">
-            <div id="calendar-grid" class="grid grid-cols-7 border-t border-l border-gray-300">
-                <!-- Day Headers -->
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">อา.</div>
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">จ.</div>
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">อ.</div>
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">พ.</div>
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">พฤ.</div>
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">ศ.</div>
-                <div class="text-center font-bold text-sm text-gray-800 py-3 bg-gray-200 border-r border-b border-gray-300">ส.</div>
-                <!-- Calendar days will be injected here by JavaScript -->
+        <div class="glass-effect rounded-3xl shadow-2xl overflow-hidden fade-in border-2 border-white/20">
+            <!-- Days of week header -->
+            <div class="calendar-grid bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white font-bold text-lg shadow-inner">
+                <div class="p-4 text-center">อาทิตย์</div>
+                <div class="p-4 text-center">จันทร์</div>
+                <div class="p-4 text-center">อังคาร</div>
+                <div class="p-4 text-center">พุธ</div>
+                <div class="p-4 text-center">พฤหัสบดี</div>
+                <div class="p-4 text-center">ศุกร์</div>
+                <div class="p-4 text-center">เสาร์</div>
             </div>
-            <div id="loading" class="text-center p-8 text-gray-500 hidden">
-                <p>กำลังโหลดข้อมูลกิจกรรม...</p>
+            
+            <!-- Calendar days -->
+            <div id="calendarDays" class="calendar-grid">
+                <!-- Days will be populated by JavaScript -->
             </div>
         </div>
-    </div>
 
-    <!-- Event Detail Modal -->
-    <div id="event-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-fade-enter">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
-            <button id="close-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <h3 id="modal-title" class="text-2xl font-bold mb-2 text-gray-800"></h3>
-            <p id="modal-time" class="text-sm text-gray-600 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span></span>
-            </p>
-            <div id="modal-description" class="text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto"></div>
+        <!-- Event Details Modal -->
+        <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="glass-effect rounded-3xl p-8 m-4 max-w-md w-full transform transition-all duration-300 scale-95 border-2 border-white/30 shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">รายละเอียดกิจกรรม</h3>
+                    <button id="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                </div>
+                <div id="eventDetails" class="space-y-3">
+                    <!-- Event details will be populated here -->
+                </div>
+            </div>
         </div>
+
+        <!-- All Events Modal -->
+        <div id="allEventsModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 backdrop-blur-sm">
+            <div class="glass-effect rounded-3xl p-8 m-4 max-w-lg w-full max-h-96 overflow-y-auto transform transition-all duration-300 scale-95 border-2 border-white/30 shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">รายการทั้งหมด</h3>
+                    <button id="closeAllEventsModal" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                </div>
+                <div id="allEventsList" class="space-y-2">
+                    <!-- All events will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-16 text-center fade-in">
+            <p class="text-gray-500 text-sm">© 2025 ปฏิทินลา OPD - ภก.ธีรเดช วิชัย โรงพยาบาลอุตรดิตถ์</p>
+        </footer>
     </div>
 
     <script>
+        // Configuration
+        const API_KEY = 'AIzaSyA7oK3a0FbtRsROPjoKAoPQdsk5Z3iVczI';
+        const CALENDAR_ID = 'f1ada1daba2dcb31a3468a5b868d31772584e27b34303accb56a8005e982fbb0@group.calendar.google.com';
+        
+        // Global variables
+        let currentDate = new Date();
+        let events = [];
+        
+        // Single event color for all events
+        const eventColor = 'bg-gradient-to-r from-indigo-500 to-blue-500';
+        
+        // Thai month names
+        const thaiMonths = [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ];
+        
+        // Thai holidays
+        const holidays = {
+            '2025-01-01': 'วันขึ้นปีใหม่',
+            '2025-02-12': 'วันมาฆบูชา',
+            '2025-04-07': 'ชดเชยวันจักรี',
+            '2025-04-14': 'วันสงกรานต์',
+            '2025-04-15': 'วันสงกรานต์',
+            '2025-05-01': 'วันแรงงาน',
+            '2025-05-05': 'วันฉัตรมงคล',
+            '2025-05-09': 'วันพืชมงคล',
+            '2025-05-12': 'วันวิสาขบูชา',
+            '2025-06-03': 'วันเฉลิมฯ พระราชินี',
+            '2025-07-10': 'วันอาสาฬหบูชา',
+            '2025-07-11': 'วันเข้าพรรษา',
+            '2025-07-28': 'วันเฉลิมฯ ร.10',
+            '2025-08-12': 'วันแม่แห่งชาติ',
+            '2025-10-13': 'วันนวมินทรมหาราช',
+            '2025-10-23': 'วันปิยมหาราช',
+            '2025-12-05': 'วันพ่อแห่งชาติ',
+            '2025-12-10': 'วันรัฐธรรมนูญ',
+            '2025-12-31': 'วันสิ้นปี'
+        };
+        
+        // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
-            // --- Configuration ---
-            const API_KEY = 'AIzaSyA7oK3a0FbtRsROPjoKAoPQdsk5Z3iVczI'; // API Key ที่ได้รับมา
-            const CALENDAR_ID = 'f1ada1daba2dcb31a3468a5b868d31772584e27b34303accb56a8005e982fbb0@group.calendar.google.com';
+            populateSelectors();
+            updateCalendarHeader();
+            loadEvents();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                updateSelectors();
+                updateCalendarHeader();
+                loadEvents();
+            });
             
-            // --- Thai Public Holidays for 2025 (พ.ศ. 2568) ---
-            const holidays = {
-                '2025-01-01': 'วันขึ้นปีใหม่',
-                '2025-02-12': 'วันมาฆบูชา',
-                '2025-04-07': 'ชดเชยวันจักรี',
-                '2025-04-14': 'วันสงกรานต์',
-                '2025-04-15': 'วันสงกรานต์',
-                '2025-05-01': 'วันแรงงาน',
-                '2025-05-05': 'วันฉัตรมงคล',
-                '2025-05-09': 'วันพืชมงคล',
-                '2025-05-12': 'วันวิสาขบูชา',
-                '2025-06-03': 'วันเฉลิมฯ พระราชินี',
-                '2025-07-10': 'วันอาสาฬหบูชา',
-                '2025-07-11': 'วันเข้าพรรษา',
-                '2025-07-28': 'วันเฉลิมฯ ร.10',
-                '2025-08-12': 'วันแม่แห่งชาติ',
-                '2025-10-13': 'วันนวมินทรมหาราช',
-                '2025-10-23': 'วันปิยมหาราช',
-                '2025-12-05': 'วันพ่อแห่งชาติ',
-                '2025-12-10': 'วันรัฐธรรมนูญ',
-                '2025-12-31': 'วันสิ้นปี',
-            };
-
-            // --- DOM Elements ---
-            const monthYearEl = document.getElementById('month-year');
-            const calendarGridEl = document.getElementById('calendar-grid');
-            const prevMonthBtn = document.getElementById('prev-month');
-            const nextMonthBtn = document.getElementById('next-month');
-            const loadingEl = document.getElementById('loading');
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                updateSelectors();
+                updateCalendarHeader();
+                loadEvents();
+            });
             
-            // Modal elements
-            const eventModal = document.getElementById('event-modal');
-            const closeModalBtn = document.getElementById('close-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalTime = document.getElementById('modal-time').querySelector('span');
-            const modalDescription = document.getElementById('modal-description');
-
-            let currentDate = new Date();
-            let currentRenderID = 0;
-            let eventsMap = new Map();
-
-            // --- Main Function to Render Calendar ---
-            async function renderCalendar(date) {
-                currentRenderID++;
-                const renderID = currentRenderID;
-
-                showLoading(true);
-                const year = date.getFullYear();
-                const month = date.getMonth();
-
-                const monthName = date.toLocaleDateString('th-TH', { month: 'long' });
-                const thaiYear = year + 543;
-                monthYearEl.textContent = `${monthName} ${thaiYear}`;
-
-                const dayHeaders = calendarGridEl.querySelectorAll('div:nth-child(-n+7)');
-                calendarGridEl.innerHTML = '';
-                dayHeaders.forEach(header => calendarGridEl.appendChild(header));
-
-                const firstDayOfMonth = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-                for (let i = 0; i < firstDayOfMonth; i++) {
-                    calendarGridEl.innerHTML += '<div class="border-r border-b border-gray-300"></div>';
+            document.getElementById('monthSelector').addEventListener('change', (e) => {
+                currentDate.setMonth(parseInt(e.target.value));
+                updateCalendarHeader();
+                loadEvents();
+            });
+            
+            document.getElementById('yearSelector').addEventListener('change', (e) => {
+                currentDate.setFullYear(parseInt(e.target.value));
+                updateCalendarHeader();
+                loadEvents();
+            });
+            
+            document.getElementById('closeModal').addEventListener('click', () => {
+                document.getElementById('eventModal').classList.add('hidden');
+                document.getElementById('eventModal').classList.remove('flex');
+            });
+            
+            document.getElementById('closeAllEventsModal').addEventListener('click', () => {
+                document.getElementById('allEventsModal').classList.add('hidden');
+                document.getElementById('allEventsModal').classList.remove('flex');
+            });
+            
+            // Close modal when clicking outside
+            document.getElementById('eventModal').addEventListener('click', (e) => {
+                if (e.target.id === 'eventModal') {
+                    document.getElementById('eventModal').classList.add('hidden');
+                    document.getElementById('eventModal').classList.remove('flex');
                 }
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dayEl = document.createElement('div');
-                    
-                    const monthStr = String(month + 1).padStart(2, '0');
-                    const dayStr = String(day).padStart(2, '0');
-                    const dateString = `${year}-${monthStr}-${dayStr}`;
-                    dayEl.dataset.date = dateString;
-
-                    const dateNum = document.createElement('span');
-                    dateNum.textContent = day;
-                    dateNum.className = 'text-sm self-start mb-1';
-                    
-                    const eventList = document.createElement('div');
-                    eventList.className = 'event-list flex-grow overflow-y-auto text-xs space-y-1';
-
-                    const today = new Date();
-                    const currentDayDate = new Date(year, month, day);
-                    const dayOfWeek = currentDayDate.getDay();
-                    const isHoliday = holidays[dateString];
-                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-                    // --- Define base and highlight classes ---
-                    let dayCellClasses = 'relative border-r border-b border-gray-300 p-2 min-h-[100px] flex flex-col cursor-pointer';
-                    if (isHoliday || isWeekend) {
-                        dayCellClasses += ' bg-red-50'; // Highlight color
-                    } else {
-                        dayCellClasses += ' bg-white/50';
-                    }
-                    dayEl.className = dayCellClasses;
-
-                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dateNum.className += ' bg-blue-500 text-white rounded-full h-7 w-7 flex items-center justify-center font-semibold';
-                    } else if (isHoliday) {
-                        dateNum.className += ' text-red-500 font-bold';
-                    } else {
-                        dateNum.className += ' text-gray-800 font-medium';
-                    }
-                    
-                    dayEl.appendChild(dateNum);
-                    dayEl.appendChild(eventList);
-                    calendarGridEl.appendChild(dayEl);
+            });
+            
+            document.getElementById('allEventsModal').addEventListener('click', (e) => {
+                if (e.target.id === 'allEventsModal') {
+                    document.getElementById('allEventsModal').classList.add('hidden');
+                    document.getElementById('allEventsModal').classList.remove('flex');
+                }
+            });
+        }
+        
+        function populateSelectors() {
+            const monthSelector = document.getElementById('monthSelector');
+            const yearSelector = document.getElementById('yearSelector');
+            
+            // Populate month selector
+            thaiMonths.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = month;
+                monthSelector.appendChild(option);
+            });
+            
+            // Populate year selector (current year ± 5 years)
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + 543; // Thai Buddhist year
+                yearSelector.appendChild(option);
+            }
+            
+            updateSelectors();
+        }
+        
+        function updateSelectors() {
+            document.getElementById('monthSelector').value = currentDate.getMonth();
+            document.getElementById('yearSelector').value = currentDate.getFullYear();
+        }
+        
+        function updateCalendarHeader() {
+            // Calendar header is now handled by the selectors, no need for separate element
+        }
+        
+        async function loadEvents() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                
+                const timeMin = startOfMonth.toISOString();
+                const timeMax = endOfMonth.toISOString();
+                
+                const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                const totalCells = firstDayOfMonth + daysInMonth;
-                const remainingCells = 7 - (totalCells % 7);
-                if (remainingCells < 7) {
-                    for (let i = 0; i < remainingCells; i++) {
-                        calendarGridEl.innerHTML += '<div class="border-r border-b border-gray-300"></div>';
-                    }
-                }
-
-                await fetchEvents(year, month, renderID);
+                const data = await response.json();
+                events = data.items || [];
+                
+                renderCalendar();
                 showLoading(false);
+                
+            } catch (error) {
+                console.error('Error loading events:', error);
+                showError();
+                showLoading(false);
+                renderCalendar(); // Show calendar even if events fail to load
             }
-
-            // --- Fetch Events from Google Calendar API ---
-            async function fetchEvents(year, month, renderID) {
-                const timeMin = new Date(Date.UTC(year, month, 1)).toISOString();
-                const timeMax = new Date(Date.UTC(year, month + 1, 1)).toISOString();
-                const url = `https://www.googleapis.com/calendar/v3/calendars/${CALENDAR_ID}/events?key=${API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
-
-                try {
-                    const response = await fetch(url);
-                    if (renderID !== currentRenderID) return;
-
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(`Google Calendar API Error: ${error.error.message}`);
+        }
+        
+        function renderCalendar() {
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            const today = new Date();
+            
+            for (let i = 0; i < 42; i++) {
+                const cellDate = new Date(startDate);
+                cellDate.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day relative';
+                
+                // Check if it's a holiday (using Thailand timezone)
+                const year = cellDate.getFullYear();
+                const month = String(cellDate.getMonth() + 1).padStart(2, '0');
+                const day = String(cellDate.getDate()).padStart(2, '0');
+                const dateString = `${year}-${month}-${day}`;
+                const isHoliday = holidays[dateString];
+                
+                // Highlight holidays first (takes priority over weekends)
+                if (isHoliday) {
+                    dayElement.classList.add('holiday-day');
+                } else {
+                    // Highlight weekends (Saturday = 6, Sunday = 0)
+                    const dayOfWeek = cellDate.getDay();
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        dayElement.classList.add('weekend-day');
                     }
-                    const data = await response.json();
-                    displayEvents(data.items);
-                } catch (error) {
-                    if (renderID !== currentRenderID) return;
-                    console.error('Error fetching calendar events:', error);
-                    const dayCellsContainer = calendarGridEl;
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'col-span-7 text-center p-4 bg-red-50 text-red-700 rounded-lg';
-                    errorDiv.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
-                    const dayHeaders = calendarGridEl.querySelectorAll('div:nth-child(-n+7)');
-                    calendarGridEl.innerHTML = '';
-                    dayHeaders.forEach(header => calendarGridEl.appendChild(header));
-                    dayCellsContainer.appendChild(errorDiv);
                 }
-            }
-
-            // --- Helper function to create event element ---
-            function createAndAppendEventElement(event, dayCell) {
-                const eventEl = document.createElement('div');
-                eventEl.className = 'bg-green-100 text-green-800 p-1 rounded cursor-pointer hover:bg-green-200 truncate';
-                eventEl.textContent = event.summary;
-                eventEl.dataset.eventId = event.id;
-                dayCell.querySelector('.event-list').appendChild(eventEl);
-            }
-
-            // --- Display Events on Calendar ---
-            function displayEvents(events) {
-                eventsMap.clear();
-                events.forEach(event => {
-                    eventsMap.set(event.id, event);
-                    if (event.start.date) {
-                        const startDate = new Date(event.start.date);
-                        const endDate = new Date(event.end.date);
-                        for (let d = startDate; d < endDate; d.setDate(d.getDate() + 1)) {
-                            const year = d.getUTCFullYear();
-                            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-                            const day = String(d.getUTCDate()).padStart(2, '0');
-                            const dateStr = `${year}-${month}-${day}`;
-                            const dayCell = document.querySelector(`[data-date="${dateStr}"]`);
-                            if (dayCell) {
-                                createAndAppendEventElement(event, dayCell);
-                            }
-                        }
-                    } else if (event.start.dateTime) {
-                        const startDate = new Date(event.start.dateTime);
-                        const year = startDate.getFullYear();
-                        const month = String(startDate.getMonth() + 1).padStart(2, '0');
-                        const day = String(startDate.getDate()).padStart(2, '0');
-                        const dateStr = `${year}-${month}-${day}`;
-                        const dayCell = document.querySelector(`[data-date="${dateStr}"]`);
-                        if (dayCell) {
-                            createAndAppendEventElement(event, dayCell);
-                        }
-                    }
+                
+                // Highlight today
+                if (cellDate.toDateString() === today.toDateString()) {
+                    dayElement.classList.add('bg-blue-50', 'border-2', 'border-blue-300');
+                }
+                
+                // Dim days from other months
+                if (cellDate.getMonth() !== currentDate.getMonth()) {
+                    dayElement.classList.add('text-gray-300', 'bg-gray-100');
+                    dayElement.style.opacity = '0.4';
+                }
+                
+                // Day number
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'font-semibold text-gray-800 mb-1';
+                dayNumber.textContent = cellDate.getDate();
+                dayElement.appendChild(dayNumber);
+                
+                // Add holiday label if it's a holiday
+                if (isHoliday) {
+                    const holidayElement = document.createElement('div');
+                    holidayElement.className = 'text-xs text-red-800 font-semibold mb-1 bg-white bg-opacity-70 rounded px-1';
+                    holidayElement.textContent = '🎌 ' + isHoliday;
+                    dayElement.appendChild(holidayElement);
+                }
+                
+                // Add events for this day
+                const dayEvents = getEventsForDay(cellDate);
+                const maxDisplayEvents = 4;
+                
+                // Show first 4 events
+                dayEvents.slice(0, maxDisplayEvents).forEach((event) => {
+                    const eventElement = document.createElement('div');
+                    eventElement.className = `event-item ${eventColor}`;
+                    eventElement.textContent = event.summary || 'ไม่มีชื่อกิจกรรม';
+                    eventElement.addEventListener('click', () => showEventDetails(event));
+                    dayElement.appendChild(eventElement);
                 });
-            }
-            
-            // --- Modal Functions ---
-            function showEventModal(event) {
-                modalTitle.textContent = event.summary || '(ไม่มีหัวข้อ)';
-                modalDescription.innerHTML = event.description ? event.description.replace(/\n/g, '<br>') : '<i>ไม่มีคำอธิบาย</i>';
-                modalTime.textContent = formatEventTime(event.start, event.end);
-                eventModal.classList.remove('hidden');
-                setTimeout(() => eventModal.classList.add('modal-fade-enter-active'), 10);
-            }
-
-            function showHolidayModal(holidayName, dateString) {
-                modalTitle.textContent = holidayName;
-                const [year, month, day] = dateString.split('-').map(Number);
-                const date = new Date(year, month - 1, day);
-                modalTime.textContent = `เต็มวัน - ${date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`;
-                modalDescription.textContent = 'วันหยุดนักขัตฤกษ์';
-                eventModal.classList.remove('hidden');
-                setTimeout(() => eventModal.classList.add('modal-fade-enter-active'), 10);
-            }
-
-            function hideEventModal() {
-                 eventModal.classList.remove('modal-fade-enter-active');
-                 eventModal.classList.add('modal-fade-leave-active');
-                 setTimeout(() => {
-                    eventModal.classList.add('hidden');
-                    eventModal.classList.remove('modal-fade-leave-active');
-                 }, 200);
-            }
-
-            // --- Helper Functions ---
-            function formatEventTime(start, end) {
-                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' };
-                if (start.date) {
-                    const startDate = new Date(start.date);
-                    const endDate = new Date(end.date);
-                    endDate.setDate(endDate.getDate() - 1);
-                    const startStr = startDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-                    const endStr = endDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-                    if (startStr === endStr) {
-                        return `เต็มวัน - ${startStr}`;
-                    } else {
-                        return `เต็มวัน - ${startStr} ถึง ${endStr}`;
-                    }
+                
+                // Add "show more" button if there are more than 4 events
+                if (dayEvents.length > maxDisplayEvents) {
+                    const showMoreBtn = document.createElement('div');
+                    showMoreBtn.className = 'show-more-btn';
+                    showMoreBtn.textContent = `+${dayEvents.length - maxDisplayEvents} รายการ`;
+                    showMoreBtn.addEventListener('click', () => showAllEvents(cellDate, dayEvents));
+                    dayElement.appendChild(showMoreBtn);
                 }
-                const startDate = new Date(start.dateTime);
-                const endDate = new Date(end.dateTime);
-                const startStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                const endStr = endDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+        
+        function getEventsForDay(date) {
+            return events.filter(event => {
+                let eventStartDate, eventEndDate;
+                
+                if (event.start.dateTime) {
+                    // Time-based event - convert to Thailand timezone
+                    eventStartDate = new Date(event.start.dateTime);
+                    // Adjust for Thailand timezone (UTC+7)
+                    eventStartDate = new Date(eventStartDate.getTime() + (7 * 60 * 60 * 1000));
+                } else {
+                    // All-day event - use local date
+                    const dateParts = event.start.date.split('-');
+                    eventStartDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+                }
+                
+                if (event.end.dateTime) {
+                    eventEndDate = new Date(event.end.dateTime);
+                    // Adjust for Thailand timezone (UTC+7)
+                    eventEndDate = new Date(eventEndDate.getTime() + (7 * 60 * 60 * 1000));
+                } else {
+                    // All-day event - subtract one day from end date as Google Calendar adds one day
+                    const dateParts = event.end.date.split('-');
+                    eventEndDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]) - 1);
+                }
+                
+                // Check if the date falls within the event range
+                const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                const startDate = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+                const endDate = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
+                
+                return checkDate >= startDate && checkDate <= endDate;
+            });
+        }
+        
+        function showEventDetails(event) {
+            const modal = document.getElementById('eventModal');
+            const details = document.getElementById('eventDetails');
+            
+            const startTime = new Date(event.start.dateTime || event.start.date);
+            const endTime = new Date(event.end.dateTime || event.end.date);
+            
+            details.innerHTML = `
+                <div class="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-lg">
+                    <h4 class="font-semibold text-lg text-gray-800 mb-2">📋 ${event.summary || 'ไม่มีชื่อกิจกรรม'}</h4>
+                    <p class="text-gray-600 mb-2">🕐 ${formatEventTime(event)}</p>
+                    ${event.location ? `<p class="text-gray-600 mb-2">📍 ${event.location}</p>` : ''}
+                    ${event.description ? `<p class="text-gray-700 mt-3">${event.description}</p>` : ''}
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function showAllEvents(date, dayEvents) {
+            const modal = document.getElementById('allEventsModal');
+            const eventsList = document.getElementById('allEventsList');
+            
+            const dateString = date.toLocaleDateString('th-TH', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // Update modal title
+            document.querySelector('#allEventsModal h3').textContent = `รายการทั้งหมด - ${dateString}`;
+            
+            eventsList.innerHTML = '';
+            
+            dayEvents.forEach((event) => {
+                const eventItem = document.createElement('div');
+                eventItem.className = `${eventColor} text-white p-3 rounded-lg cursor-pointer hover:opacity-80 transition-all duration-200`;
+                eventItem.innerHTML = `
+                    <div class="font-semibold">${event.summary || 'ไม่มีชื่อกิจกรรม'}</div>
+                    <div class="text-sm opacity-90">${formatEventTime(event)}</div>
+                    ${event.location ? `<div class="text-sm opacity-90">📍 ${event.location}</div>` : ''}
+                `;
+                eventItem.addEventListener('click', () => {
+                    // Close all events modal and show event details
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    showEventDetails(event);
+                });
+                eventsList.appendChild(eventItem);
+            });
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function formatDateTime(date) {
+            return date.toLocaleString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formatEventTime(event) {
+            if (event.start.dateTime && event.end.dateTime) {
+                // Time-based event - adjust for Thailand timezone
+                const startTime = new Date(event.start.dateTime);
+                const endTime = new Date(event.end.dateTime);
+                
+                // Convert to Thailand timezone (UTC+7)
+                const thaiStartTime = new Date(startTime.getTime() + (7 * 60 * 60 * 1000));
+                const thaiEndTime = new Date(endTime.getTime() + (7 * 60 * 60 * 1000));
+                
+                return `${formatDateTime(thaiStartTime)} - ${formatDateTime(thaiEndTime)}`;
+            } else {
+                // All-day event
+                const dateParts = event.start.date.split('-');
+                const startDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+                
+                const endParts = event.end.date.split('-');
+                const endDate = new Date(parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]) - 1);
+                
                 if (startDate.toDateString() === endDate.toDateString()) {
-                     return `${startDate.toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | ${startStr} - ${endStr} น.`;
+                    return `${startDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })} (ทั้งวัน)`;
                 } else {
-                    return `ตั้งแต่ ${startDate.toLocaleString('th-TH', options)} น. \nถึง ${endDate.toLocaleString('th-TH', options)} น.`;
+                    return `${startDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })} - ${endDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })} (ทั้งวัน)`;
                 }
             }
-            
-            function showLoading(isLoading) {
-                loadingEl.classList.toggle('hidden', !isLoading);
-                calendarGridEl.classList.toggle('hidden', isLoading);
+        }
+        
+        function showLoading(show) {
+            const loading = document.getElementById('loadingIndicator');
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
             }
-
-            // --- Event Listeners ---
-            prevMonthBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar(currentDate);
-            });
-            nextMonthBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                renderCalendar(currentDate);
-            });
-            closeModalBtn.addEventListener('click', hideEventModal);
-            eventModal.addEventListener('click', (e) => {
-                if (e.target === eventModal) hideEventModal();
-            });
-
-            calendarGridEl.addEventListener('click', (e) => {
-                const dayEl = e.target.closest('[data-date]');
-                if (!dayEl) return;
-
-                const clickedEventEl = e.target.closest('[data-event-id]');
-                if (clickedEventEl) {
-                    const eventId = clickedEventEl.dataset.eventId;
-                    const eventData = eventsMap.get(eventId);
-                    if (eventData) {
-                        showEventModal(eventData);
-                    }
-                } else {
-                    const dateString = dayEl.dataset.date;
-                    const isHoliday = holidays[dateString];
-                    if (isHoliday) {
-                        showHolidayModal(isHoliday, dateString);
-                    }
-                }
-            });
-
-            // --- Initial Render ---
-            renderCalendar(currentDate);
-        });
+        }
+        
+        function showError() {
+            document.getElementById('errorMessage').classList.remove('hidden');
+        }
+        
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'974ca1fec56ecdd9',t:'MTc1NjE0MTA5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
