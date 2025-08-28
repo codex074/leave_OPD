@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ปฏิทินลา OPD - โรงพยาบาลอุตรดิตถ์</title>
-    <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
@@ -168,33 +167,48 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <div class="text-center mb-12 fade-in">
-            <div class="relative inline-block">
-                <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-xl opacity-30 floating-animation"></div>
-                <h1 class="relative text-5xl font-bold gradient-text mb-4 floating-animation">
-                    📅 ปฏิทินลา OPD
-                </h1>
+            <div class="relative inline-block mb-6">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-40 floating-animation"></div>
+                <div class="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-8 py-6 rounded-3xl shadow-2xl border-4 border-white/30 backdrop-blur-sm floating-animation">
+                    <div class="flex items-center justify-center space-x-4">
+                        <div class="text-6xl animate-bounce">📅</div>
+                        <div>
+                            <h1 class="text-4xl md:text-6xl font-black tracking-wide drop-shadow-lg">
+                                ปฏิทินลา OPD
+                            </h1>
+                            <div class="text-lg md:text-xl font-semibold text-blue-100 mt-2 tracking-wider">
+                                Leave Calendar System
+                            </div>
+                        </div>
+                        <div class="text-6xl animate-pulse">🏥</div>
+                    </div>
+                </div>
             </div>
-            <div class="glass-effect rounded-2xl p-6 mx-auto max-w-2xl pulse-glow">
-                <p class="text-gray-700 text-xl font-medium">ปฏิทินลาและแจ้งลาล่วงหน้าห้องจ่ายยาผู้ป่วยนอก</p>
-                <p class="text-purple-600 text-lg font-semibold mt-2">🏥 โรงพยาบาลอุตรดิตถ์</p>
+            <div class="glass-effect rounded-2xl p-6 mx-auto max-w-2xl pulse-glow border-2 border-white/30">
+                <p class="text-gray-800 text-xl font-semibold">ปฏิทินลาและแจ้งลาล่วงหน้าห้องจ่ายยาผู้ป่วยนอก</p>
+                <div class="flex items-center justify-center mt-3 space-x-2">
+                    <span class="text-2xl">🏥</span>
+                    <p class="text-purple-700 text-xl font-bold">โรงพยาบาลอุตรดิตถ์</p>
+                    <span class="text-2xl">⚕️</span>
+                </div>
             </div>
         </div>
 
         <!-- Calendar Navigation -->
-        <div class="glass-effect rounded-3xl shadow-2xl p-8 mb-8 fade-in border-2 border-white/20">
-            <div class="flex justify-between items-center mb-4 gap-2 md:gap-4">
-                <button id="prevMonth" class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white w-10 h-10 md:w-12 md:h-12 rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0">
+        <div class="glass-effect rounded-3xl shadow-2xl p-4 mb-8 fade-in border-2 border-white/20">
+            <div class="flex justify-between items-center mb-2 gap-3">
+                <button id="prevMonth" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white w-8 h-8 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center flex-shrink-0 font-bold text-lg border-2 border-white/20">
                     ←
                 </button>
-                <div class="flex items-center space-x-2 md:space-x-4 flex-1 justify-center">
-                    <select id="monthSelector" class="bg-white/90 backdrop-blur-sm border-2 border-purple-200 rounded-xl px-3 py-2 md:px-6 md:py-3 text-gray-800 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base">
+                <div class="flex items-center space-x-3 flex-1 justify-center">
+                    <select id="monthSelector" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-2 border-white/30 rounded-lg px-4 py-2 font-bold focus:outline-none focus:ring-3 focus:ring-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 text-sm backdrop-blur-sm">
                         <!-- Options will be populated by JavaScript -->
                     </select>
-                    <select id="yearSelector" class="bg-white/90 backdrop-blur-sm border-2 border-purple-200 rounded-xl px-3 py-2 md:px-6 md:py-3 text-gray-800 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base">
+                    <select id="yearSelector" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-2 border-white/30 rounded-lg px-4 py-2 font-bold focus:outline-none focus:ring-3 focus:ring-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 text-sm backdrop-blur-sm">
                         <!-- Options will be populated by JavaScript -->
                     </select>
                 </div>
-                <button id="nextMonth" class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white w-10 h-10 md:w-12 md:h-12 rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0">
+                <button id="nextMonth" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white w-8 h-8 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center flex-shrink-0 font-bold text-lg border-2 border-white/20">
                     →
                 </button>
             </div>
@@ -228,6 +242,33 @@
                 <!-- Calendar days -->
                 <div id="calendarDays" class="calendar-grid min-w-full" style="min-width: 700px;">
                     <!-- Days will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Legend -->
+        <div class="glass-effect rounded-2xl shadow-lg p-6 mt-6 fade-in border-2 border-white/20">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">🎨 สีประเภทการลา</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 justify-center">
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded"></div>
+                    <span class="text-sm text-gray-700">ลาป่วย</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-gradient-to-r from-green-500 to-green-600 rounded"></div>
+                    <span class="text-sm text-gray-700">ลาพักผ่อน</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded"></div>
+                    <span class="text-sm text-gray-700">ลากิจ</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded"></div>
+                    <span class="text-sm text-gray-700">ลากิจฉุกเฉิน</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 bg-gradient-to-r from-pink-500 to-pink-600 rounded"></div>
+                    <span class="text-sm text-gray-700">ลาคลอด</span>
                 </div>
             </div>
         </div>
@@ -273,8 +314,15 @@
         let currentDate = new Date();
         let events = [];
         
-        // Single event color for all events
-        const eventColor = 'bg-gradient-to-r from-indigo-500 to-blue-500';
+        // Event colors based on leave type
+        const eventColors = {
+            'ลาป่วย': 'bg-gradient-to-r from-red-500 to-red-600',
+            'ลาพักผ่อน': 'bg-gradient-to-r from-green-500 to-green-600',
+            'ลากิจ': 'bg-gradient-to-r from-blue-500 to-blue-600',
+            'ลากิจฉุกเฉิน': 'bg-gradient-to-r from-purple-500 to-purple-600',
+            'ลาคลอด': 'bg-gradient-to-r from-pink-500 to-pink-600',
+            'default': 'bg-gradient-to-r from-gray-500 to-gray-600'
+        };
         
         // Thai month names
         const thaiMonths = [
@@ -307,10 +355,13 @@
         
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing calendar...');
             populateSelectors();
             updateCalendarHeader();
-            loadEvents();
             setupEventListeners();
+            // Always render calendar first, then load events
+            renderCalendar();
+            loadEvents();
         });
         
         function setupEventListeners() {
@@ -428,12 +479,21 @@
                 console.error('Error loading events:', error);
                 showError();
                 showLoading(false);
-                renderCalendar(); // Show calendar even if events fail to load
+                // Always render calendar even if events fail to load
+                events = [];
+                renderCalendar();
             }
         }
         
         function renderCalendar() {
+            console.log('Rendering calendar for:', currentDate);
             const calendarDays = document.getElementById('calendarDays');
+            
+            if (!calendarDays) {
+                console.error('Calendar container not found!');
+                return;
+            }
+            
             calendarDays.innerHTML = '';
             
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -442,6 +502,7 @@
             startDate.setDate(startDate.getDate() - firstDay.getDay());
             
             const today = new Date();
+            console.log('Creating calendar days...');
             
             for (let i = 0; i < 42; i++) {
                 const cellDate = new Date(startDate);
@@ -500,6 +561,7 @@
                 // Show first 4 events
                 dayEvents.slice(0, maxDisplayEvents).forEach((event) => {
                     const eventElement = document.createElement('div');
+                    const eventColor = getEventColor(event);
                     eventElement.className = `event-item ${eventColor}`;
                     eventElement.textContent = event.summary || 'ไม่มีชื่อกิจกรรม';
                     eventElement.addEventListener('click', () => showEventDetails(event));
@@ -517,6 +579,28 @@
                 
                 calendarDays.appendChild(dayElement);
             }
+            
+            console.log('Calendar rendered successfully with', calendarDays.children.length, 'days');
+        }
+        
+        function getLeaveTypeFromEvent(event) {
+            const title = event.summary || '';
+            const description = event.description || '';
+            const fullText = (title + ' ' + description).toLowerCase();
+            
+            // Check for leave types in order of specificity (more specific first)
+            if (fullText.includes('ลากิจฉุกเฉิน') || fullText.includes('กิจฉุกเฉิน') || fullText.includes('ฉุกเฉิน')) return 'ลากิจฉุกเฉิน';
+            if (fullText.includes('ลาป่วย') || fullText.includes('ป่วย')) return 'ลาป่วย';
+            if (fullText.includes('ลาพักผ่อน') || fullText.includes('พักผ่อน') || fullText.includes('ลาพักร้อน') || fullText.includes('พักร้อน')) return 'ลาพักผ่อน';
+            if (fullText.includes('ลากิจ') || fullText.includes('กิจ')) return 'ลากิจ';
+            if (fullText.includes('ลาคลอด') || fullText.includes('คลอด')) return 'ลาคลอด';
+            
+            return 'default';
+        }
+        
+        function getEventColor(event) {
+            const leaveType = getLeaveTypeFromEvent(event);
+            return eventColors[leaveType] || eventColors['default'];
         }
         
         function getEventsForDay(date) {
@@ -560,12 +644,23 @@
             const startTime = new Date(event.start.dateTime || event.start.date);
             const endTime = new Date(event.end.dateTime || event.end.date);
             
+            // Format description with proper line breaks and structure
+            let formattedDescription = '';
+            if (event.description) {
+                formattedDescription = event.description
+                    .replace(/\n/g, '<br>')
+                    .replace(/(ชื่อ-สกุล|ประเภทการลา|วันที่|หมายเหตุ|ผู้อนุมัติ):/g, '<strong>$1:</strong>')
+                    .replace(/(\([^)]+\))/g, '<span class="text-purple-600 font-medium">$1</span>');
+            }
+            
             details.innerHTML = `
-                <div class="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-lg">
-                    <h4 class="font-semibold text-lg text-gray-800 mb-2">📋 ${event.summary || 'ไม่มีชื่อกิจกรรม'}</h4>
-                    <p class="text-gray-600 mb-2">🕐 ${formatEventTime(event)}</p>
-                    ${event.location ? `<p class="text-gray-600 mb-2">📍 ${event.location}</p>` : ''}
-                    ${event.description ? `<p class="text-gray-700 mt-3">${event.description}</p>` : ''}
+                <div class="bg-gradient-to-r from-purple-100 to-blue-100 p-6 rounded-lg">
+                    <h4 class="font-semibold text-lg text-gray-800 mb-4 border-b border-gray-300 pb-2">📋 ${event.summary || 'ไม่มีชื่อกิจกรรม'}</h4>
+                    <div class="space-y-3">
+                        <p class="text-gray-600 flex items-center"><span class="mr-2">🕐</span> ${formatEventTime(event)}</p>
+                        ${event.location ? `<p class="text-gray-600 flex items-center"><span class="mr-2">📍</span> ${event.location}</p>` : ''}
+                        ${event.description ? `<div class="text-gray-700 mt-4 p-3 bg-white bg-opacity-50 rounded-lg leading-relaxed">${formattedDescription}</div>` : ''}
+                    </div>
                 </div>
             `;
             
@@ -591,11 +686,14 @@
             
             dayEvents.forEach((event) => {
                 const eventItem = document.createElement('div');
+                const eventColor = getEventColor(event);
+                const leaveType = getLeaveTypeFromEvent(event);
                 eventItem.className = `${eventColor} text-white p-3 rounded-lg cursor-pointer hover:opacity-80 transition-all duration-200`;
                 eventItem.innerHTML = `
                     <div class="font-semibold">${event.summary || 'ไม่มีชื่อกิจกรรม'}</div>
                     <div class="text-sm opacity-90">${formatEventTime(event)}</div>
                     ${event.location ? `<div class="text-sm opacity-90">📍 ${event.location}</div>` : ''}
+                    ${leaveType !== 'default' ? `<div class="text-xs opacity-75 mt-1">🏷️ ${leaveType}</div>` : ''}
                 `;
                 eventItem.addEventListener('click', () => {
                     // Close all events modal and show event details
@@ -664,5 +762,5 @@
             document.getElementById('errorMessage').classList.add('hidden');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'974d1b42b4e344c6',t:'MTc1NjE0NjA1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'975ac7289776f543',t:'MTc1NjI4OTQxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
