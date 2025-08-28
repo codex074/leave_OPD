@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลาชั่วโมง OPD</title>
+    <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        @media (min-width: 768px) {
+            .main-container {
+                padding: 2rem;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+            margin-bottom: 2rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background-color: #fff;
+        }
+        
+        .form-input-sm {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .form-input-sm:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background-color: #fff;
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .modern-table th, .modern-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .modern-table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-leave { background-color: #fee2e2; color: #b91c1c; }
+        .badge-return { background-color: #dcfce7; color: #166534; }
+        .badge-pharmacist { background-color: #e9d5ff; color: #7e22ce; } 
+        .badge-officer { background-color: #e0e7ff; color: #3730a3; } 
+        .badge-staff { background-color: #ffedd5; color: #9a3412; } 
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .app-title {
+            background: linear-gradient(135deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* PIN Pad Styles */
+        .pin-container { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; padding-top: 1rem; }
+        .pin-dots { display: flex; gap: 1rem; }
+        .pin-dot { width: 1.25rem; height: 1.25rem; border-radius: 50%; border: 2px solid #ccc; transition: background-color: 0.2s; }
+        .pin-dot.filled { background-color: #667eea; border-color: #667eea; }
+        .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 280px; }
+        .pin-btn { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 1 / 1; border: 1px solid #ddd; border-radius: 50%; font-size: 1.5rem; background-color: #fff; cursor: pointer; transition: background-color 0.2s; }
+        .pin-btn:hover { background-color: #f0f2f5; }
+        .pin-btn.text-btn { font-size: 1rem; font-weight: 600; color: #555; border: none; background-color: transparent; }
+        .pin-btn.text-btn:hover { background-color: #f0f2f5; }
+
+        /* Meteor Shower Animation */
+        .shooting-stars { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; pointer-events: none; }
+        .star { position: absolute; background: linear-gradient(-45deg, rgba(147, 112, 219, 1), rgba(147, 112, 219, 0)); width: 150px; height: 2px; border-radius: 9999px; filter: drop-shadow(0 0 6px rgba(183, 142, 255, 0.8)); animation: animateStar linear infinite; }
+        @keyframes animateStar { 0% { transform: translateX(100vw) translateY(-50vh) rotate(-45deg); opacity: 1; } 100% { transform: translateX(-50vw) translateY(100vh) rotate(-45deg); opacity: 0; } }
+        .star:nth-child(1) { top: 0; left: 0; animation-delay: 0s; animation-duration: 3s; }
+        .star:nth-child(2) { top: 0; left: 30%; animation-delay: 1.2s; animation-duration: 4s; }
+        .star:nth-child(3) { top: 80%; left: 0; animation-delay: 1.8s; animation-duration: 2.5s; }
+        .star:nth-child(4) { top: 0; left: 70%; animation-delay: 3.2s; animation-duration: 3.5s; }
+        .star:nth-child(5) { top: 0; left: 90%; animation-delay: 4.5s; animation-duration: 2.8s; }
+        
+        /* Ranking Animation */
+        .podium-item {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.3s ease-out; /* Adjusted transition for hover */
+        }
+
+        .podium-item.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Added hover effect */
+        .podium-item:hover {
+            transform: translateY(-10px); /* Lift effect */
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="shooting-stars">
+        <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+    </div>
+
+    <div class="main-container">
+        <!-- Header -->
+        <div class="card flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl sm:text-5xl font-extrabold mb-3 app-title">ลาชั่วโมง OPD</h1>
+                <p class="text-base sm:text-lg text-gray-600">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก</p>
+            </div>
+            <div class="text-center p-3 bg-gray-100 rounded-lg shadow-inner">
+                <div id="digital-clock" class="font-bold text-3xl md:text-5xl" style="font-family: 'Orbitron', sans-serif; background: linear-gradient(135deg, #ff8c00, #ff4500); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">00:00:00</div>
+                <div id="digital-date" class="text-gray-600 text-sm md:text-base font-semibold mt-1"></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <h2 class="text-2xl font-bold gradient-text mb-6 text-center">บันทึกข้อมูล</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <button id="openLeaveModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all">บันทึกการลา</button>
+                <button id="openUsageModalBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all">บันทึกการใช้ชั่วโมง</button>
+            </div>
+        </div>
+
+        <!-- Rankings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="card"><h2 class="text-xl sm:text-2xl font-bold text-red-600 mb-4 text-center">🏆 Top 3 ชั่วโมงติดลบ 🏆</h2><div id="leaveRankingContainer" class="flex items-end justify-center gap-2 md:gap-4 pt-4 min-h-[240px]"></div></div>
+            <div class="card"><h2 class="text-xl sm:text-2xl font-bold text-green-600 mb-4 text-center">🏅 Top 3 ชั่วโมงคงเหลือ 🏅</h2><div id="hourUsageRankingContainer" class="flex items-end justify-center gap-2 md:gap-4 pt-4 min-h-[240px]"></div></div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="card">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold gradient-text">Dashboard สรุปข้อมูล</h2>
+                <div class="flex flex-wrap items-center justify-center md:justify-end gap-4">
+                    <div class="w-full sm:w-40"><label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ</label><select id="fiscalYearFilter" class="form-input"></select></div>
+                    <div class="w-full sm:w-40"><label class="block text-sm font-medium text-gray-700 mb-1">ตำแหน่ง</label><select id="positionFilter" class="form-input"></select></div>
+                </div>
+            </div>
+            <div class="overflow-x-auto"><table class="modern-table"><thead><tr><th>ชื่อบุคลากร</th><th class="text-center">ตำแหน่ง</th><th class="text-center">ชั่วโมงที่ลา</th><th class="text-center">ชั่วโมงที่ใช้</th><th class="text-center">ผลรวม</th><th class="text-center">สถานะ</th></tr></thead><tbody id="dashboardTable"></tbody></table></div>
+        </div>
+
+        <!-- Records -->
+        <div class="card">
+             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold gradient-text">รายการล่าสุด</h2>
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 items-center w-full">
+                    <div class="relative w-full sm:w-auto sm:flex-grow">
+                         <input type="text" id="searchNameInput" placeholder="ค้นหาชื่อ..." class="form-input-sm" autocomplete="off">
+                         <div id="searchNameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
+                    </div>
+                    <select id="recordPositionFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow"></select>
+                    <input type="text" id="startDateFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow" placeholder="วันที่เริ่มต้น" onfocus="(this.type='date')" onblur="(this.value ? null : this.type='text')">
+                    <input type="text" id="endDateFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow" placeholder="วันที่สิ้นสุด" onfocus="(this.type='date')" onblur="(this.value ? null : this.type='text')">
+                    <button id="clearRecordFiltersBtn" class="bg-red-500 text-white w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg shadow-md hover:bg-red-600" title="ล้างตัวกรอง"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                </div>
+            </div>
+            <div class="overflow-x-auto"><table class="modern-table"><thead><tr><th>วันที่</th><th>ชื่อ</th><th class="text-center">ตำแหน่ง</th><th class="text-center">ประเภท</th><th class="text-center">เวลา</th><th class="text-center">ระยะเวลา</th><th>หมายเหตุ</th><th class="text-center">ยืนยัน</th><th class="text-center">จัดการ</th></tr></thead><tbody id="recordsTable"></tbody></table></div>
+            <!-- Pagination Controls Moved Here -->
+            <div class="flex justify-center mt-6">
+                <div class="flex space-x-2 items-center">
+                    <button id="prevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
+                    <span id="pageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold flex-shrink-0"></span>
+                    <button id="nextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="recordModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full transform transition-all" id="recordModalContainer"><div class="p-6 flex flex-col max-h-[90vh]"><div class="flex-shrink-0 flex justify-between items-center mb-4 pb-4 border-b"><h3 id="recordModalTitle" class="text-xl font-semibold"></h3><button id="closeRecordModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button></div><div class="overflow-y-auto flex-grow pr-2"><form id="leaveForm" class="space-y-4"><input type="hidden" id="leaveTypeInput"><div class="relative"><label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร (ชื่อเล่น)</label><input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อเล่น..." class="form-input" autocomplete="off" required><div id="nameDropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div></div><div><label class="block text-sm font-medium text-gray-700 mb-2">วันที่</label><input type="date" id="leaveDate" class="form-input" required></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 mb-2">เวลาเริ่มต้น</label><input type="time" id="startTime" class="form-input" required></div><div><label class="block text-sm font-medium text-gray-700 mb-2">เวลาสิ้นสุด</label><input type="time" id="endTime" class="form-input" required></div></div><div><label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label><textarea id="notes" class="form-input" rows="2" placeholder="ไม่บังคับ"></textarea></div><div><button type="submit" id="submitRecordBtn" class="w-full text-white font-medium py-3 px-6 rounded-lg mt-2">บันทึก</button></div></form></div></div></div>
+    </div>
+    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] transform transition-all" id="modalContainer"><div class="p-6"><div class="flex justify-between items-center mb-4 pb-4 border-b"><h3 id="modalTitle" class="text-xl font-semibold text-gray-800"></h3><button id="closeModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button></div><div id="modalContent" class="max-h-[70vh] overflow-y-auto pr-2"></div></div></div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-16 text-center">
+        <p class="text-gray-200 text-sm">© 2025 ลาชั่วโมง OPD - ภก.ธีรเดช วิชัย โรงพยาบาลอุตรดิตถ์</p>
+    </footer>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuHOzS6xa_7Kwa0jrfNygfl8lh0nfIT5Z6wa5SSiWZcuACYF7tm87O51oSzXRQ8veT/exec'; // <-- URL ของ Web App ที่ Deploy
+        
+        // --- SECURITY WARNING ---
+        // การเก็บ PIN ไว้ในโค้ดฝั่ง Client (Frontend) แบบนี้ไม่มีความปลอดภัย
+        // ผู้ใช้งานที่เชี่ยวชาญสามารถเปิดดูโค้ดและเห็น PIN ได้
+        // วิธีนี้เหมาะสำหรับระบบภายในที่ไม่ต้องการความปลอดภัยสูงมากนัก
+        // หากต้องการความปลอดภัยสูง ควรใช้ระบบ Login ของ Google Account แทน
+        const CORRECT_PIN = "1412";
+
+        // --- GLOBAL VARIABLES ---
+        let allRecords = [];
+        let allUsers = [];
+        let filteredRecords = [];
+        let currentPage = 1;
+        const recordsPerPage = 10;
+        let modalCurrentPage = 1;
+        
+        // --- APP INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadData();
+            startClock();
+        });
+
+        // --- CORE FUNCTIONS ---
+        async function apiCall(action, data) {
+            const isSavingAction = ['saveRecord', 'deleteRecord', 'confirmRecord'].includes(action);
+            const loadingTitle = isSavingAction ? 'กำลังบันทึกข้อมูล' : 'กำลังประมวลผล';
+            const loadingHtml = isSavingAction ? 'กรุณารอสักครู่...' : 'กำลังโหลดข้อมูล...';
+
+            Swal.fire({ title: loadingTitle, html: loadingHtml, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const urlWithCacheBuster = `${SCRIPT_URL}?v=${new Date().getTime()}`;
+                const response = await fetch(urlWithCacheBuster, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action, data })
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message || 'API call returned an error.');
+                Swal.close();
+                return result;
+            } catch (error) {
+                console.error(`API call failed for action: ${action}`, error);
+                Swal.fire('ข้อผิดพลาด', `การเชื่อมต่อล้มเหลว: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        async function loadData() {
+            try {
+                const data = await apiCall('loadData', {});
+                allUsers = data.users || [];
+                allRecords = data.records || [];
+                initializeFilters();
+                applyFilter();
+            } catch (error) {
+                // Error is handled in apiCall
+            }
+        }
+
+        // --- EVENT LISTENERS SETUP ---
+        function setupEventListeners() {
+            document.getElementById('leaveForm').addEventListener('submit', handleFormSubmit);
+            ['fiscalYearFilter', 'positionFilter', 'recordPositionFilter'].forEach(id => document.getElementById(id).addEventListener('change', applyFilter));
+            
+            ['searchNameInput', 'startDateFilter', 'endDateFilter'].forEach(id => document.getElementById(id).addEventListener('input', applyFilter));
+            document.getElementById('clearRecordFiltersBtn').addEventListener('click', clearRecordFilters);
+            document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+            document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+            setupModalListeners('recordModal', 'openLeaveModalBtn', 'closeRecordModal', () => openRecordModal('ลา'));
+            setupModalListeners('recordModal', 'openUsageModalBtn', 'closeRecordModal', () => openRecordModal('ใช้ชั่วโมง'));
+            setupModalListeners('userModal', null, 'closeModal');
+            setupDropdown('nameInput', 'nameDropdown', filterNames);
+            setupDropdown('searchNameInput', 'searchNameDropdown', filterSearchNames);
+        }
+
+        // --- FORM HANDLERS ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const nickname = document.getElementById('nameInput').value.trim();
+            const user = allUsers.find(u => u.nickname === nickname);
+            if (!user) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่พบบุคลากรชื่อเล่นนี้', 'error');
+                return;
+            }
+            
+            const record = {
+                leaveDate: document.getElementById('leaveDate').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                type: document.getElementById('leaveTypeInput').value,
+                name: user.nickname,
+                position: user.position,
+                notes: document.getElementById('notes').value,
+                confirmed: false, 
+                timestamp: new Date().toISOString()
+            };
+            record.hours = calculateHours(record.startTime, record.endTime);
+
+            if (record.hours <= 0) {
+                Swal.fire('ข้อผิดพลาด', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
+                return;
+            }
+            
+            const { isConfirmed } = await Swal.fire({
+                title: 'ยืนยันการบันทึก?', icon: 'question', showCancelButton: true,
+                html: `<b>ชื่อ:</b> ${record.name}<br><b>ประเภท:</b> ${record.type}<br><b>วันที่:</b> ${formatThaiDate(record.leaveDate)}<br><b>เวลา:</b> ${record.startTime} - ${record.endTime}`
+            });
+
+            if (isConfirmed) {
+                try {
+                    await apiCall('saveRecord', record);
+                    await loadData();
+                    closeModal('recordModal');
+                    Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+                } catch(e) { /* Error is handled in apiCall */ }
+            }
+        }
+
+        // --- UI UPDATE FUNCTIONS ---
+        function applyFilter() {
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const searchName = document.getElementById('searchNameInput').value.toLowerCase();
+            const startDate = document.getElementById('startDateFilter').value;
+            const endDate = document.getElementById('endDateFilter').value;
+            const recordPosition = document.getElementById('recordPositionFilter').value;
+            
+            filteredRecords = allRecords.filter(r => {
+                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
+                const matchName = !searchName || r.name.toLowerCase().includes(searchName);
+                const matchRecordPosition = !recordPosition || r.position === recordPosition;
+                const matchDate = (!startDate || r.leaveDate >= startDate) && (!endDate || r.leaveDate <= endDate);
+                return matchFiscal && matchName && matchDate && matchRecordPosition;
+            });
+            
+            updateRankings(); 
+            updateDashboard(); 
+            updateRecordsTable();
+            updatePagination();
+            updateNameDropdowns();
+        }
+
+        function updateDashboard() {
+            const summary = {};
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const position = document.getElementById('positionFilter').value;
+
+            allRecords.filter(r => 
+                (!fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear) &&
+                (!position || r.position === position)
+            ).forEach(record => {
+                const key = `${record.name}_${record.position}`;
+                if (!summary[key]) {
+                    summary[key] = { name: record.name, position: record.position, leave: 0, return: 0 };
+                }
+                summary[key][record.type === 'ลา' ? 'leave' : 'return'] += record.hours;
+            });
+
+            const tbody = document.getElementById('dashboardTable');
+            const summaryData = Object.values(summary);
+
+            if (summaryData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">ไม่พบข้อมูลสรุป</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = summaryData.map(data => {
+                const total = data.return - data.leave;
+                return `
+                    <tr>
+                        <td><button class="font-semibold py-1 px-4 rounded-full ${getPositionButtonClass(data.position)}" onclick="showUserDetail('${data.name}')">${data.name}</button></td>
+                        <td class="text-center"><span class="badge ${getPositionBadgeClass(data.position)}">${data.position}</span></td>
+                        <td class="text-center">${formatTimeDisplay(data.leave)}</td>
+                        <td class="text-center">${formatTimeDisplay(data.return)}</td>
+                        <td class="text-center font-semibold ${total < 0 ? 'text-red-600' : 'text-green-600'}">${formatBalanceDisplay(total)}</td>
+                        <td class="text-center ${total >= 0 ? 'text-green-600' : 'text-yellow-600'}">${total >= 0 ? 'OK' : 'ต้องใช้คืน'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateRecordsTable() {
+            const tbody = document.getElementById('recordsTable');
+            const pageRecords = filteredRecords.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+            
+            if (pageRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center text-gray-500 py-4">ไม่พบรายการ</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = pageRecords.map(record => `
+                <tr>
+                    <td>${formatThaiDate(record.leaveDate)}</td>
+                    <td>${record.name}</td>
+                    <td class="text-center"><span class="badge ${getPositionBadgeClass(record.position)}">${record.position}</span></td>
+                    <td class="text-center"><span class="badge ${record.type === 'ลา' ? 'badge-leave' : 'badge-return'}">${record.type}</span></td>
+                    <td class="text-center">${formatShortTime(record.startTime)} - ${formatShortTime(record.endTime)}</td>
+                    <td class="text-center">${formatTimeDisplay(record.hours)}</td>
+                    <td>${record.notes || '-'}</td>
+                    <td class="text-center">${record.confirmed ? 
+                        `<div class="bg-green-100 text-green-600 p-2 rounded-full inline-flex" title="ยืนยันแล้ว"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg></div>` :
+                        `<button onclick="confirmRecord('${record.timestamp}', '${record.leaveDate}')" class="bg-gray-200 text-gray-600 p-2 rounded-full hover:bg-green-200" title="คลิกเพื่อยืนยัน"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>`
+                    }</td>
+                    <td class="text-center">
+                        <button onclick="deleteRecord('${record.timestamp}', '${record.leaveDate}')" class="bg-red-100 text-red-600 p-2 rounded-full hover:bg-red-200" title="ลบรายการ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateRankings() {
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const position = document.getElementById('positionFilter').value;
+            const rankingRecords = allRecords.filter(r => 
+                (!fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear) &&
+                (!position || r.position === position)
+            );
+
+            const balanceSummary = {};
+            rankingRecords.forEach(r => {
+                const hours = r.type === 'ลา' ? -r.hours : r.hours;
+                balanceSummary[r.name] = (balanceSummary[r.name] || 0) + hours;
+            });
+
+            const allBalances = Object.entries(balanceSummary).map(([name, balance]) => ({ name, balance }));
+            const topNegative = allBalances.filter(u => u.balance < 0).sort((a, b) => a.balance - b.balance).slice(0, 3);
+            const topPositive = allBalances.filter(u => u.balance > 0).sort((a, b) => b.balance - a.balance).slice(0, 3);
+            
+            renderRankingPodium('leaveRankingContainer', topNegative, ['bg-amber-400', 'bg-amber-500', 'bg-amber-300']);
+            renderRankingPodium('hourUsageRankingContainer', topPositive, ['bg-teal-400', 'bg-teal-500', 'bg-teal-300']);
+        }
+
+        function renderRankingPodium(containerId, topUsers, colors) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = topUsers.length === 0 ? `<p class="text-gray-500 self-center">ไม่มีข้อมูล</p>` : '';
+            const podiumOrder = [topUsers[1], topUsers[0], topUsers[2]];
+            const heights = ['h-32', 'h-40', 'h-24'];
+            const ranks = [2, 1, 3];
+            podiumOrder.forEach((user, index) => {
+                if (user) {
+                    container.innerHTML += `
+                        <div class="podium-item flex flex-col items-center text-center">
+                            <div class="font-black text-2xl">${user.name}</div>
+                            <div class="text-lg font-semibold ${user.balance < 0 ? 'text-red-600' : 'text-green-600'}">${formatBalanceDisplay(user.balance)}</div>
+                            <div class="relative ${heights[index]} w-24 ${colors[index]} rounded-t-lg flex items-center justify-center text-6xl font-extrabold text-white shadow-lg">${ranks[index]}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Trigger the animation after the elements are added to the DOM
+            const items = container.querySelectorAll('.podium-item');
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('is-visible');
+                }, index * 150); // Staggered delay
+            });
+        }
+        
+        // --- ACTIONS ---
+        async function deleteRecord(timestamp, leaveDate) {
+            try {
+                await promptForPin();
+                const { isConfirmed } = await Swal.fire({ title: 'ยืนยันการลบ', text: 'ต้องการลบรายการนี้?', icon: 'warning', showCancelButton: true });
+                if (isConfirmed) {
+                    await apiCall('deleteRecord', { timestamp, leaveDate });
+                    await loadData();
+                    Swal.fire('สำเร็จ!', 'ลบข้อมูลเรียบร้อย', 'success');
+                }
+            } catch (error) {
+                if (error && !error.message.includes('cancelled')) Swal.fire('ข้อผิดพลาด', `ไม่สามารถลบได้: ${error.message}`, 'error');
+            }
+        }
+
+        async function confirmRecord(timestamp, leaveDate) {
+            try {
+                await promptForPin();
+                await apiCall('confirmRecord', { timestamp, leaveDate });
+                await loadData();
+                Swal.fire('สำเร็จ!', 'ยืนยันรายการเรียบร้อย', 'success');
+            } catch (error) {
+                if (error && !error.message.includes('cancelled')) Swal.fire('ข้อผิดพลาด', `ไม่สามารถยืนยันได้: ${error.message}`, 'error');
+            }
+        }
+
+        // --- MODAL & UI HELPERS ---
+        function setupModalListeners(modalId, openBtnId, closeBtnId, openCallback) {
+            const modal = document.getElementById(modalId);
+            const closeBtn = document.getElementById(closeBtnId);
+            if (openBtnId) document.getElementById(openBtnId).addEventListener('click', openCallback || (() => openModal(modalId)));
+            if (closeBtn) closeBtn.addEventListener('click', () => closeModal(modalId));
+            if (modal) modal.addEventListener('click', (e) => e.target.id === modalId && closeModal(modalId));
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+        }
+
+        function openRecordModal(type) {
+            document.getElementById('leaveForm').reset();
+            document.getElementById('leaveTypeInput').value = type;
+            const title = document.getElementById('recordModalTitle');
+            const submitBtn = document.getElementById('submitRecordBtn');
+            if (type === 'ลา') {
+                title.innerHTML = `<span class="text-red-700">บันทึกการลา</span>`;
+                submitBtn.className = 'w-full text-white font-medium py-3 px-6 rounded-lg mt-2 bg-red-500 hover:bg-red-600';
+            } else {
+                title.innerHTML = `<span class="text-green-700">บันทึกการใช้ชั่วโมง</span>`;
+                submitBtn.className = 'w-full text-white font-medium py-3 px-6 rounded-lg mt-2 bg-green-500 hover:bg-green-600';
+            }
+            openModal('recordModal');
+        }
+        
+        function showUserDetail(name) {
+            modalCurrentPage = 1;
+            renderUserDetailModal(name);
+        }
+        
+        // --- UTILITY & FORMATTING ---
+        const calculateHours = (start, end) => (new Date(`1970-01-01T${end}`) - new Date(`1970-01-01T${start}`)) / 36e5;
+        
+        const formatTimeDisplay = (h) => {
+            if (h === null || h === undefined) return '0 ชั่วโมง';
+            const absHours = Math.abs(h);
+            const hours = Math.floor(absHours);
+            const minutes = Math.round((absHours % 1) * 60);
+            let result = '';
+            if (hours > 0) result += `${hours} ชั่วโมง `;
+            if (minutes > 0) result += `${minutes} นาที`;
+            return result.trim() || '0 ชั่วโมง';
+        };
+
+        const formatBalanceDisplay = (b) => formatTimeDisplay(b);
+        const formatThaiDate = (d) => d ? new Date(d).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+        
+        const formatShortTime = (t) => {
+            if (!t) return '';
+            try {
+                // This handles both time strings "HH:mm" and ISO strings from Google Sheets
+                const date = new Date(t.includes('T') ? t : `1970-01-01T${t}`);
+                if (isNaN(date.getTime())) return 'N/A';
+                return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+            } catch (e) {
+                return 'N/A';
+            }
+        };
+
+        const getFiscalYear = (d) => new Date(d).getMonth() >= 9 ? new Date(d).getFullYear() + 544 : new Date(d).getFullYear() + 543;
+        const getPositionBadgeClass = (p) => ({'เภสัช':'badge-pharmacist','จพง':'badge-officer','จนท':'badge-staff'})[p]||'';
+        const getPositionButtonClass = (p) => ({'เภสัช':'bg-purple-100 text-purple-700','จพง':'bg-indigo-100 text-indigo-700','จนท':'bg-orange-100 text-orange-700'})[p]||'';
+        const startClock = () => setInterval(() => {
+            const now = new Date();
+            document.getElementById('digital-clock').textContent = now.toLocaleTimeString('th-TH');
+            document.getElementById('digital-date').textContent = now.toLocaleDateString('th-TH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        }, 1000);
+        
+        // --- PIN PROMPT ---
+        function promptForPin() {
+            return new Promise((resolve, reject) => {
+                let currentPin = '';
+                Swal.fire({
+                    title: 'กรุณาใส่ PIN',
+                    html: `<div class="pin-container"><div class="pin-dots" id="swal-pin-dots">${Array(4).fill('<span class="pin-dot"></span>').join('')}</div><div class="pin-keypad" id="swal-pin-keypad">${[...Array(9).keys()].map(n => `<button class="pin-btn">${n+1}</button>`).join('')}<button class="pin-btn text-btn" data-action="cancel">ยกเลิก</button><button class="pin-btn">0</button><button class="pin-btn text-btn" data-action="delete">ลบ</button></div></div>`,
+                    showConfirmButton: true, confirmButtonText: 'ยืนยัน', allowOutsideClick: false,
+                    didOpen: () => {
+                        document.getElementById('swal-pin-keypad').addEventListener('click', (e) => {
+                            const btn = e.target.closest('.pin-btn');
+                            if (!btn) return;
+                            const action = btn.dataset.action;
+                            if (action === 'delete') currentPin = currentPin.slice(0, -1);
+                            else if (action === 'cancel') { Swal.close(); reject(new Error('User cancelled PIN entry.')); }
+                            else if (currentPin.length < 4) currentPin += btn.textContent;
+                            document.querySelectorAll('#swal-pin-dots .pin-dot').forEach((dot, i) => dot.classList.toggle('filled', i < currentPin.length));
+                        });
+                    },
+                    preConfirm: () => {
+                        if (currentPin === CORRECT_PIN) return true;
+                        Swal.showValidationMessage('PIN ไม่ถูกต้อง');
+                        currentPin = ''; // Reset PIN on failure
+                        document.querySelectorAll('#swal-pin-dots .pin-dot').forEach(dot => dot.classList.remove('filled'));
+                        return false;
+                    }
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        resolve();
+                    } else {
+                        reject(new Error('User cancelled PIN entry.'));
+                    }
+                });
+            });
+        }
+        
+        function clearRecordFilters() {
+            document.getElementById('searchNameInput').value = '';
+            document.getElementById('startDateFilter').value = '';
+            document.getElementById('endDateFilter').value = '';
+            document.getElementById('recordPositionFilter').value = '';
+            applyFilter();
+        }
+
+        function initializeFilters() {
+            const fiscalYearFilter = document.getElementById('fiscalYearFilter');
+            const positionFilter = document.getElementById('positionFilter');
+            const recordPositionFilter = document.getElementById('recordPositionFilter');
+            
+            fiscalYearFilter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
+            positionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+            recordPositionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+
+            const fiscalYears = [...new Set(allRecords.map(r => getFiscalYear(r.leaveDate)))].sort((a, b) => b - a);
+            fiscalYears.forEach(year => fiscalYearFilter.add(new Option(year, year)));
+
+            const positions = [...new Set(allUsers.map(u => u.position))].sort((a, b) => a.localeCompare(b, 'th'));
+            positions.forEach(pos => {
+                positionFilter.add(new Option(pos, pos));
+                recordPositionFilter.add(new Option(pos, pos));
+            });
+            
+            const currentFiscalYear = getFiscalYear(new Date());
+            if (fiscalYears.includes(currentFiscalYear)) {
+                fiscalYearFilter.value = currentFiscalYear;
+            }
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            currentPage = Math.min(currentPage, totalPages) || 1;
+            document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                updateRecordsTable();
+                updatePagination();
+            }
+        }
+
+        function setupDropdown(inputId, dropdownId, filterFunction) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            input.addEventListener('focus', () => dropdown.classList.remove('hidden'));
+            input.addEventListener('input', filterFunction);
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+            dropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.dropdown-item');
+                if (item) {
+                    input.value = item.dataset.name;
+                    dropdown.classList.add('hidden');
+                    if(inputId === 'searchNameInput') {
+                       applyFilter();
+                    }
+                }
+            });
+        }
+
+        function filterNames() {
+            const input = document.getElementById('nameInput').value.toLowerCase();
+            document.querySelectorAll('#nameDropdown .dropdown-item').forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(input) ? '' : 'none';
+            });
+        }
+        
+        function filterSearchNames() {
+            const input = document.getElementById('searchNameInput').value.toLowerCase();
+            document.querySelectorAll('#searchNameDropdown .dropdown-item').forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(input) ? '' : 'none';
+            });
+        }
+
+        function updateNameDropdowns() {
+            const nameDropdown = document.getElementById('nameDropdown');
+            const searchNameDropdown = document.getElementById('searchNameDropdown');
+            nameDropdown.innerHTML = '';
+            searchNameDropdown.innerHTML = '';
+            const sortedUsers = [...allUsers].sort((a, b) => a.nickname.localeCompare(b.nickname, 'th'));
+            sortedUsers.forEach(user => {
+                const item = `
+                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.nickname}">
+                        ${user.nickname} <span class="text-gray-500 text-sm">(${user.fullName})</span>
+                    </div>`;
+                nameDropdown.insertAdjacentHTML('beforeend', item);
+                searchNameDropdown.insertAdjacentHTML('beforeend', item);
+            });
+        }
+
+        function renderUserDetailModal(name) {
+            const fiscalYear = document.getElementById('fiscalYearFilter').value;
+            const userRecords = allRecords.filter(r => 
+                r.name === name &&
+                (!fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear)
+            );
+
+            let leaveHours = 0, returnHours = 0;
+            userRecords.forEach(r => {
+                if (r.type === 'ลา') leaveHours += r.hours;
+                else returnHours += r.hours;
+            });
+            const balance = returnHours - leaveHours;
+
+            const modalRecordsPerPage = 10;
+            const totalPages = Math.ceil(userRecords.length / modalRecordsPerPage) || 1;
+            const pageRecords = userRecords.slice((modalCurrentPage - 1) * modalRecordsPerPage, modalCurrentPage * modalRecordsPerPage);
+
+            const tableRows = pageRecords.length > 0 ? pageRecords.map(r => `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${formatThaiDate(r.leaveDate)}</td>
+                    <td class="px-4 py-2 text-center">${formatShortTime(r.startTime)} - ${formatShortTime(r.endTime)}</td>
+                    <td class="px-4 py-2 text-center">${formatTimeDisplay(r.hours)}</td>
+                    <td class="px-4 py-2 text-center"><span class="badge ${r.type === 'ลา' ? 'badge-leave' : 'badge-return'}">${r.type}</span></td>
+                    <td class="px-4 py-2">${r.notes || '-'}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="5" class="text-center text-gray-500 py-4">ไม่พบรายการ</td></tr>`;
+
+            document.getElementById('modalTitle').textContent = `รายละเอียดของ ${name} (ปีงบ ${fiscalYear || 'ทั้งหมด'})`;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                    <div class="bg-red-50 p-3 rounded-lg"><div class="text-sm text-red-700">ลาทั้งหมด</div><div class="text-xl font-bold text-red-800">${formatTimeDisplay(leaveHours)}</div></div>
+                    <div class="bg-green-50 p-3 rounded-lg"><div class="text-sm text-green-700">ชั่วโมงที่ใช้</div><div class="text-xl font-bold text-green-800">${formatTimeDisplay(returnHours)}</div></div>
+                    <div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-blue-700">คงเหลือ</div><div class="text-xl font-bold ${balance < 0 ? 'text-red-600' : 'text-green-600'}">${formatBalanceDisplay(balance)}</div></div>
+                    <div class="bg-yellow-50 p-3 rounded-lg"><div class="text-sm text-yellow-700">สถานะ</div><div class="text-xl font-bold ${balance >= 0 ? 'text-green-800' : 'text-yellow-800'}">${balance >= 0 ? 'OK' : 'ต้องใช้คืน'}</div></div>
+                </div>
+                <div class="flex justify-end items-center mb-4">
+                    <div class="flex space-x-2 items-center">
+                        <button id="modalPrevPage" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-lg hover:bg-gray-300" ${modalCurrentPage === 1 ? 'disabled' : ''}>&lt;</button>
+                        <span class="px-3 py-1 rounded-lg font-semibold">${modalCurrentPage} / ${totalPages}</span>
+                        <button id="modalNextPage" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-lg hover:bg-gray-300" ${modalCurrentPage === totalPages ? 'disabled' : ''}>&gt;</button>
+                    </div>
+                </div>
+                <table class="modern-table w-full"><thead><tr><th>วันที่</th><th class="text-center">เวลา</th><th class="text-center">ระยะเวลา</th><th class="text-center">ประเภท</th><th>หมายเหตุ</th></tr></thead><tbody>${tableRows}</tbody></table>
+            `;
+            
+            document.getElementById('modalPrevPage').onclick = () => { if (modalCurrentPage > 1) { modalCurrentPage--; renderUserDetailModal(name); } };
+            document.getElementById('modalNextPage').onclick = () => { if (modalCurrentPage < totalPages) { modalCurrentPage++; renderUserDetailModal(name); } };
+
+            openModal('userModal');
+        }
+    </script>
+</body>
+</html>

@@ -3,1622 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลาชั่วโมง OPD</title>
-    <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>ห้องจ่ายยาผู้ป่วยนอก - โรงพยาบาลอุตรดิตถ์</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body {
+            font-family: 'Sarabun', sans-serif;
         }
         
-        body { 
-            font-family: 'Sarabun', sans-serif; 
-            background: #0f0c29;
-            background: -webkit-linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
-            background: linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
-            color: #333;
-            overflow-x: hidden;
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-
-        .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1rem; /* Adjusted for mobile */
-            position: relative;
-            z-index: 1;
+        
+        .card-hover {
+            transition: all 0.3s ease;
         }
-        @media (min-width: 768px) {
-            .main-container {
-                padding: 2rem; /* Restore for larger screens */
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .btn-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
             }
         }
-
-
-        .header-card {
-            background: #ffffff;
-            border-radius: 1.5rem;
-            padding: 2rem 1rem;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            border: 1px solid #d1d5db;
-            background-color: #f9fafb;
-            transition: all 0.3s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            background-color: #fff;
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
         }
         
-        .form-input-sm {
-            width: 100%;
-            padding: 0.5rem 0.75rem; /* Reduced padding */
-            border-radius: 0.5rem; /* Slightly smaller radius */
-            border: 1px solid #d1d5db;
-            background-color: #f9fafb;
-            transition: all 0.3s ease;
-            font-size: 0.875rem; /* Smaller font */
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, -10px); }
+            100% { transform: translate(0, 0px); }
         }
-
-        .form-input-sm:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            background-color: #fff;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-weight: 600;
-            padding: 0.85rem 1.5rem;
-            border-radius: 0.75rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.2);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.3);
-        }
-
-        .modern-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .modern-table th, .modern-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap; /* Prevent text wrapping in cells */
-        }
-
-        .modern-table th {
-            background-color: #f9fafb;
-            font-weight: 600;
-            color: #4b5563;
-        }
-
-        .modern-table tbody tr:hover {
-            background-color: #f3f4f6;
-        }
-
-        .badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .badge-leave { background-color: #fee2e2; color: #b91c1c; }
-        .badge-return { background-color: #dcfce7; color: #166534; }
         
-        .badge-pharmacist { background-color: #e9d5ff; color: #7e22ce; } 
-        .badge-officer { background-color: #e0e7ff; color: #3730a3; } 
-        .badge-staff { background-color: #ffedd5; color: #9a3412; } 
-
-        .status-ok { color: #16a34a; font-weight: 600; }
-        .status-warning { color: #d97706; font-weight: 600; }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
         }
-
-        .app-title {
-            background: linear-gradient(135deg, #a78bfa, #f472b6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            line-height: 1.5;
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Custom PIN Pad Styles */
-        .pin-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
-            padding-top: 1rem;
+        
+        .btn-gradient {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            transition: all 0.3s ease;
         }
-        .pin-dots {
-            display: flex;
-            gap: 1rem;
+        
+        .btn-gradient:hover {
+            background: linear-gradient(45deg, #1d4ed8, #1e40af);
+            transform: scale(1.05);
         }
-        .pin-dot {
-            width: 1.25rem;
-            height: 1.25rem;
-            border-radius: 50%;
-            border: 2px solid #ccc;
-            transition: background-color: 0.2s;
-        }
-        .pin-dot.filled {
-            background-color: #667eea;
-            border-color: #667eea;
-        }
-        .pin-keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            width: 100%;
-            max-width: 280px;
-        }
-        .pin-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            border: 1px solid #ddd;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            background-color: #fff;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .pin-btn:hover {
-            background-color: #f0f2f5;
-        }
-        .pin-btn.text-btn {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #555;
-            border: none;
-            background-color: transparent;
-        }
-        .pin-btn.text-btn:hover {
-            background-color: #f0f2f5;
-        }
-
-        /* Meteor Shower Animation */
-        .shooting-stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-        }
-        .star {
-            position: absolute;
-            background: linear-gradient(-45deg, rgba(147, 112, 219, 1), rgba(147, 112, 219, 0));
-            width: 150px;
-            height: 2px;
-            border-radius: 9999px;
-            filter: drop-shadow(0 0 6px rgba(183, 142, 255, 0.8));
-            animation: animateStar linear infinite;
-        }
-        @keyframes animateStar {
-            0% { transform: translateX(100vw) translateY(-50vh) rotate(-45deg); opacity: 1; }
-            100% { transform: translateX(-50vw) translateY(100vh) rotate(-45deg); opacity: 0; }
-        }
-        .star:nth-child(1) { top: 0; left: 0; animation-delay: 0s; animation-duration: 3s; }
-        .star:nth-child(2) { top: 0; left: 30%; animation-delay: 1.2s; animation-duration: 4s; }
-        .star:nth-child(3) { top: 80%; left: 0; animation-delay: 1.8s; animation-duration: 2.5s; }
-        .star:nth-child(4) { top: 0; left: 70%; animation-delay: 3.2s; animation-duration: 3.5s; }
-        .star:nth-child(5) { top: 0; left: 90%; animation-delay: 4.5s; animation-duration: 2.8s; }
-
     </style>
 </head>
-<body>
-    <div class="shooting-stars">
-        <div class="star"></div>
-        <div class="star"></div>
-        <div class="star"></div>
-        <div class="star"></div>
-        <div class="star"></div>
-    </div>
-
-    <div class="main-container">
-        <!-- Header -->
-        <div class="header-card flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-center md:text-left">
-                <h1 class="text-4xl sm:text-5xl font-extrabold mb-3 app-title">Welcome to OPD</h1>
-                <p class="text-base sm:text-lg text-gray-600">จัดการข้อมูลการลาและการใช้ชั่วโมงห้องจ่ายยาผู้ป่วยนอก โรงพยาบาลอุตรดิตถ์</p>
-            </div>
-            <!-- Clock Container -->
-            <div class="text-center p-3 bg-gray-100 rounded-lg shadow-inner">
-                <div id="digital-clock" class="font-bold text-3xl md:text-5xl" style="font-family: 'Orbitron', sans-serif; background: linear-gradient(135deg, #ff8c00, #ff4500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    00:00:00
-                </div>
-                <div id="digital-date" class="text-gray-600 text-sm md:text-base font-semibold mt-1">
-                    <!-- Date will be injected here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- New Layout for Record and Personnel Management -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Record Data Section -->
-            <div class="card">
-                <h2 class="text-2xl font-bold gradient-text mb-6 text-center">บันทึกข้อมูล</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <button id="openLeaveModalBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                        บันทึกการลา
-                    </button>
-                    <button id="openUsageModalBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                        บันทึกการใช้ชั่วโมง
-                    </button>
-                </div>
-            </div>
-            <!-- Personnel Management Section -->
-            <div class="card">
-                <h2 class="text-2xl font-bold gradient-text mb-6 text-center">จัดการบุคลากร</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                     <button id="openAddPersonnelModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                        เพิ่มบุคลากร
-                    </button>
-                    <button id="showUserListModalBtn" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                        แสดงรายชื่อ
-                    </button>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Rankings Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="rankingsSection">
-            <!-- Top Negative Balance -->
-            <div class="card">
-                <h2 class="text-xl sm:text-2xl font-bold text-red-600 mb-4 text-center">🏆 Top 3 ชั่วโมงติดลบ 🏆</h2>
-                <div id="leaveRankingContainer" class="flex items-end justify-center gap-2 md:gap-4 pt-4 min-h-[240px]">
-                    <!-- Ranking will be injected here by JS -->
-                </div>
-            </div>
-            <!-- Top Positive Balance -->
-            <div class="card">
-                <h2 class="text-xl sm:text-2xl font-bold text-green-600 mb-4 text-center">🏅 Top 3 ชั่วโมงคงเหลือ 🏅</h2>
-                <div id="hourUsageRankingContainer" class="flex items-end justify-center gap-2 md:gap-4 pt-4 min-h-[240px]">
-                    <!-- Ranking will be injected here by JS -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Dashboard Section -->
-        <div class="card">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold gradient-text">Dashboard สรุปข้อมูล</h2>
-                <div class="flex flex-wrap items-center justify-center md:justify-end gap-4">
-                    <div class="w-full sm:w-40">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ปีงบประมาณ</label>
-                        <select id="fiscalYearFilter" class="form-input"></select>
+<body class="min-h-screen gradient-bg">
+    <!-- Header -->
+    <header class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-center">
+                <div class="text-center">
+                    <div class="floating">
+                        <div class="text-6xl mb-2">🏥</div>
                     </div>
-                    <div class="w-full sm:w-40">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ตำแหน่ง</label>
-                        <select id="positionFilter" class="form-input"></select>
+                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">ห้องจ่ายยาผู้ป่วยนอก</h1>
+                    <p class="text-xl text-white/90">โรงพยาบาลอุตรดิตถ์</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-12">
+        <div class="max-w-4xl mx-auto">
+            <!-- Welcome Section -->
+            <div class="text-center mb-12 fade-in">
+                <h2 class="text-2xl md:text-3xl font-semibold text-white mb-4">ระบบจัดการการลาและลงทะเบียน</h2>
+                <p class="text-lg text-white/80">เลือกเมนูที่ต้องการใช้งาน</p>
+            </div>
+
+            <!-- Menu Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- ลงทะเบียน -->
+                <div class="card-hover fade-in bg-white/15 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4 floating">📝</div>
+                        <h3 class="text-2xl font-semibold text-white mb-4">ลงทะเบียน</h3>
+                        <p class="text-white/80 mb-6">สมัครสมาชิกเข้าใช้งานระบบ</p>
+                        <a href="https://codex074.github.io/leave_OPD/register.html" 
+                           class="btn-gradient inline-block px-8 py-3 rounded-full text-white font-medium hover:shadow-lg transition-all duration-300"
+                           target="_blank">
+                            เริ่มลงทะเบียน
+                        </a>
+                    </div>
+                </div>
+
+                <!-- แจ้งลาชั่วโมง -->
+                <div class="card-hover fade-in bg-white/15 backdrop-blur-md rounded-2xl p-8 border border-white/20" style="animation-delay: 0.1s">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4 floating" style="animation-delay: 0.5s">⏰</div>
+                        <h3 class="text-2xl font-semibold text-white mb-4">แจ้งลาชั่วโมง</h3>
+                        <p class="text-white/80 mb-6">แจ้งการลาในช่วงเวลาสั้น ๆ</p>
+                        <a href="https://codex074.github.io/leave_OPD/leavehour.html" 
+                           class="btn-gradient inline-block px-8 py-3 rounded-full text-white font-medium hover:shadow-lg transition-all duration-300"
+                           target="_blank">
+                            แจ้งลาชั่วโมง
+                        </a>
+                    </div>
+                </div>
+
+                <!-- แจ้งลา -->
+                <div class="card-hover fade-in bg-white/15 backdrop-blur-md rounded-2xl p-8 border border-white/20" style="animation-delay: 0.2s">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4 floating" style="animation-delay: 1s">📢</div>
+                        <h3 class="text-2xl font-semibold text-white mb-4">แจ้งลา</h3>
+                        <p class="text-white/80 mb-6">แจ้งลาป่วย ลากิจ หรือลาพักร้อน</p>
+                        <a href="https://codex074.github.io/leave_OPD/Notice.html" 
+                           class="btn-gradient inline-block px-8 py-3 rounded-full text-white font-medium hover:shadow-lg transition-all duration-300"
+                           target="_blank">
+                            แจ้งลา
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ปฏิทินแจ้งลา -->
+                <div class="card-hover fade-in bg-white/15 backdrop-blur-md rounded-2xl p-8 border border-white/20" style="animation-delay: 0.3s">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4 floating" style="animation-delay: 1.5s">📅</div>
+                        <h3 class="text-2xl font-semibold text-white mb-4">ปฏิทินแจ้งลา</h3>
+                        <p class="text-white/80 mb-6">ดูปฏิทินการลาและสถานะคำขอ</p>
+                        <a href="https://codex074.github.io/leave_OPD/Calendar.html" 
+                           class="btn-gradient inline-block px-8 py-3 rounded-full text-white font-medium hover:shadow-lg transition-all duration-300"
+                           target="_blank">
+                            ดูปฏิทิน
+                        </a>
                     </div>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>ชื่อบุคลากร</th>
-                            <th class="text-center">ตำแหน่ง</th>
-                            <th class="text-center">ชั่วโมงที่ลา</th>
-                            <th class="text-center">ชั่วโมงที่ใช้</th>
-                            <th class="text-center">ผลรวม</th>
-                            <th class="text-center">สถานะ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dashboardTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Records Section -->
-        <div class="card">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold gradient-text">รายการ</h2>
-                <div class="flex flex-wrap justify-center md:justify-start gap-2 items-center w-full">
-                    <div class="relative w-full sm:w-auto sm:flex-grow">
-                         <input type="text" id="searchNameInput" placeholder="ค้นหาชื่อ..." class="form-input-sm" autocomplete="off">
-                         <div id="searchNameDropdown" class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
-                    </div>
-                    <select id="recordPositionFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow"></select>
-                    <input type="text" id="startDateFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow" placeholder="วันที่เริ่มต้น" onfocus="(this.type='date')" onblur="(if(!this.value) this.type='text')">
-                    <input type="text" id="endDateFilter" class="form-input-sm w-full sm:w-auto sm:flex-grow" placeholder="วันที่สิ้นสุด" onfocus="(this.type='date')" onblur="(if(!this.value) this.type='text')">
-                    <button id="clearRecordFiltersBtn" class="bg-red-500 text-white w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg shadow-md hover:bg-red-600 transition-all duration-300 transform hover:scale-105" title="ล้างตัวกรอง">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="flex space-x-2 items-center self-center md:self-auto mt-4 md:mt-0">
-                    <button id="prevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
-                    <span id="pageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold flex-shrink-0"></span>
-                    <button id="nextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>วันที่</th>
-                            <th>ชื่อ</th>
-                            <th class="text-center">ตำแหน่ง</th>
-                            <th class="text-center">ประเภท</th>
-                            <th class="text-center">เวลา</th>
-                            <th class="text-center">ระยะเวลา</th>
-                            <th>หมายเหตุ</th>
-                            <th class="text-center">ยืนยัน</th>
-                            <th class="text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recordsTable"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Record Modal -->
-    <div id="recordModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="recordModalContainer">
-            <div class="p-6 flex flex-col max-h-[90vh]">
-                <div class="flex-shrink-0 flex justify-between items-center mb-4 pb-4 border-b">
-                    <h3 id="recordModalTitle" class="text-xl font-semibold"></h3>
-                    <button id="closeRecordModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-                </div>
-                <div class="overflow-y-auto flex-grow pr-2">
-                    <form id="leaveForm" class="space-y-4">
-                        <input type="hidden" id="leaveTypeInput">
-                        <div class="relative">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อบุคลากร (ชื่อเล่น)</label>
-                            <input type="text" id="nameInput" placeholder="เลือกหรือพิมพ์ชื่อเล่น..." class="form-input" autocomplete="off" required>
-                            <div id="nameDropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-lg mt-1 hidden max-h-48 overflow-y-auto shadow-lg"></div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">วันที่</label>
-                            <input type="date" id="leaveDate" class="form-input" required>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">เวลาเริ่มต้น</label>
-                                <input type="time" id="startTime" class="form-input" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">เวลาสิ้นสุด</label>
-                                <input type="time" id="endTime" class="form-input" required>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
-                            <textarea id="notes" class="form-input" rows="2" placeholder="ไม่บังคับ"></textarea>
-                        </div>
-                        <div>
-                            <button type="submit" id="submitRecordBtn" class="w-full text-white font-medium py-3 px-6 rounded-lg mt-2">บันทึก</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Add Personnel Modal -->
-    <div id="addPersonnelModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="addPersonnelModalContainer">
-            <div class="p-6">
-                 <div class="flex justify-between items-center mb-4 pb-4 border-b">
-                    <h3 class="text-xl font-semibold text-gray-800">เพิ่มบุคลากร</h3>
-                    <button id="closeAddPersonnelModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-                </div>
-                <form id="userForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อ-สกุล</label>
-                        <input type="text" id="userFullName" class="form-input" placeholder="กรอกชื่อ-สกุล" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อเล่น</label>
-                        <input type="text" id="userNickname" class="form-input" placeholder="กรอกชื่อเล่น" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ตำแหน่ง</label>
-                        <select id="userPosition" class="form-input" required>
-                            <option value="">เลือกตำแหน่ง</option>
-                            <option value="เภสัช">เภสัช</option>
-                            <option value="จพง">จพง</option>
-                            <option value="จนท">จนท</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit" id="userFormSubmitButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg mt-2">บันทึก</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
 
-    <!-- User Detail Modal -->
-    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] transform transition-all duration-300 scale-95 opacity-0" id="modalContainer">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4 pb-4 border-b">
-                    <h3 id="modalTitle" class="text-xl font-semibold text-gray-800"></h3>
-                    <button id="closeModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-                </div>
-                <div id="modalContent" class="max-h-[70vh] overflow-y-auto pr-2"></div>
-            </div>
         </div>
-    </div>
-    
-    <!-- User List Modal -->
-    <div id="userListModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] transform transition-all duration-300 scale-95 opacity-0" id="userListModalContainer">
-            <div class="p-6 flex flex-col">
-                 <div class="flex justify-between items-center mb-4 pb-4 border-b">
-                    <h3 class="text-xl font-semibold text-gray-800">รายชื่อบุคลากร</h3>
-                    <button id="closeUserListModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-                </div>
-                <div class="flex justify-end items-center mb-4">
-                    <select id="userPositionFilter" class="form-input w-48"></select>
-                </div>
-                <div class="overflow-y-auto flex-grow">
-                    <table class="modern-table w-full">
-                        <thead>
-                            <tr>
-                                <th>ชื่อ-สกุล</th>
-                                <th>ชื่อเล่น</th>
-                                <th class="text-center">ตำแหน่ง</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userListTableBody"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-center mt-4 space-x-2" id="userListPaginationControls">
-                     <!-- User list pagination will be inserted here -->
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
-    <footer class="text-center py-8">
-        <p class="text-white/50 text-sm">© 2025 ปฏิทินลา OPD - ภก.ธีรเดช วิชัย โรงพยาบาลอุตรดิตถ์</p>
+    <!-- Footer -->
+    <footer class="bg-white/5 backdrop-blur-md border-t border-white/20 mt-16">
+        <div class="container mx-auto px-4 py-6">
+            <div class="text-center text-white/70">
+                <p>&copy; 2024 โรงพยาบาลอุตรดิตถ์ - ห้องจ่ายยาผู้ป่วยนอก</p>
+            </div>
+        </div>
     </footer>
 
-
     <script>
-        // Global variables
-        let allRecords = [];
-        let allUsers = [];
-        let filteredRecords = [];
-        let currentPage = 1;
-        const recordsPerPage = 10;
-        let userCurrentPage = 1; 
-        const usersPerPage = 15;
-        let modalCurrentPage = 1;
-        
-        // --- PIN Verification System ---
-        const CORRECT_PIN = "1412";
-
-        function promptForPin() {
-            return new Promise((resolve, reject) => {
-                let currentPin = '';
-                
-                const handleKeyPress = (key) => {
-                    if (/\d/.test(key) && currentPin.length < 4) {
-                        currentPin += key;
-                    } else if (key === 'Backspace') {
-                        currentPin = currentPin.slice(0, -1);
-                    }
-                    updateDots();
-                };
-
-                const updateDots = () => {
-                    const dots = document.querySelectorAll('#swal-pin-dots .pin-dot');
-                    dots.forEach((dot, index) => {
-                        dot.classList.toggle('filled', index < currentPin.length);
-                    });
-                };
-
-                const keydownListener = (event) => {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        Swal.clickConfirm();
-                    } else {
-                        handleKeyPress(event.key);
-                    }
-                };
-
-                Swal.fire({
-                    title: 'กรุณาใส่ PIN',
-                    html: `
-                        <div class="pin-container">
-                            <div class="pin-dots" id="swal-pin-dots">
-                                <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-                            </div>
-                            <div class="pin-keypad" id="swal-pin-keypad">
-                                ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button class="pin-btn">${n}</button>`).join('')}
-                                <button class="pin-btn text-btn" data-action="cancel">ยกเลิก</button>
-                                <button class="pin-btn">0</button>
-                                <button class="pin-btn text-btn" data-action="delete">ลบ</button>
-                            </div>
-                        </div>
-                    `,
-                    showConfirmButton: true,
-                    confirmButtonText: 'ยืนยัน',
-                    showCancelButton: false,
-                    allowOutsideClick: false,
-                    stopKeydownPropagation: false, 
-                    customClass: { popup: 'w-auto' },
-                    didOpen: () => {
-                        document.addEventListener('keydown', keydownListener);
-                        const keypad = document.getElementById('swal-pin-keypad');
-                        keypad.addEventListener('click', (e) => {
-                            const button = e.target.closest('.pin-btn');
-                            if (!button) return;
-
-                            const action = button.dataset.action;
-                            if (action === 'delete') {
-                                handleKeyPress('Backspace');
-                            } else if (action === 'cancel') {
-                                Swal.close();
-                                reject(new Error('User cancelled PIN entry.'));
-                            } else {
-                                handleKeyPress(button.textContent);
-                            }
-                        });
-                    },
-                    willClose: () => {
-                        document.removeEventListener('keydown', keydownListener);
-                    },
-                    preConfirm: () => {
-                        if (currentPin.length < 4) {
-                            Swal.showValidationMessage('กรุณาใส่ PIN ให้ครบ 4 หลัก');
-                            return false;
-                        }
-                        if (currentPin === CORRECT_PIN) {
-                            return true;
-                        } else {
-                            currentPin = '';
-                            updateDots();
-                            Swal.showValidationMessage('PIN ไม่ถูกต้อง');
-                            return false;
-                        }
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        resolve();
-                    } else {
-                        reject(new Error('User cancelled PIN entry.'));
-                    }
-                });
-            });
-        }
-
-
-        // --- UTILITY FUNCTIONS ---
-        const calculateHours = (startTime, endTime) => {
-            const start = new Date(`2000-01-01T${startTime}:00`);
-            let end = new Date(`2000-01-01T${endTime}:00`);
-            if (end <= start) end.setDate(end.getDate() + 1);
-            return Math.round((end - start) / (1000 * 60 * 60) * 100) / 100;
-        };
-
-        const formatTimeDisplay = (hours) => {
-            if (hours === 0) return "0 ชั่วโมง";
+        // Add smooth scrolling and interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click effect to buttons
+            const buttons = document.querySelectorAll('a[href^="https://"]');
             
-            const absHours = Math.abs(hours);
-            
-            let h = Math.floor(absHours);
-            let m = Math.round((absHours - h) * 60);
-
-            if (m === 60) {
-                h += 1;
-                m = 0;
-            }
-
-            let result = '';
-            if (h > 0) {
-                result += `${h} ชั่วโมง `;
-            }
-            if (m > 0) {
-                result += `${m} นาที`;
-            }
-            
-            return result.trim();
-        };
-
-        const formatBalanceDisplay = (balance) => {
-            if (balance === 0) return "0 ชั่วโมง";
-            const prefix = balance < 0 ? '-' : '+';
-            const timeStr = formatTimeDisplay(Math.abs(balance));
-            return `${prefix} ${timeStr}`;
-        };
-        
-        const formatThaiDate = (dateString) => {
-            if (!dateString) return '-';
-            let date = new Date(dateString);
-            if (isNaN(date.getTime()) && typeof dateString === 'string') {
-                const year = parseInt(dateString.substring(0, 4), 10);
-                if (year > 2500) {
-                    const gregorianYear = year - 543;
-                    const correctedDateString = gregorianYear + dateString.substring(4);
-                    date = new Date(correctedDateString);
-                }
-            }
-            if (isNaN(date.getTime())) return 'วันที่ผิดพลาด';
-            return date.toLocaleDateString('th-TH', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                timeZone: 'Asia/Bangkok'
-            });
-        };
-
-        const formatShortTime = (timeValue) => {
-            if (!timeValue) return '';
-
-            if (typeof timeValue === 'string' && /^\d{2}:\d{2}$/.test(timeValue)) {
-                return timeValue;
-            }
-
-            try {
-                const date = new Date(timeValue);
-                if (isNaN(date.getTime())) {
-                    return timeValue.toString();
-                }
-                
-                const hours = date.getHours().toString().padStart(2, '0');
-                const minutes = date.getMinutes().toString().padStart(2, '0');
-                
-                return `${hours}:${minutes}`;
-            } catch (e) {
-                return timeValue.toString();
-            }
-        };
-
-        const getFiscalYear = (dateString) => {
-            const date = new Date(dateString);
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            return month >= 10 ? year + 544 : year + 543;
-        };
-        
-        const getCurrentFiscalYear = () => {
-            const today = new Date();
-            return getFiscalYear(today.toISOString().split('T')[0]);
-        };
-
-        function isOverlapping(newRecord) {
-            const newStart = new Date(`1970-01-01T${newRecord.startTime}`);
-            const newEnd = new Date(`1970-01-01T${newRecord.endTime}`);
-
-            const recordsForPersonOnDate = allRecords.filter(record =>
-                record.name === newRecord.name &&
-                record.leaveDate === newRecord.leaveDate
-            );
-
-            for (const existingRecord of recordsForPersonOnDate) {
-                const existingStart = new Date(`1970-01-01T${formatShortTime(existingRecord.startTime)}`);
-                const existingEnd = new Date(`1970-01-01T${formatShortTime(existingRecord.endTime)}`);
-
-                if (newStart < existingEnd && newEnd > existingStart) {
-                    return true; 
-                }
-            }
-            return false;
-        }
-
-
-        // --- APP INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-            loadData();
-        });
-
-        // --- EVENT LISTENERS ---
-        function setupEventListeners() {
-            document.getElementById('leaveForm').addEventListener('submit', handleFormSubmit);
-            document.getElementById('userForm').addEventListener('submit', handleUserFormSubmit);
-            
-            document.getElementById('fiscalYearFilter').addEventListener('change', applyFilter);
-            document.getElementById('positionFilter').addEventListener('change', applyFilter);
-            document.getElementById('userPositionFilter').addEventListener('change', updateUsersDisplay);
-            
-            document.getElementById('searchNameInput').addEventListener('input', applyFilter);
-            document.getElementById('startDateFilter').addEventListener('change', applyFilter);
-            document.getElementById('endDateFilter').addEventListener('change', applyFilter);
-            document.getElementById('clearRecordFiltersBtn').addEventListener('click', clearRecordFilters);
-            document.getElementById('recordPositionFilter').addEventListener('change', applyFilter);
-
-            document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
-            document.getElementById('nextPage').addEventListener('click', () => changePage(1));
-            
-            // User Detail Modal
-            document.getElementById('closeModal').addEventListener('click', closeModal);
-            document.getElementById('userModal').addEventListener('click', (e) => e.target.id === 'userModal' && closeModal());
-            
-            // Record Modal
-            document.getElementById('openLeaveModalBtn').addEventListener('click', () => openRecordModal('ลา'));
-            document.getElementById('openUsageModalBtn').addEventListener('click', () => openRecordModal('ใช้ชั่วโมง'));
-            document.getElementById('closeRecordModal').addEventListener('click', closeRecordModal);
-            document.getElementById('recordModal').addEventListener('click', (e) => e.target.id === 'recordModal' && closeRecordModal());
-
-            // Add Personnel Modal
-            document.getElementById('openAddPersonnelModalBtn').addEventListener('click', openAddPersonnelModal);
-            document.getElementById('closeAddPersonnelModal').addEventListener('click', closeAddPersonnelModal);
-            document.getElementById('addPersonnelModal').addEventListener('click', (e) => e.target.id === 'addPersonnelModal' && closeAddPersonnelModal());
-            
-            // User List Modal
-            document.getElementById('showUserListModalBtn').addEventListener('click', openUserListModal);
-            document.getElementById('closeUserListModal').addEventListener('click', closeUserListModal);
-            document.getElementById('userListModal').addEventListener('click', (e) => e.target.id === 'userListModal' && closeUserListModal());
-
-
-            const nameInput = document.getElementById('nameInput');
-            const nameDropdown = document.getElementById('nameDropdown');
-            nameInput.addEventListener('focus', () => nameDropdown.classList.remove('hidden'));
-            nameInput.addEventListener('input', filterNames);
-            document.addEventListener('click', (e) => {
-                if (!nameInput.contains(e.target) && !nameDropdown.contains(e.target)) {
-                    nameDropdown.classList.add('hidden');
-                }
-            });
-            nameDropdown.addEventListener('click', (e) => {
-                if (e.target.closest('.dropdown-item')) {
-                    nameInput.value = e.target.closest('.dropdown-item').dataset.name;
-                    nameDropdown.classList.add('hidden');
-                }
-            });
-
-            const searchNameInput = document.getElementById('searchNameInput');
-            const searchNameDropdown = document.getElementById('searchNameDropdown');
-            searchNameInput.addEventListener('focus', () => searchNameDropdown.classList.remove('hidden'));
-            searchNameInput.addEventListener('input', () => {
-                filterSearchNames();
-                applyFilter();
-            });
-            document.addEventListener('click', (e) => {
-                if (!searchNameInput.contains(e.target) && !searchNameDropdown.contains(e.target)) {
-                    searchNameDropdown.classList.add('hidden');
-                }
-            });
-            searchNameDropdown.addEventListener('click', (e) => {
-                const item = e.target.closest('.dropdown-item');
-                if (item) {
-                    searchNameInput.value = item.dataset.name;
-                    searchNameDropdown.classList.add('hidden');
-                    applyFilter();
-                }
-            });
-
-            const startTimeInput = document.getElementById('startTime');
-            const endTimeInput = document.getElementById('endTime');
-
-            startTimeInput.addEventListener('change', () => {
-                if (startTimeInput.value) {
-                    endTimeInput.min = startTimeInput.value;
-                    if (endTimeInput.value && endTimeInput.value < startTimeInput.value) {
-                        endTimeInput.value = '';
-                    }
-                }
-            });
-
-            endTimeInput.addEventListener('blur', () => {
-                if (endTimeInput.value && startTimeInput.value && endTimeInput.value < startTimeInput.value) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เวลาไม่ถูกต้อง',
-                        text: 'เวลาสิ้นสุดต้องไม่น้อยกว่าเวลาเริ่มต้น',
-                    });
-                    endTimeInput.value = '';
-                }
-            });
-             
-            setInterval(() => {
-                const now = new Date();
-                const clockElement = document.getElementById('digital-clock');
-                const dateElement = document.getElementById('digital-date');
-
-                if (clockElement) {
-                    const hours = now.getHours().toString().padStart(2, '0');
-                    const minutes = now.getMinutes().toString().padStart(2, '0');
-                    const seconds = now.getSeconds().toString().padStart(2, '0');
-                    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
-                }
-                if (dateElement) {
-                    dateElement.textContent = now.toLocaleDateString('th-TH', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                }
-            }, 1000);
-        }
-
-        // --- DATA HANDLING (GOOGLE SHEETS) ---
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuHOzS6xa_7Kwa0jrfNygfl8lh0nfIT5Z6wa5SSiWZcuACYF7tm87O51oSzXRQ8veT/exec';
-
-        async function apiCall(action, data) {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action, data })
-                });
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const result = await response.json();
-                if (!result.success) {
-                   throw new Error(result.message || 'API call returned an error.');
-                }
-                return result;
-            } catch (error) {
-                console.error(`API call failed for action: ${action}`, error);
-                throw new Error(`Failed to execute action: ${action}. ${error.message}`);
-            }
-        }
-
-        async function loadData() {
-            Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'loadData' })
-                });
-                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                if (data.success) {
-                    allUsers = data.users || [];
-                    allRecords = data.records || [];
-                    initializeFilters();
-                    applyFilter();
-                    if (allUsers.length === 0 && allRecords.length === 0) {
-                        Swal.fire('ยินดีต้อนรับ!', 'เริ่มต้นใช้งานโดยการเพิ่มบุคลากร', 'info');
-                    }
-                } else {
-                    throw new Error(data.message || 'Failed to load data');
-                }
-            } catch (error) {
-                console.error('Error loading from Google Sheets:', error);
-                Swal.fire('ข้อผิดพลาด', `ไม่สามารถโหลดข้อมูลได้: ${error.message}`, 'error');
-            } finally {
-                Swal.close();
-            }
-        }
-
-        // --- FORM HANDLERS ---
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            try {
-                const nickname = document.getElementById('nameInput').value.trim();
-                const user = allUsers.find(u => u.nickname === nickname);
-                if (!user) {
-                    Swal.fire('ข้อผิดพลาด', 'ไม่พบบุคลากรชื่อเล่นนี้ กรุณาเพิ่มบุคลากรก่อน', 'error');
-                    return;
-                }
-                
-                const record = {
-                    leaveDate: document.getElementById('leaveDate').value,
-                    startTime: document.getElementById('startTime').value,
-                    endTime: document.getElementById('endTime').value,
-                    type: document.getElementById('leaveTypeInput').value,
-                    name: user.nickname, // Use nickname for records
-                    position: user.position,
-                    notes: document.getElementById('notes').value,
-                    confirmed: false, 
-                    timestamp: new Date().toISOString()
-                };
-                record.hours = calculateHours(record.startTime, record.endTime);
-
-                if (record.hours <= 0) {
-                    Swal.fire('ข้อผิดพลาด', 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
-                    return;
-                }
-
-                if (isOverlapping(record)) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'ข้อมูลซ้ำซ้อน',
-                        text: 'มีข้อมูลการลาหรือใช้ชั่วโมงในช่วงเวลานี้แล้ว',
-                    });
-                    return;
-                }
-                
-                const typeColorClass = record.type === 'ลา' ? 'text-red-600' : 'text-green-600';
-                const { isConfirmed } = await Swal.fire({
-                    title: 'ยืนยันการบันทึก?',
-                    html: `
-                        คุณต้องการบันทึกข้อมูล:<br>
-                        <b class="mr-2">ชื่อ:</b> ${record.name}<br>
-                        <b class="mr-2">ประเภท:</b> <span class="font-bold ${typeColorClass}">${record.type}</span><br>
-                        <b class="mr-2">วันที่:</b> ${formatThaiDate(record.leaveDate)}<br>
-                        <b class="mr-2">เวลา:</b> ${record.startTime} - ${record.endTime}
-                    `,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'ยืนยัน',
-                    cancelButtonText: 'ยกเลิก'
-                });
-
-                if (isConfirmed) {
-                    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    await apiCall('saveRecord', record);
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Add ripple effect
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('absolute', 'bg-white/30', 'rounded-full', 'animate-ping');
+                    ripple.style.width = ripple.style.height = '20px';
+                    ripple.style.left = (e.clientX - this.offsetLeft - 10) + 'px';
+                    ripple.style.top = (e.clientY - this.offsetTop - 10) + 'px';
                     
-                    allRecords.unshift(record); 
-                    applyFilter(); 
-                    closeRecordModal();
-                    Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
-                }
-
-            } catch (error) {
-                console.error("Error in handleFormSubmit:", error);
-                Swal.fire('ข้อผิดพลาด', `ไม่สามารถบันทึกข้อมูลได้: ${error.message}`, 'error');
-            }
-        }
-
-        async function handleUserFormSubmit(e) {
-            e.preventDefault();
-            try {
-                await promptForPin();
-
-                const fullName = document.getElementById('userFullName').value.trim();
-                const nickname = document.getElementById('userNickname').value.trim();
-                const position = document.getElementById('userPosition').value;
-
-                if (allUsers.some(u => u.nickname === nickname)) {
-                    Swal.fire('ข้อผิดพลาด', 'มีบุคลากรที่ใช้ชื่อเล่นนี้อยู่แล้ว', 'error');
-                    return;
-                }
-                
-                const user = { fullName, nickname, position, timestamp: new Date().toISOString() };
-                Swal.fire({ title: 'กำลังเพิ่มบุคลากร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                await apiCall('saveUser', user);
-                allUsers.push(user);
-                Swal.fire('สำเร็จ!', 'เพิ่มบุคลากรเรียบร้อยแล้ว', 'success');
-                closeAddPersonnelModal();
-                updateUsersDisplay();
-                updateNameDropdown();
-                initializeFilters();
-                
-            } catch (error) {
-                if (error && error.message.includes('User cancelled')) {
-                    console.log('PIN entry cancelled for adding user.');
-                } else {
-                    console.error("Error in handleUserFormSubmit:", error);
-                    Swal.fire('ข้อผิดพลาด', `การดำเนินการล้มเหลว: ${error ? error.message : 'Unknown error'}`, 'error');
-                }
-            }
-        }
-
-        // --- UI UPDATE FUNCTIONS ---
-        // *** Ranking Functions ***
-        function updateRankings() {
-            const fiscalYear = document.getElementById('fiscalYearFilter').value;
-            const position = document.getElementById('positionFilter').value;
-
-            const rankingRecords = allRecords.filter(r => {
-                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
-                const matchPosition = !position || r.position === position;
-                return matchFiscal && matchPosition;
-            });
-
-            const balanceSummary = {};
-            rankingRecords.forEach(record => {
-                const name = record.name; // This is the nickname
-                const hours = record.type === 'ลา' ? -record.hours : record.hours;
-                balanceSummary[name] = (balanceSummary[name] || 0) + hours;
-            });
-
-            const allBalances = Object.entries(balanceSummary)
-                .map(([name, balance]) => ({ name, balance }));
-
-            const topNegative = allBalances
-                .sort((a, b) => a.balance - b.balance) 
-                .slice(0, 3);
-
-            const topPositive = allBalances
-                .sort((a, b) => b.balance - a.balance) 
-                .slice(0, 3);
-            
-            renderRankingPodium('leaveRankingContainer', topNegative, {
-                podiumColors: ['bg-gradient-to-b from-amber-400 to-amber-600', 'bg-gradient-to-b from-amber-500 to-amber-700', 'bg-gradient-to-b from-amber-300 to-amber-500'],
-                textColor: 'text-amber-800'
-            });
-            renderRankingPodium('hourUsageRankingContainer', topPositive, {
-                podiumColors: ['bg-gradient-to-b from-teal-400 to-teal-600', 'bg-gradient-to-b from-teal-500 to-teal-700', 'bg-gradient-to-b from-teal-300 to-teal-500'],
-                textColor: 'text-teal-800'
-            });
-        }
-
-        function renderRankingPodium(containerId, topUsers, theme) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = ''; 
-
-            if (topUsers.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 self-center">ไม่มีข้อมูล</p>`;
-                return;
-            }
-
-            const podiumOrder = [topUsers[1], topUsers[0], topUsers[2]];
-            const heights = ['h-32', 'h-40', 'h-24'];
-            const ranks = [2, 1, 3];
-            
-            if (topUsers.length === 1) {
-                const user = topUsers[0];
-                const balanceColor = user.balance < 0 ? 'text-red-600' : 'text-green-600';
-                container.innerHTML = `
-                    <div class="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105">
-                        <div class="font-black text-2xl truncate w-full ${theme.textColor}" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">${user.name}</div>
-                        <div class="text-lg font-semibold ${balanceColor}">${formatBalanceDisplay(user.balance)}</div>
-                        <div class="relative ${heights[1]} w-24 ${theme.podiumColors[1]} rounded-t-lg flex items-center justify-center text-6xl font-extrabold text-white shadow-lg" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                            1
-                        </div>
-                    </div>`;
-                return;
-            }
-
-            podiumOrder.forEach((user, index) => {
-                if (user) {
-                    const balanceColor = user.balance < 0 ? 'text-red-600' : 'text-green-600';
-                    const podiumEl = `
-                        <div class="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105">
-                            <div class="font-black text-2xl truncate w-full ${theme.textColor}" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">${user.name}</div>
-                            <div class="text-lg font-semibold ${balanceColor}">${formatBalanceDisplay(user.balance)}</div>
-                            <div class="relative ${heights[index]} w-24 ${theme.podiumColors[index]} rounded-t-lg flex items-center justify-center text-6xl font-extrabold text-white shadow-lg" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                                ${ranks[index]}
-                                 <svg class="absolute top-1 right-1 w-5 h-5 text-yellow-300 opacity-75 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += podiumEl;
-                }
-            });
-        }
-
-
-        function updateDashboard() {
-            const summary = {};
-            const fiscalYear = document.getElementById('fiscalYearFilter').value;
-            const position = document.getElementById('positionFilter').value;
-
-            const dashboardRecords = allRecords.filter(r => {
-                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
-                const matchPosition = !position || r.position === position;
-                return matchFiscal && matchPosition;
-            });
-
-            dashboardRecords.forEach(record => {
-                const key = `${record.name}_${record.position}`;
-                if (!summary[key]) {
-                    summary[key] = { name: record.name, position: record.position, leave: 0, return: 0 };
-                }
-                if (record.type && (record.type.trim() === 'ลา')) summary[key].leave += record.hours;
-                else if (record.type && (record.type.trim() === 'ใช้ชั่วโมง')) summary[key].return += record.hours;
-            });
-
-            const tbody = document.getElementById('dashboardTable');
-            tbody.innerHTML = '';
-            Object.values(summary).forEach(data => {
-                const total = data.return - data.leave;
-                const totalColorClass = total < 0 ? 'text-red-600' : 'text-green-600';
-                const statusClass = total >= 0 ? 'status-ok' : 'status-warning';
-                const statusText = total >= 0 ? 'OK' : 'ต้องใช้คืน';
-                const buttonColorClasses = getPositionButtonClass(data.position);
-                const row = `
-                    <tr>
-                        <td><button class="font-semibold py-1 px-4 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${buttonColorClasses}" onclick="showUserDetail('${data.name}')">${data.name}</button></td>
-                        <td class="text-center"><span class="badge ${getPositionBadgeClass(data.position)}">${data.position}</span></td>
-                        <td class="text-center">${formatTimeDisplay(data.leave)}</td>
-                        <td class="text-center">${formatTimeDisplay(data.return)}</td>
-                        <td class="text-center font-semibold ${totalColorClass}">${formatTimeDisplay(total)}</td>
-                        <td class="text-center ${statusClass}">${statusText}</td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
-        }
-        
-        function updateRecordsTable() {
-            const tbody = document.getElementById('recordsTable');
-            tbody.innerHTML = '';
-            const pageRecords = filteredRecords.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
-
-            pageRecords.forEach(record => {
-                const badgeClass = (record.type || '').trim() === 'ลา' ? 'badge-leave' : 'badge-return';
-                const confirmButton = record.confirmed 
-                    ? `<div class="bg-green-100 text-green-600 p-2 rounded-full inline-flex items-center justify-center" title="ยืนยันแล้ว">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                           </svg>
-                       </div>`
-                    : `<button onclick="confirmRecord('${record.timestamp}', '${record.leaveDate}')" class="bg-gray-200 text-gray-600 p-2 rounded-full hover:bg-green-200 hover:text-green-800 transition-colors" title="คลิกเพื่อยืนยัน">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                       </button>`;
-
-                const row = `
-                    <tr>
-                        <td>${formatThaiDate(record.leaveDate)}</td>
-                        <td>${record.name}</td>
-                        <td class="text-center"><span class="badge ${getPositionBadgeClass(record.position)}">${record.position}</span></td>
-                        <td class="text-center"><span class="badge ${badgeClass}">${record.type}</span></td>
-                        <td class="text-center">${formatShortTime(record.startTime)} - ${formatShortTime(record.endTime)}</td>
-                        <td class="text-center">${formatTimeDisplay(record.hours)}</td>
-                        <td>${record.notes || '-'}</td>
-                        <td class="text-center">${confirmButton}</td>
-                        <td class="text-center">
-                            <button onclick="deleteRecord('${record.timestamp}', '${record.leaveDate}')" class="bg-red-100 text-red-600 p-2 rounded-full hover:bg-red-200 hover:text-red-800 transition-colors" title="ลบรายการ">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
-        }
-
-        function updateUsersDisplay() {
-            const tbody = document.getElementById('userListTableBody');
-            const positionFilter = document.getElementById('userPositionFilter').value;
-            tbody.innerHTML = '';
-
-            let filteredUsers = allUsers.filter(user => 
-                !positionFilter || user.position === positionFilter
-            );
-
-            const positionOrder = { 'เภสัช': 1, 'จพง': 2, 'จนท': 3 };
-            filteredUsers.sort((a, b) => {
-                const posA = positionOrder[a.position] || 99;
-                const posB = positionOrder[b.position] || 99;
-                if (posA !== posB) return posA - posB;
-                return a.nickname.localeCompare(b.nickname, 'th');
-            });
-            
-            const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
-            userCurrentPage = Math.min(userCurrentPage, totalPages) || 1;
-            const pageUsers = filteredUsers.slice((userCurrentPage - 1) * usersPerPage, userCurrentPage * usersPerPage);
-
-            pageUsers.forEach(user => {
-                const row = `
-                    <tr>
-                        <td>${user.fullName}</td>
-                        <td>${user.nickname}</td>
-                        <td class="text-center"><span class="badge ${getPositionBadgeClass(user.position)}">${user.position}</span></td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
-
-            const paginationControls = document.getElementById('userListPaginationControls');
-            paginationControls.innerHTML = `
-                <button id="userPrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
-                <span id="userPageInfo" class="bg-gray-100 text-gray-800 px-4 py-2 flex items-center justify-center rounded-lg font-semibold">${userCurrentPage} / ${totalPages}</span>
-                <button id="userNextPage" class="bg-gray-200 text-gray-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
-            `;
-
-            document.getElementById('userPrevPage').disabled = userCurrentPage === 1;
-            document.getElementById('userNextPage').disabled = userCurrentPage === totalPages;
-
-            document.getElementById('userPrevPage').onclick = () => changeUserPage(-1);
-            document.getElementById('userNextPage').onclick = () => changeUserPage(1);
-        }
-        
-        function updatePagination() {
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
-            currentPage = Math.min(currentPage, totalPages) || 1;
-            document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
-            document.getElementById('prevPage').disabled = currentPage === 1;
-            document.getElementById('nextPage').disabled = currentPage === totalPages;
-        }
-
-        function filterNames() {
-            const input = document.getElementById('nameInput').value.toLowerCase();
-            document.querySelectorAll('#nameDropdown .dropdown-item').forEach(item => {
-                item.style.display = item.dataset.name.toLowerCase().includes(input) ? '' : 'none';
-            });
-        }
-
-        function updateNameDropdown() {
-            const dropdown = document.getElementById('nameDropdown');
-            dropdown.innerHTML = '';
-            const sortedUsers = [...allUsers].sort((a, b) => a.nickname.localeCompare(b.nickname, 'th'));
-            sortedUsers.forEach(user => {
-                const item = `
-                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.nickname}">
-                        ${user.nickname} <span class="text-gray-500 text-sm">(${user.fullName})</span>
-                    </div>`;
-                dropdown.insertAdjacentHTML('beforeend', item);
-            });
-        }
-
-        function updateSearchNameDropdown() {
-            const dropdown = document.getElementById('searchNameDropdown');
-            dropdown.innerHTML = '';
-            const sortedUsers = [...allUsers].sort((a, b) => a.nickname.localeCompare(b.nickname, 'th'));
-            sortedUsers.forEach(user => {
-                const item = `
-                    <div class="dropdown-item p-2 hover:bg-gray-100 cursor-pointer" data-name="${user.nickname}">
-                        ${user.nickname} <span class="text-gray-500 text-sm">(${user.fullName})</span>
-                    </div>`;
-                dropdown.insertAdjacentHTML('beforeend', item);
-            });
-        }
-
-        function filterSearchNames() {
-            const input = document.getElementById('searchNameInput').value.toLowerCase();
-            document.querySelectorAll('#searchNameDropdown .dropdown-item').forEach(item => {
-                const textContent = item.textContent.toLowerCase();
-                item.style.display = textContent.includes(input) ? '' : 'none';
-            });
-        }
-
-        // --- FILTERING ---
-        function initializeFilters() {
-            const fiscalYearFilter = document.getElementById('fiscalYearFilter');
-            const positionFilter = document.getElementById('positionFilter');
-            const userPositionFilter = document.getElementById('userPositionFilter');
-            const recordPositionFilter = document.getElementById('recordPositionFilter');
-            
-            // Clear existing options
-            fiscalYearFilter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
-            positionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
-            userPositionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
-            recordPositionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
-
-            const fiscalYears = [...new Set(allRecords.map(r => getFiscalYear(r.leaveDate)))].sort((a, b) => b - a);
-            fiscalYears.forEach(year => fiscalYearFilter.add(new Option(year, year)));
-
-            const positions = [...new Set(allUsers.map(u => u.position))].sort((a, b) => a.localeCompare(b, 'th'));
-            positions.forEach(pos => {
-                positionFilter.add(new Option(pos, pos));
-                userPositionFilter.add(new Option(pos, pos));
-                recordPositionFilter.add(new Option(pos, pos));
-            });
-            
-            const currentFiscalYear = getCurrentFiscalYear();
-            if (fiscalYears.includes(currentFiscalYear)) {
-                fiscalYearFilter.value = currentFiscalYear;
-            }
-        }
-
-        function applyFilter() {
-            const fiscalYear = document.getElementById('fiscalYearFilter').value;
-            const position = document.getElementById('positionFilter').value; // For dashboard
-            const searchName = document.getElementById('searchNameInput').value.toLowerCase();
-            const startDate = document.getElementById('startDateFilter').value;
-            const endDate = document.getElementById('endDateFilter').value;
-            const recordPosition = document.getElementById('recordPositionFilter').value;
-            
-            filteredRecords = allRecords.filter(r => {
-                const matchFiscal = !fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear;
-                const matchName = !searchName || r.name.toLowerCase().includes(searchName);
-                const matchRecordPosition = !recordPosition || r.position === recordPosition;
-                
-                let matchDate = true;
-                if (startDate) matchDate = matchDate && r.leaveDate >= startDate;
-                if (endDate) matchDate = matchDate && r.leaveDate <= endDate;
-
-                return matchFiscal && matchName && matchDate && matchRecordPosition;
-            });
-            
-            updateRankings(); 
-            updateDashboard(); 
-            updateRecordsTable();
-            updatePagination();
-            updateUsersDisplay();
-            updateNameDropdown();
-            updateSearchNameDropdown();
-        }
-
-        function clearRecordFilters() {
-            document.getElementById('searchNameInput').value = '';
-            document.getElementById('startDateFilter').value = '';
-            document.getElementById('endDateFilter').value = '';
-            document.getElementById('recordPositionFilter').value = '';
-            applyFilter();
-        }
-
-        function changePage(direction) {
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
-            const newPage = currentPage + direction;
-            if (newPage >= 1 && newPage <= totalPages) {
-                currentPage = newPage;
-                updateRecordsTable();
-                updatePagination();
-            }
-        }
-
-        function changeUserPage(direction) {
-            const positionFilter = document.getElementById('userPositionFilter').value;
-            const filteredUsers = allUsers.filter(user => !positionFilter || user.position === positionFilter);
-            const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
-            const newPage = userCurrentPage + direction;
-            if (newPage >= 1 && newPage <= totalPages) {
-                userCurrentPage = newPage;
-                updateUsersDisplay();
-            }
-        }
-
-        function getPositionBadgeClass(position) {
-            switch (position) {
-                case 'เภสัช': return 'badge-pharmacist';
-                case 'จพง': return 'badge-officer';
-                case 'จนท': return 'badge-staff';
-                default: return 'bg-gray-200 text-gray-800';
-            }
-        }
-
-        function getPositionButtonClass(position) {
-            switch (position) {
-                case 'เภสัช': return 'bg-purple-100 text-purple-700 hover:bg-purple-200 focus:ring-purple-500';
-                case 'จพง': return 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus:ring-indigo-500';
-                case 'จนท': return 'bg-orange-100 text-orange-700 hover:bg-orange-200 focus:ring-orange-500';
-                default: return 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500';
-            }
-        }
-
-        // --- USER & RECORD ACTIONS ---
-        async function deleteRecord(timestamp, leaveDate) {
-            try {
-                await promptForPin(); // [PIN CHECK]
-
-                const { isConfirmed } = await Swal.fire({
-                    title: 'ยืนยันการลบ', text: 'ต้องการลบรายการนี้?', icon: 'warning', showCancelButton: true
+                    this.style.position = 'relative';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
                 });
-                if (isConfirmed) {
-                    Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    await apiCall('deleteRecord', { timestamp, leaveDate });
-                    allRecords = allRecords.filter(r => r.timestamp !== timestamp);
-                    applyFilter();
-                    Swal.fire('สำเร็จ!', 'ลบข้อมูลเรียบร้อย', 'success');
-                }
-            } catch (error) {
-                if (error && error.message.includes('User cancelled')) {
-                    console.log('PIN entry cancelled for deleting record.');
-                } else {
-                    console.error("Error in deleteRecord:", error);
-                    Swal.fire('ข้อผิดพลาด', `ไม่สามารถลบได้: ${error ? error.message : 'Unknown error'}`, 'error');
-                }
-            }
-        }
-
-        async function confirmRecord(timestamp, leaveDate) {
-            try {
-                await promptForPin();
-                Swal.fire({ title: 'กำลังยืนยัน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                await apiCall('confirmRecord', { timestamp, leaveDate });
-                const record = allRecords.find(r => r.timestamp === timestamp);
-                if (record) record.confirmed = true;
-                applyFilter();
-                Swal.fire('สำเร็จ!', 'ยืนยันรายการเรียบร้อย', 'success');
-            } catch (error) {
-                if (error && error.message.includes('User cancelled')) {
-                    console.log('PIN entry cancelled for confirming record.');
-                } else {
-                    console.error("Error in confirmRecord:", error);
-                    Swal.fire('ข้อผิดพลาด', `ไม่สามารถยืนยันรายการได้: ${error ? error.message : 'Unknown error'}`, 'error');
-                }
-            }
-        }
-
-        // --- MODAL FUNCTIONS ---
-        function openRecordModal(type) {
-            const modal = document.getElementById('recordModal');
-            const title = document.getElementById('recordModalTitle');
-            const submitBtn = document.getElementById('submitRecordBtn');
-            const typeInput = document.getElementById('leaveTypeInput');
-
-            document.getElementById('leaveForm').reset();
-            typeInput.value = type;
-
-            if (type === 'ลา') {
-                title.innerHTML = `<div class="flex items-center gap-3"><div class="bg-red-100 text-red-600 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><span class="text-red-700">บันทึกการลา</span></div>`;
-                submitBtn.className = 'w-full text-white font-medium py-3 px-6 rounded-lg mt-2 bg-red-500 hover:bg-red-600';
-            } else {
-                title.innerHTML = `<div class="flex items-center gap-3"><div class="bg-green-100 text-green-600 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><span class="text-green-700">บันทึกการใช้ชั่วโมง</span></div>`;
-                submitBtn.className = 'w-full text-white font-medium py-3 px-6 rounded-lg mt-2 bg-green-500 hover:bg-green-600';
-            }
-
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('recordModalContainer').classList.remove('scale-95', 'opacity-0');
-            }, 10);
-        }
-
-        function closeRecordModal() {
-            const modal = document.getElementById('recordModal');
-            const modalContainer = document.getElementById('recordModalContainer');
-            modalContainer.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function openAddPersonnelModal() {
-            const modal = document.getElementById('addPersonnelModal');
-            document.getElementById('userForm').reset();
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('addPersonnelModalContainer').classList.remove('scale-95', 'opacity-0');
-            }, 10);
-        }
-
-        function closeAddPersonnelModal() {
-            const modal = document.getElementById('addPersonnelModal');
-            const modalContainer = document.getElementById('addPersonnelModalContainer');
-            modalContainer.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-        
-        function openUserListModal() {
-            const modal = document.getElementById('userListModal');
-            updateUsersDisplay(); // Populate the list
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('userListModalContainer').classList.remove('scale-95', 'opacity-0');
-            }, 10);
-        }
-
-        function closeUserListModal() {
-            const modal = document.getElementById('userListModal');
-            const modalContainer = document.getElementById('userListModalContainer');
-            modalContainer.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function showUserDetail(name) {
-            modalCurrentPage = 1; 
-            renderUserDetailModal(name);
-        }
-
-        function renderUserDetailModal(name) {
-            const fiscalYear = document.getElementById('fiscalYearFilter').value;
-            const userRecords = allRecords.filter(r => 
-                r.name === name &&
-                (!fiscalYear || getFiscalYear(r.leaveDate) == fiscalYear)
-            );
-
-            let leaveHours = 0, returnHours = 0;
-            userRecords.forEach(r => {
-                if ((r.type || '').trim() === 'ลา') leaveHours += r.hours;
-                else if ((r.type || '').trim() === 'ใช้ชั่วโมง') returnHours += r.hours;
+                
+                // Add hover sound effect (visual feedback)
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05) translateY(-2px)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1) translateY(0)';
+                });
             });
-            const balance = returnHours - leaveHours;
-
-            const modalRecordsPerPage = 10;
-            const totalPages = Math.ceil(userRecords.length / modalRecordsPerPage) || 1;
-            const pageRecords = userRecords.slice((modalCurrentPage - 1) * modalRecordsPerPage, modalCurrentPage * modalRecordsPerPage);
-
-            let tableRows = pageRecords.map(r => `
-                <tr class="border-b">
-                    <td class="px-4 py-2">${formatThaiDate(r.leaveDate)}</td>
-                    <td class="px-4 py-2 text-center">${formatShortTime(r.startTime)} - ${formatShortTime(r.endTime)}</td>
-                    <td class="px-4 py-2 text-center">${formatTimeDisplay(r.hours)}</td>
-                    <td class="px-4 py-2 text-center"><span class="badge ${(r.type || '').trim() === 'ลา' ? 'badge-leave' : 'badge-return'}">${r.type}</span></td>
-                    <td class="px-4 py-2">${r.notes || '-'}</td>
-                </tr>
-            `).join('');
-
-            const balanceColorClass = balance < 0 ? 'text-red-600' : 'text-green-600';
-
-            document.getElementById('modalTitle').textContent = `รายละเอียดของ ${name} (ปีงบ ${fiscalYear || 'ทั้งหมด'})`;
-            document.getElementById('modalContent').innerHTML = `
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                    <div class="bg-red-50 p-3 rounded-lg"><div class="text-sm text-red-700">ลาทั้งหมด</div><div class="text-xl font-bold text-red-800">${formatTimeDisplay(leaveHours)}</div></div>
-                    <div class="bg-green-50 p-3 rounded-lg"><div class="text-sm text-green-700">ชั่วโมงที่ใช้</div><div class="text-xl font-bold text-green-800">${formatTimeDisplay(returnHours)}</div></div>
-                    <div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-blue-700">คงเหลือ</div><div class="text-xl font-bold ${balanceColorClass}">${formatTimeDisplay(balance)}</div></div>
-                    <div class="bg-yellow-50 p-3 rounded-lg"><div class="text-sm text-yellow-700">สถานะ</div><div class="text-xl font-bold ${balance >= 0 ? 'text-green-800' : 'text-yellow-800'}">${balance >= 0 ? 'OK' : 'ต้องใช้คืน'}</div></div>
-                </div>
-                <div class="flex justify-end items-center mb-4">
-                    <div class="flex space-x-2 items-center">
-                        <button id="modalPrevPage" class="bg-gray-200 text-gray-700 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&lt;</button>
-                        <span id="modalPageInfo" class="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg font-semibold">${modalCurrentPage} / ${totalPages}</span>
-                        <button id="modalNextPage" class="bg-gray-200 text-gray-700 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-300 disabled:opacity-50 font-bold">&gt;</button>
-                    </div>
-                </div>
-                <table class="modern-table w-full"><thead><tr><th>วันที่</th><th class="text-center">เวลา</th><th class="text-center">ระยะเวลา</th><th class="text-center">ประเภท</th><th>หมายเหตุ</th></tr></thead><tbody>${tableRows}</tbody></table>
-            `;
             
-            document.getElementById('modalPrevPage').disabled = modalCurrentPage === 1;
-            document.getElementById('modalNextPage').disabled = modalCurrentPage === totalPages;
-
-            document.getElementById('modalPrevPage').onclick = () => {
-                if (modalCurrentPage > 1) {
-                    modalCurrentPage--;
-                    renderUserDetailModal(name);
-                }
+            // Add parallax effect to floating elements
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const parallax = document.querySelectorAll('.floating');
+                
+                parallax.forEach(element => {
+                    const speed = 0.5;
+                    element.style.transform = `translateY(${scrolled * speed}px)`;
+                });
+            });
+            
+            // Add fade-in animation on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
             };
-            document.getElementById('modalNextPage').onclick = () => {
-                if (modalCurrentPage < totalPages) {
-                    modalCurrentPage++;
-                    renderUserDetailModal(name);
-                }
-            };
-
-            const modal = document.getElementById('userModal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('modalContainer').classList.remove('scale-95', 'opacity-0');
-                }, 10);
-            }
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('userModal');
-            const modalContainer = document.getElementById('modalContainer');
-            modalContainer.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
+            
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe all cards
+            document.querySelectorAll('.card-hover').forEach(card => {
+                observer.observe(card);
+            });
+        });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9760dbb6a1687b38',t:'MTc1NjM1MzE3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

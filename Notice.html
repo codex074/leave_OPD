@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แจ้งลา OPD</title>
+    <title>แจ้งลาห้องยา OPD</title>
     <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
-        html, body {
-            height: 100%;
-        }
         body {
             font-family: 'Sarabun', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
         }
         .container {
-            max-width: 600px;
-            width: 100%;
+            max-width: 800px;
             margin: 20px auto;
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
         }
         .header {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -32,120 +27,34 @@
             padding: 30px;
             text-align: center;
         }
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        .form-container {
-            padding: 30px;
-        }
-        .form-group {
-            margin-bottom: 25px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-        }
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-container { padding: 30px; }
+        .form-input, .form-select {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e1e5e9;
             border-radius: 8px;
-            font-size: 16px;
             transition: all 0.3s ease;
             background: #f8f9fa;
         }
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
+        .form-input:focus, .form-select:focus {
             outline: none;
             border-color: #4facfe;
-            background: white;
             box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
         }
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        .searchable-dropdown {
-            position: relative;
-        }
-        .search-input {
-            width: 100%;
-            padding: 12px 40px 12px 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            background: #f8f9fa;
-            cursor: pointer;
-        }
-        .dropdown-arrow {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #666;
-            transition: transform 0.3s ease;
-        }
-        .dropdown-arrow.open {
-            transform: translateY(-50%) rotate(180deg);
-        }
-        .dropdown-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #e1e5e9;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-        .dropdown-list.show {
-            display: block;
-        }
-        .dropdown-item {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background-color 0.2s ease;
-        }
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
-        }
-        .dropdown-item:last-child {
-            border-bottom: none;
-        }
-        .date-row {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-        @media (min-width: 640px) {
-            .date-row {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+        .searchable-dropdown { position: relative; }
+        .search-input { width: 100%; padding: 12px 40px 12px 15px; border: 2px solid #e1e5e9; border-radius: 8px; background: #f8f9fa; cursor: pointer; }
+        .dropdown-arrow { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; transition: transform 0.3s ease; }
+        .dropdown-arrow.open { transform: translateY(-50%) rotate(180deg); }
+        .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e1e5e9; border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; }
+        .dropdown-list.show { display: block; }
+        .dropdown-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease; }
+        .dropdown-item:hover { background-color: #f8f9fa; }
         .submit-btn {
             width: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 12px 20px; /* Reduced padding */
+            padding: 12px 20px;
             border-radius: 8px;
             font-size: 18px;
             font-weight: 600;
@@ -153,122 +62,153 @@
             transition: all 0.3s ease;
             margin-top: 20px;
         }
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3); }
+        .modern-table { width: 100%; border-collapse: collapse; }
+        .modern-table th, .modern-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+        .modern-table th { background-color: #f9fafb; font-weight: 600; color: #4b5563; }
+        .action-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.2s;
         }
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .required {
-            color: #e74c3c;
+        .action-btn:hover {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📢 ระบบแจ้งลาห้องยา OPD</h1>
+            <h1 class="text-2xl font-bold">📢 ระบบแจ้งลาห้องยา OPD</h1>
             <p>กรุณากรอกข้อมูลการลาให้ครบถ้วน</p>
         </div>
 
         <div class="form-container">
-            <form id="leaveForm">
-                <div class="form-group">
-                    <label for="employeeName">ชื่อผู้ลา <span class="required">*</span></label>
+            <form id="leaveForm" class="space-y-6">
+                <div>
+                    <label for="employeeName" class="block mb-2 font-semibold text-gray-700">ชื่อผู้ลา <span class="text-red-500">*</span></label>
                     <div class="searchable-dropdown">
-                        <input type="text" 
-                               id="employeeName" 
-                               name="employeeName" 
-                               class="search-input"
-                               placeholder="พิมพ์เพื่อค้นหาหรือคลิกเพื่อเลือก"
-                               autocomplete="off"
-                               required>
+                        <input type="text" id="employeeName" class="search-input" placeholder="พิมพ์เพื่อค้นหาหรือคลิกเพื่อเลือก" autocomplete="off" required>
                         <span class="dropdown-arrow">▼</span>
                         <div class="dropdown-list" id="employeeDropdown"></div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="approverName">ผู้อนุมัติ <span class="required">*</span></label>
+                <div>
+                    <label for="approverName" class="block mb-2 font-semibold text-gray-700">ผู้อนุมัติ <span class="text-red-500">*</span></label>
                     <div class="searchable-dropdown">
-                        <input type="text" 
-                               id="approverName" 
-                               name="approverName" 
-                               class="search-input"
-                               placeholder="เลือกผู้อนุมัติ"
-                               autocomplete="off"
-                               required>
+                        <input type="text" id="approverName" class="search-input" placeholder="เลือกผู้อนุมัติ" autocomplete="off" required>
                         <span class="dropdown-arrow">▼</span>
                         <div class="dropdown-list" id="approverDropdown"></div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="leaveType">ประเภทการลา <span class="required">*</span></label>
-                    <select id="leaveType" name="leaveType" class="form-input" required>
-                        <option value="">กรุณาเลือกประเภทการลา</option>
-                        <option value="ลาป่วย">ลาป่วย</option>
-                        <option value="ลากิจ">ลากิจ</option>
-                        <option value="ลาพักผ่อน">ลาพักผ่อน</option>
-                        <option value="ลากิจฉุกเฉิน">ลากิจฉุกเฉิน</option>
-                        <option value="ลาคลอด">ลาคลอด</option>
-                    </select>
-                </div>
-
-                <div class="date-row">
-                    <div class="form-group">
-                        <label for="startDate">วันที่เริ่มต้น <span class="required">*</span></label>
-                        <input type="date" id="startDate" name="startDate" class="form-input" required>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="leaveType" class="block mb-2 font-semibold text-gray-700">ประเภทการลา <span class="text-red-500">*</span></label>
+                        <select id="leaveType" class="form-select" required>
+                            <option value="">กรุณาเลือกประเภท</option>
+                            <option value="ลาป่วย">ลาป่วย</option>
+                            <option value="ลากิจ">ลากิจ</option>
+                            <option value="ลาพักผ่อน">ลาพักผ่อน</option>
+                            <option value="ลากิจฉุกเฉิน">ลากิจฉุกเฉิน</option>
+                            <option value="ลาคลอด">ลาคลอด</option>
+                        </select>
                     </div>
-
-                    <div class="form-group">
-                        <label for="endDate">วันที่สิ้นสุด <span class="required">*</span></label>
-                        <input type="date" id="endDate" name="endDate" class="form-input" required>
+                    <div>
+                        <label for="timeRange" class="block mb-2 font-semibold text-gray-700">ช่วงเวลาที่ลา <span class="text-red-500">*</span></label>
+                        <select id="timeRange" class="form-select" required>
+                            <option value="เต็มวัน">เต็มวัน</option>
+                            <option value="ครึ่งวัน-เช้า (08:30-12:30)">ครึ่งวัน-เช้า (08:30-12:30)</option>
+                            <option value="ครึ่งวัน-บ่าย (12:30-16:30)">ครึ่งวัน-บ่าย (12:30-16:30)</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="timeRange">ช่วงเวลาที่ลา <span class="required">*</span></label>
-                    <select id="timeRange" name="timeRange" class="form-input" required>
-                        <option value="เต็มวัน">เต็มวัน</option>
-                        <option value="ครึ่งวัน-เช้า (08:30-12:30)">ครึ่งวัน-เช้า (08:30-12:30)</option>
-                        <option value="ครึ่งวัน-บ่าย (12:30-16:30)">ครึ่งวัน-บ่าย (12:30-16:30)</option>
-                    </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="startDate" class="block mb-2 font-semibold text-gray-700">วันที่เริ่มต้น <span class="text-red-500">*</span></label>
+                        <input type="date" id="startDate" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="endDate" class="block mb-2 font-semibold text-gray-700">วันที่สิ้นสุด <span class="text-red-500">*</span></label>
+                        <input type="date" id="endDate" class="form-input" required>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="remarks">หมายเหตุ (ถ้ามี)</label>
-                    <textarea id="remarks" name="remarks" class="form-input" placeholder="กรอกรายละเอียดเพิ่มเติม (ไม่บังคับ)"></textarea>
+                <div>
+                    <label for="remarks" class="block mb-2 font-semibold text-gray-700">หมายเหตุ (ถ้ามี)</label>
+                    <textarea id="remarks" class="form-input" placeholder="กรอกรายละเอียดเพิ่มเติม"></textarea>
                 </div>
 
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    📢 แจ้งลา
-                </button>
+                <button type="submit" class="submit-btn" id="submitBtn">📢 แจ้งลา</button>
             </form>
         </div>
     </div>
+
+    <div class="container mt-8">
+        <div class="form-container">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">รายการแจ้งลาล่าสุด</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                <select id="filterFiscalYear" class="form-input"></select>
+                <select id="filterPosition" class="form-input"></select>
+                <input type="text" id="filterStartDate" class="form-input" placeholder="วันที่เริ่มต้น" onfocus="(this.type='date')" onblur="(this.value ? null : this.type='text')">
+                <input type="text" id="filterEndDate" class="form-input" placeholder="วันที่สิ้นสุด" onfocus="(this.type='date')" onblur="(this.value ? null : this.type='text')">
+                <button id="clearFiltersBtn" class="bg-red-500 text-white rounded-lg hover:bg-red-600">ล้างตัวกรอง</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>วันที่ทำรายการ</th>
+                            <th>เวลา</th>
+                            <th>ชื่อ-สกุล</th>
+                            <th>ชื่อเล่น</th>
+                            <th>ตำแหน่ง</th>
+                            <th>ประเภทการลา</th>
+                            <th>วันที่ลา</th>
+                            <th>จำนวนวัน</th>
+                            <th>ช่วงเวลา</th>
+                            <th>ผู้อนุมัติ</th>
+                            <th>การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="noticeTableBody"></tbody>
+                </table>
+            </div>
+             <div class="flex justify-center mt-4 space-x-2" id="noticePaginationControls"></div>
+        </div>
+    </div>
     
-    <footer class="text-center py-4 mt-4">
-        <p class="text-white/70 text-sm">© 2025 ปฏิทินลา OPD - ภก.ธีรเดช วิชัย โรงพยาบาลอุตรดิตถ์</p>
-    </footer>
+    <footer class="text-center py-4 mt-4"><p class="text-white/70 text-sm">© 2025 OPD Leave System</p></footer>
 
     <script>
+        // --- CONFIGURATION ---
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuHOzS6xa_7Kwa0jrfNygfl8lh0nfIT5Z6wa5SSiWZcuACYF7tm87O51oSzXRQ8veT/exec';
+
+        // --- GLOBAL VARIABLES ---
         let allUsers = [];
         let allApprovers = [];
+        let allNotices = [];
+        let filteredNotices = [];
+        let noticeCurrentPage = 1;
+        const noticesPerPage = 10;
         let selectedUser = null;
         let selectedApprover = null;
 
+        // --- APP INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             loadInitialData();
             setupEventListeners();
             setDefaultDates();
         });
 
+        // --- CORE FUNCTIONS ---
         async function apiCall(action, data) {
+            Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -278,157 +218,54 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
                 if (!result.success) throw new Error(result.message || 'API call returned an error.');
+                Swal.close();
                 return result;
             } catch (error) {
                 console.error(`API call failed for action: ${action}`, error);
+                Swal.fire('ข้อผิดพลาด', `การเชื่อมต่อล้มเหลว: ${error.message}`, 'error');
                 throw error;
             }
         }
 
         async function loadInitialData() {
             try {
-                const data = await apiCall('getInitialData');
+                const data = await apiCall('getInitialData', {});
                 allUsers = data.users;
                 allApprovers = data.approvers;
-                populateDropdown('employeeDropdown', allUsers, 'user');
-                populateDropdown('approverDropdown', allApprovers, 'approver');
-            } catch (error) {
-                Swal.fire('ข้อผิดพลาด', `ไม่สามารถโหลดข้อมูลเริ่มต้นได้: ${error.message}`, 'error');
-            }
-        }
-
-        function populateDropdown(elementId, items, type) {
-            const dropdown = document.getElementById(elementId);
-            dropdown.innerHTML = '';
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'dropdown-item';
+                allNotices = data.leaveNotices;
                 
-                if (type === 'user') {
-                    div.textContent = `${item.nickname} (${item.fullName})`;
-                    div.addEventListener('click', () => selectUser(item));
-                } else { // approver is a simple string array
-                    div.textContent = item;
-                    div.addEventListener('click', () => selectApprover(item));
-                }
-                dropdown.appendChild(div);
-            });
-        }
-
-        function selectUser(user) {
-            selectedUser = user;
-            document.getElementById('employeeName').value = user.nickname;
-            hideDropdown('employeeDropdown');
-        }
-
-        function selectApprover(approverName) {
-            selectedApprover = approverName;
-            document.getElementById('approverName').value = approverName;
-            hideDropdown('approverDropdown');
-        }
-
-        function filterList(query, sourceArray, type) {
-            const lowerCaseQuery = query.toLowerCase();
-            if (type === 'user') {
-                return sourceArray.filter(user => 
-                    user.nickname.toLowerCase().includes(lowerCaseQuery) || 
-                    user.fullName.toLowerCase().includes(lowerCaseQuery)
-                );
-            } else { // approver
-                return sourceArray.filter(approver => 
-                    approver.toLowerCase().includes(lowerCaseQuery)
-                );
+                initializeNoticeFilters();
+                applyNoticeFilters();
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
             }
         }
 
-        function showDropdown(elementId) {
-            document.getElementById(elementId).classList.add('show');
-            document.querySelector(`#${elementId}`).previousElementSibling.classList.add('open');
-        }
-
-        function hideDropdown(elementId) {
-            document.getElementById(elementId).classList.remove('show');
-            document.querySelector(`#${elementId}`).previousElementSibling.classList.remove('open');
-        }
-
+        // --- EVENT LISTENERS ---
         function setupEventListeners() {
-            const nameInput = document.getElementById('employeeName');
-            const approverInput = document.getElementById('approverName');
-
-            nameInput.addEventListener('click', (e) => {
-                e.stopPropagation();
-                populateDropdown('employeeDropdown', allUsers, 'user');
-                showDropdown('employeeDropdown');
-            });
-
-            nameInput.addEventListener('input', () => {
-                selectedUser = null;
-                const filtered = filterList(nameInput.value, allUsers, 'user');
-                populateDropdown('employeeDropdown', filtered, 'user');
-                showDropdown('employeeDropdown');
-            });
-
-            approverInput.addEventListener('click', (e) => {
-                e.stopPropagation();
-                populateDropdown('approverDropdown', allApprovers, 'approver');
-                showDropdown('approverDropdown');
-            });
-
-            approverInput.addEventListener('input', () => {
-                selectedApprover = null;
-                const filtered = filterList(approverInput.value, allApprovers, 'approver');
-                populateDropdown('approverDropdown', filtered, 'approver');
-                showDropdown('approverDropdown');
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.searchable-dropdown')) {
-                    hideDropdown('employeeDropdown');
-                    hideDropdown('approverDropdown');
-                }
-            });
-
+            setupDropdown('employeeName', 'employeeDropdown', () => allUsers, 'user', selectUser, (query) => filterList(query, allUsers, 'user'));
+            setupDropdown('approverName', 'approverDropdown', () => allApprovers, 'approver', selectApprover, (query) => filterList(query, allApprovers, 'approver'));
             document.getElementById('startDate').addEventListener('change', function() {
                 const endDateInput = document.getElementById('endDate');
-                if (this.value > endDateInput.value) {
+                if (!endDateInput.value || this.value > endDateInput.value) {
                     endDateInput.value = this.value;
                 }
                 endDateInput.min = this.value;
             });
-
             document.getElementById('leaveForm').addEventListener('submit', handleFormSubmit);
+            ['filterFiscalYear', 'filterPosition', 'filterStartDate', 'filterEndDate'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyNoticeFilters);
+            });
+            document.getElementById('clearFiltersBtn').addEventListener('click', clearNoticeFilters);
         }
 
-        function setDefaultDates() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('startDate').value = today;
-            document.getElementById('endDate').value = today;
-            document.getElementById('endDate').min = today;
-        }
-
+        // --- FORM & DROPDOWN HANDLERS ---
         async function handleFormSubmit(e) {
             e.preventDefault();
-
-            if (!selectedUser) {
-                const foundUser = allUsers.find(u => u.nickname === document.getElementById('employeeName').value);
-                if (foundUser) {
-                    selectedUser = foundUser;
-                } else {
-                    Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกชื่อผู้ลาจากรายการ', 'error');
-                    return;
-                }
+            if (!selectedUser || !selectedApprover) {
+                Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกชื่อผู้ลาและผู้อนุมัติจากรายการ', 'warning');
+                return;
             }
-            
-            if (!selectedApprover) {
-                const foundApprover = allApprovers.find(name => name === document.getElementById('approverName').value);
-                if (foundApprover) {
-                    selectedApprover = foundApprover;
-                } else {
-                    Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกผู้อนุมัติจากรายการ', 'error');
-                    return;
-                }
-            }
-
             const formData = {
                 fullName: selectedUser.fullName,
                 nickname: selectedUser.nickname,
@@ -440,38 +277,272 @@
                 timeRange: document.getElementById('timeRange').value,
                 remarks: document.getElementById('remarks').value
             };
-
-            Swal.fire({
-                title: 'ยืนยันการแจ้งลา?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'กำลังส่งข้อมูล...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    try {
-                        await apiCall('submitLeaveRequest', formData);
-                        Swal.fire('สำเร็จ!', 'แจ้งลาเรียบร้อยแล้ว', 'success');
-                        document.getElementById('leaveForm').reset();
-                        selectedUser = null;
-                        selectedApprover = null;
-                        setDefaultDates();
-                    } catch (error) {
-                        Swal.fire('ข้อผิดพลาด', `เกิดข้อผิดพลาด: ${error.message}`, 'error');
-                    }
+            const { isConfirmed } = await Swal.fire({ title: 'ยืนยันการแจ้งลา?', icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
+            if (isConfirmed) {
+                try {
+                    await apiCall('submitLeaveRequest', formData);
+                    Swal.fire('สำเร็จ!', 'แจ้งลาเรียบร้อยแล้ว', 'success');
+                    document.getElementById('leaveForm').reset();
+                    selectedUser = null;
+                    selectedApprover = null;
+                    document.getElementById('employeeName').value = '';
+                    document.getElementById('approverName').value = '';
+                    setDefaultDates();
+                    loadInitialData();
+                } catch(e) { /* Error is handled in apiCall */ }
+            }
+        }
+        
+        function setupDropdown(inputId, dropdownId, dataFunc, type, onSelect, onFilter) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            const show = () => {
+                populateDropdown(dropdownId, dataFunc(), type);
+                dropdown.classList.add('show');
+                input.parentElement.querySelector('.dropdown-arrow').classList.add('open');
+            };
+            const hide = () => {
+                dropdown.classList.remove('show');
+                input.parentElement.querySelector('.dropdown-arrow').classList.remove('open');
+            };
+            input.addEventListener('click', (e) => { e.stopPropagation(); show(); });
+            input.addEventListener('input', () => {
+                if (type === 'user') selectedUser = null; else selectedApprover = null;
+                const filtered = onFilter(input.value);
+                populateDropdown(dropdownId, filtered, type);
+                show();
+            });
+            dropdown.addEventListener('click', (e) => {
+                const itemElement = e.target.closest('.dropdown-item');
+                if (itemElement) {
+                    const selectedValue = (type === 'user') 
+                        ? allUsers.find(u => u.nickname === itemElement.dataset.nickname)
+                        : itemElement.dataset.name;
+                    onSelect(selectedValue);
                 }
             });
+            document.addEventListener('click', hide);
         }
+
+        function populateDropdown(elementId, items, type) {
+            const dropdown = document.getElementById(elementId);
+            if (!items) return;
+            dropdown.innerHTML = items.map(item => {
+                if (type === 'user') {
+                    return `<div class="dropdown-item" data-nickname="${item.nickname}">${item.nickname} (${item.fullName})</div>`;
+                } else {
+                    return `<div class="dropdown-item" data-name="${item}">${item}</div>`;
+                }
+            }).join('') || '<div class="p-3 text-center text-gray-500">ไม่พบข้อมูล</div>';
+        }
+        
+        function selectUser(user) {
+            selectedUser = user;
+            document.getElementById('employeeName').value = user.nickname;
+            document.getElementById('employeeDropdown').classList.remove('show');
+        }
+
+        function selectApprover(approverName) {
+            selectedApprover = approverName;
+            document.getElementById('approverName').value = approverName;
+            document.getElementById('approverDropdown').classList.remove('show');
+        }
+
+        function filterList(query, sourceArray, type) {
+            const q = query.toLowerCase();
+            if (!sourceArray) return [];
+            return (type === 'user')
+                ? sourceArray.filter(u => u.nickname.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q))
+                : sourceArray.filter(a => a.toLowerCase().includes(q));
+        }
+
+        // --- NOTICE TABLE & FILTER FUNCTIONS ---
+        function initializeNoticeFilters() {
+            const fiscalYearFilter = document.getElementById('filterFiscalYear');
+            const positionFilter = document.getElementById('filterPosition');
+            fiscalYearFilter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
+            const fiscalYears = [...new Set(allNotices.map(n => getFiscalYear(n.startDate)))].filter(Boolean).sort((a,b) => b - a);
+            fiscalYears.forEach(year => fiscalYearFilter.add(new Option(`ปีงบ ${year}`, year)));
+            positionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+            const positions = [...new Set(allUsers.map(u => u.position))].sort();
+            positions.forEach(pos => positionFilter.add(new Option(pos, pos)));
+        }
+
+        function applyNoticeFilters() {
+            const fiscalYear = document.getElementById('filterFiscalYear').value;
+            const position = document.getElementById('filterPosition').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            filteredNotices = allNotices.filter(n => 
+                (!fiscalYear || getFiscalYear(n.startDate) == fiscalYear) &&
+                (!position || n.position === position) &&
+                (!startDate || n.startDate >= startDate) &&
+                (!endDate || n.endDate <= endDate)
+            );
+            noticeCurrentPage = 1;
+            updateNoticeTable();
+            updateNoticePagination();
+        }
+
+        function clearNoticeFilters() {
+            document.getElementById('filterFiscalYear').value = '';
+            document.getElementById('filterPosition').value = '';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            applyNoticeFilters();
+        }
+
+        function updateNoticeTable() {
+            const tbody = document.getElementById('noticeTableBody');
+            if (!filteredNotices) {
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
+                return;
+            }
+            const pageNotices = filteredNotices.slice((noticeCurrentPage - 1) * noticesPerPage, noticeCurrentPage * noticesPerPage);
+            if (pageNotices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">ไม่พบรายการแจ้งลา</td></tr>';
+                return;
+            }
+            tbody.innerHTML = pageNotices.map(notice => {
+                const start = new Date(notice.startDate);
+                const end = new Date(notice.endDate);
+                let days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                if (days === 1 && notice.timeRange && notice.timeRange.includes('ครึ่งวัน')) {
+                    days = 0.5;
+                }
+                const startDateFormatted = formatThaiDate(notice.startDate);
+                const endDateFormatted = formatThaiDate(notice.endDate);
+                const dateRange = startDateFormatted === endDateFormatted ? startDateFormatted : `${startDateFormatted} - ${endDateFormatted}`;
+                
+                let managementCell = '';
+                if (notice.status === 'approved') {
+                    managementCell = '<span class="text-2xl" title="อนุมัติแล้ว">✅</span>';
+                } else if (notice.status === 'disapproved') {
+                    managementCell = '<span class="text-2xl" title="ไม่อนุมัติ">❌</span>';
+                } else {
+                    const noticeData = JSON.stringify(notice).replace(/"/g, "'");
+                    managementCell = `
+                        <div class="flex space-x-2">
+                            <button onclick="handleApproval(${noticeData}, 'approved')" class="action-btn" title="อนุมัติ">✅</button>
+                            <button onclick="handleApproval(${noticeData}, 'disapproved')" class="action-btn" title="ไม่อนุมัติ">❌</button>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <tr>
+                        <td>${formatThaiDate(notice.timestamp)}</td>
+                        <td>${formatThaiTime(notice.timestamp)}</td>
+                        <td>${notice.fullName}</td>
+                        <td>${notice.nickname || '-'}</td>
+                        <td>${notice.position}</td>
+                        <td>${notice.leaveType}</td>
+                        <td>${dateRange}</td>
+                        <td class="text-center">${days}</td>
+                        <td>${notice.timeRange || '-'}</td>
+                        <td>${notice.approver}</td>
+                        <td class="text-center">${managementCell}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function handleApproval(leaveDetails, status) {
+            const actionText = status === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ';
+            const { isConfirmed } = await Swal.fire({
+                title: `ยืนยันการ${actionText}?`,
+                text: `คุณต้องการ${actionText}การลาของ ${leaveDetails.fullName} ใช่หรือไม่?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: status === 'approved' ? '#28a745' : '#d33',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (isConfirmed) {
+                try {
+                    await apiCall('updateLeaveStatus', {
+                        timestamp: leaveDetails.timestamp,
+                        status: status,
+                        leaveDetails: leaveDetails
+                    });
+                    
+                    const noticeIndex = allNotices.findIndex(n => n.timestamp === leaveDetails.timestamp);
+                    if (noticeIndex > -1) {
+                        allNotices[noticeIndex].status = status;
+                    }
+                    applyNoticeFilters();
+
+                    Swal.fire('สำเร็จ!', `การลาได้ถูก${actionText}แล้ว`, 'success');
+                } catch (e) {
+                    // Error is handled in apiCall
+                }
+            }
+        }
+
+        function updateNoticePagination() {
+            const controls = document.getElementById('noticePaginationControls');
+            if (!filteredNotices) return;
+            const totalPages = Math.ceil(filteredNotices.length / noticesPerPage) || 1;
+            controls.innerHTML = `
+                <button id="noticePrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${noticeCurrentPage === 1 ? 'disabled' : ''}>&lt;</button>
+                <span class="px-4 py-2 rounded-lg font-semibold">${noticeCurrentPage} / ${totalPages}</span>
+                <button id="noticeNextPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${noticeCurrentPage === totalPages ? 'disabled' : ''}>&gt;</button>
+            `;
+            document.getElementById('noticePrevPage').onclick = () => changeNoticePage(-1);
+            document.getElementById('noticeNextPage').onclick = () => changeNoticePage(1);
+        }
+
+        function changeNoticePage(direction) {
+            const totalPages = Math.ceil(filteredNotices.length / noticesPerPage) || 1;
+            const newPage = noticeCurrentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                noticeCurrentPage = newPage;
+                updateNoticeTable();
+                updateNoticePagination();
+            }
+        }
+        
+        // --- UTILITIES ---
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            document.getElementById('endDate').min = today;
+        }
+
+        const getFiscalYear = (dateString) => {
+            if (!dateString) return null;
+            const d = new Date(dateString);
+            if (isNaN(d.getTime())) return null;
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const buddhistYear = month >= 10 ? year + 544 : year + 543;
+            return buddhistYear;
+        };
+
+        const formatThaiDate = (dateString) => {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+             if (isNaN(date.getTime())) return 'วันที่ไม่ถูกต้อง';
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        };
+
+        const formatThaiTime = (dateString) => {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '-';
+            return date.toLocaleTimeString('th-TH', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }) + ' น.';
+        };
+
     </script>
 </body>
 </html>
