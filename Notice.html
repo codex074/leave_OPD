@@ -15,7 +15,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 20px auto;
             background: white;
             border-radius: 15px;
@@ -26,6 +26,7 @@
             color: white;
             padding: 30px;
             text-align: center;
+            border-radius: 15px 15px 0 0;
         }
         .form-container { padding: 30px; }
         .form-input, .form-select {
@@ -72,10 +73,14 @@
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 50%;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
         }
-        .action-btn:hover {
-            background-color: #f0f0f0;
+        .status-badge, .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-pharmacist { background-color: #e9d5ff; color: #7e22ce; } 
+        .badge-officer { background-color: #e0e7ff; color: #3730a3; } 
+        .badge-staff { background-color: #ffedd5; color: #9a3412; }
+        .selected-row {
+            background-color: #eff6ff; /* Light blue background for selected row */
         }
     </style>
 </head>
@@ -151,10 +156,11 @@
 
     <div class="container mt-8">
         <div class="form-container">
-            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">รายการแจ้งลาล่าสุด</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                <select id="filterFiscalYear" class="form-input"></select>
-                <select id="filterPosition" class="form-input"></select>
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">รายการล่าสุด</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-4">
+                <input type="text" id="filterName" class="form-input" placeholder="ค้นหาชื่อ...">
+                <select id="filterFiscalYear" class="form-input" title="กรองตามปีงบประมาณ"></select>
+                <select id="filterPosition" class="form-input" title="กรองตามตำแหน่ง"></select>
                 <input type="text" id="filterStartDate" class="form-input" placeholder="วันที่เริ่มต้น" onfocus="(this.type='date')" onblur="(this.value ? null : this.type='text')">
                 <input type="text" id="filterEndDate" class="form-input" placeholder="วันที่สิ้นสุด" onfocus="(this.type='date')" onblur="(this.value ? null : this.type='text')">
                 <button id="clearFiltersBtn" class="bg-red-500 text-white rounded-lg hover:bg-red-600">ล้างตัวกรอง</button>
@@ -164,16 +170,16 @@
                     <thead>
                         <tr>
                             <th>วันที่ทำรายการ</th>
-                            <th>เวลา</th>
                             <th>ชื่อ-สกุล</th>
                             <th>ชื่อเล่น</th>
                             <th>ตำแหน่ง</th>
                             <th>ประเภทการลา</th>
                             <th>วันที่ลา</th>
-                            <th>จำนวนวัน</th>
+                            <th class="text-center">จำนวนวัน</th>
                             <th>ช่วงเวลา</th>
                             <th>ผู้อนุมัติ</th>
-                            <th>การจัดการ</th>
+                            <th class="text-center">สถานะ</th>
+                            <th class="text-center">การจัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="noticeTableBody"></tbody>
@@ -182,8 +188,50 @@
              <div class="flex justify-center mt-4 space-x-2" id="noticePaginationControls"></div>
         </div>
     </div>
+
+    <div class="container mt-8">
+        <div class="form-container">
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">สรุปวันลา</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
+                <input type="text" id="dashboardNameFilter" class="form-input" placeholder="ค้นหาชื่อ...">
+                <select id="dashboardFiscalYearFilter" class="form-input" title="กรองตามปีงบประมาณ"></select>
+                <select id="dashboardPositionFilter" class="form-input" title="กรองตามตำแหน่ง"></select>
+                <button id="clearDashboardFiltersBtn" class="bg-red-500 text-white rounded-lg hover:bg-red-600">ล้างตัวกรอง</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>ชื่อ-สกุล</th>
+                            <th>ชื่อเล่น</th>
+                            <th class="text-center">ตำแหน่ง</th>
+                            <th class="text-center">รวมวันลา</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userLeaveDashboardTable"></tbody>
+                </table>
+            </div>
+            <div class="flex justify-center mt-4 space-x-2" id="dashboardPaginationControls"></div>
+        </div>
+    </div>
     
-    <footer class="text-center py-4 mt-4"><p class="text-white/70 text-sm">© 2025 OPD Leave System</p></footer>
+    <!-- User Detail Modal -->
+    <div id="userDetailModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full transform transition-all">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                    <h3 id="userDetailModalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                    <button id="closeUserDetailModal" class="text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
+                </div>
+                <div id="userDetailModalContent" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 text-center">
+        <p class="text-gray-200 text-sm">© 2025 แจ้งลา OPD - ภก.ธีรเดช วิชัย โรงพยาบาลอุตรดิตถ์</p>
+    </footer>
 
     <script>
         // --- CONFIGURATION ---
@@ -193,11 +241,14 @@
         let allUsers = [];
         let allApprovers = [];
         let allNotices = [];
-        let filteredNotices = [];
         let noticeCurrentPage = 1;
         const noticesPerPage = 10;
+        let dashboardCurrentPage = 1;
+        const dashboardItemsPerPage = 10;
         let selectedUser = null;
         let selectedApprover = null;
+        let userDetailCurrentPage = 1;
+        const userDetailPerPage = 10;
 
         // --- APP INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -207,11 +258,17 @@
         });
 
         // --- CORE FUNCTIONS ---
-        async function apiCall(action, data) {
-            Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        async function apiCall(action, data, isSaveOperation = false) {
+            const loadingTitle = isSaveOperation ? 'กำลังบันทึกข้อมูล' : 'กำลังประมวลผล';
+            const loadingHtml = isSaveOperation ? 'กรุณารอสักครู่...' : 'กำลังโหลดข้อมูล...';
+            
+            Swal.fire({ title: loadingTitle, html: loadingHtml, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
             try {
-                const response = await fetch(SCRIPT_URL, {
+                const urlWithCacheBuster = `${SCRIPT_URL}?v=${new Date().getTime()}`;
+                const response = await fetch(urlWithCacheBuster, {
                     method: 'POST',
+                    redirect: 'follow', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action, data })
                 });
@@ -229,15 +286,30 @@
 
         async function loadInitialData() {
             try {
-                const data = await apiCall('getInitialData', {});
+                const data = await apiCall('getInitialData');
                 allUsers = data.users;
                 allApprovers = data.approvers;
-                allNotices = data.leaveNotices;
                 
-                initializeNoticeFilters();
-                applyNoticeFilters();
+                allNotices = data.leaveNotices.map(n => ({
+                        timestamp: n.Timestamp,
+                        fullName: n['ชื่อ-สกุล'],
+                        nickname: n['ชื่อเล่น'],
+                        position: n['ตำแหน่ง'],
+                        leaveType: n['ประเภทการลา'],
+                        startDate: n['วันที่เริ่มต้น'],
+                        endDate: n['วันที่สิ้นสุด'],
+                        timeRange: n['ช่วงเวลา'],
+                        approver: n['ผู้อนุมัติ'],
+                        status: n['Status'] || 'pending',
+                        eventId: n['Event ID']
+                    }));
+                
+                initializeFilters();
+                applyFilters();
             } catch (error) {
                 console.error('Failed to load initial data:', error);
+                const tbody = document.getElementById('noticeTableBody');
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center p-4 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</td></tr>`;
             }
         }
 
@@ -253,10 +325,18 @@
                 endDateInput.min = this.value;
             });
             document.getElementById('leaveForm').addEventListener('submit', handleFormSubmit);
-            ['filterFiscalYear', 'filterPosition', 'filterStartDate', 'filterEndDate'].forEach(id => {
-                document.getElementById(id).addEventListener('change', applyNoticeFilters);
+            
+            ['filterName', 'filterFiscalYear', 'filterPosition', 'filterStartDate', 'filterEndDate'].forEach(id => {
+                document.getElementById(id).addEventListener('input', applyFilters);
             });
-            document.getElementById('clearFiltersBtn').addEventListener('click', clearNoticeFilters);
+            ['dashboardNameFilter', 'dashboardFiscalYearFilter', 'dashboardPositionFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('input', applyFilters);
+            });
+
+            document.getElementById('clearFiltersBtn').addEventListener('click', clearMainListFilters);
+            document.getElementById('clearDashboardFiltersBtn').addEventListener('click', clearDashboardFilters);
+            
+            setupModalListeners('userDetailModal', null, 'closeUserDetailModal');
         }
 
         // --- FORM & DROPDOWN HANDLERS ---
@@ -266,6 +346,7 @@
                 Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกชื่อผู้ลาและผู้อนุมัติจากรายการ', 'warning');
                 return;
             }
+
             const formData = {
                 fullName: selectedUser.fullName,
                 nickname: selectedUser.nickname,
@@ -277,18 +358,48 @@
                 timeRange: document.getElementById('timeRange').value,
                 remarks: document.getElementById('remarks').value
             };
-            const { isConfirmed } = await Swal.fire({ title: 'ยืนยันการแจ้งลา?', icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
+
+            const existingLeave = allNotices.find(n =>
+                n.fullName === formData.fullName &&
+                new Date(n.startDate).toISOString().split('T')[0] === formData.startDate &&
+                n.status !== 'disapproved'
+            );
+
+            if (existingLeave) {
+                Swal.fire('แจ้งลาซ้ำ', `${formData.fullName} มีรายการแจ้งลาในวันที่ ${formatThaiDate(formData.startDate)} อยู่แล้ว`, 'error');
+                return;
+            }
+
+            const confirmationHtml = `
+                <div class="text-left">
+                    <p><b>ชื่อผู้ลา:</b> ${formData.fullName}</p>
+                    <p><b>ประเภทการลา:</b> ${formData.leaveType}</p>
+                    <p><b>วันที่:</b> ${formatThaiDate(formData.startDate)} - ${formatThaiDate(formData.endDate)}</p>
+                    <p><b>ช่วงเวลา:</b> ${formData.timeRange}</p>
+                    <p><b>ผู้อนุมัติ:</b> ${formData.approver}</p>
+                </div>
+            `;
+
+            const { isConfirmed } = await Swal.fire({ 
+                title: 'กรุณาตรวจสอบข้อมูล', 
+                html: confirmationHtml,
+                icon: 'info', 
+                showCancelButton: true, 
+                confirmButtonText: 'ยืนยันการแจ้งลา',
+                cancelButtonText: 'แก้ไข'
+            });
+
             if (isConfirmed) {
                 try {
-                    await apiCall('submitLeaveRequest', formData);
-                    Swal.fire('สำเร็จ!', 'แจ้งลาเรียบร้อยแล้ว', 'success');
+                    await apiCall('submitLeaveRequest', formData, true);
+                    Swal.fire({ icon: 'success', title: 'บันทึกข้อมูลเรียบร้อยแล้ว', showConfirmButton: true })
+                        .then(() => loadInitialData());
                     document.getElementById('leaveForm').reset();
                     selectedUser = null;
                     selectedApprover = null;
                     document.getElementById('employeeName').value = '';
                     document.getElementById('approverName').value = '';
                     setDefaultDates();
-                    loadInitialData();
                 } catch(e) { /* Error is handled in apiCall */ }
             }
         }
@@ -319,6 +430,7 @@
                         ? allUsers.find(u => u.nickname === itemElement.dataset.nickname)
                         : itemElement.dataset.name;
                     onSelect(selectedValue);
+                    hide();
                 }
             });
             document.addEventListener('click', hide);
@@ -338,14 +450,12 @@
         
         function selectUser(user) {
             selectedUser = user;
-            document.getElementById('employeeName').value = user.nickname;
-            document.getElementById('employeeDropdown').classList.remove('show');
+            document.getElementById('employeeName').value = `${user.nickname} (${user.fullName})`;
         }
 
         function selectApprover(approverName) {
             selectedApprover = approverName;
             document.getElementById('approverName').value = approverName;
-            document.getElementById('approverDropdown').classList.remove('show');
         }
 
         function filterList(query, sourceArray, type) {
@@ -357,101 +467,299 @@
         }
 
         // --- NOTICE TABLE & FILTER FUNCTIONS ---
-        function initializeNoticeFilters() {
+        function initializeFilters() {
             const fiscalYearFilter = document.getElementById('filterFiscalYear');
             const positionFilter = document.getElementById('filterPosition');
-            fiscalYearFilter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
+            const dashboardFiscalYearFilter = document.getElementById('dashboardFiscalYearFilter');
+            const dashboardPositionFilter = document.getElementById('dashboardPositionFilter');
+
+            const allFilters = [fiscalYearFilter, positionFilter, dashboardFiscalYearFilter, dashboardPositionFilter];
+            allFilters.forEach(f => f.innerHTML = ''); // Clear existing options
+
             const fiscalYears = [...new Set(allNotices.map(n => getFiscalYear(n.startDate)))].filter(Boolean).sort((a,b) => b - a);
-            fiscalYears.forEach(year => fiscalYearFilter.add(new Option(`ปีงบ ${year}`, year)));
-            positionFilter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
             const positions = [...new Set(allUsers.map(u => u.position))].sort();
-            positions.forEach(pos => positionFilter.add(new Option(pos, pos)));
+            const currentFiscalYear = getFiscalYear(new Date().toISOString());
+
+            [fiscalYearFilter, dashboardFiscalYearFilter].forEach(filter => {
+                filter.innerHTML = '<option value="">ปีงบประมาณทั้งหมด</option>';
+                fiscalYears.forEach(year => filter.add(new Option(`ปีงบ ${year}`, year)));
+                if (fiscalYears.includes(currentFiscalYear)) {
+                    filter.value = currentFiscalYear;
+                }
+            });
+
+            [positionFilter, dashboardPositionFilter].forEach(filter => {
+                filter.innerHTML = '<option value="">ตำแหน่งทั้งหมด</option>';
+                positions.forEach(pos => filter.add(new Option(pos, pos)));
+            });
         }
 
-        function applyNoticeFilters() {
-            const fiscalYear = document.getElementById('filterFiscalYear').value;
-            const position = document.getElementById('filterPosition').value;
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
-            filteredNotices = allNotices.filter(n => 
-                (!fiscalYear || getFiscalYear(n.startDate) == fiscalYear) &&
-                (!position || n.position === position) &&
-                (!startDate || n.startDate >= startDate) &&
-                (!endDate || n.endDate <= endDate)
-            );
-            noticeCurrentPage = 1;
+        function applyFilters() {
+            updateUserLeaveSummaryTable();
             updateNoticeTable();
-            updateNoticePagination();
         }
 
-        function clearNoticeFilters() {
+        function clearMainListFilters() {
+            document.getElementById('filterName').value = '';
             document.getElementById('filterFiscalYear').value = '';
             document.getElementById('filterPosition').value = '';
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
-            applyNoticeFilters();
+            applyFilters();
         }
+
+        function clearDashboardFilters() {
+            document.getElementById('dashboardNameFilter').value = '';
+            document.getElementById('dashboardFiscalYearFilter').value = '';
+            document.getElementById('dashboardPositionFilter').value = '';
+            applyFilters();
+        }
+
+        function updateUserLeaveSummaryTable() {
+            const fiscalYear = document.getElementById('dashboardFiscalYearFilter').value;
+            const position = document.getElementById('dashboardPositionFilter').value;
+            const nameFilter = document.getElementById('dashboardNameFilter').value.toLowerCase();
+
+            const approvedLeaves = allNotices.filter(n =>
+                n.status === 'approved' &&
+                (!fiscalYear || getFiscalYear(n.startDate) == fiscalYear)
+            );
+
+            const summary = {};
+            let filteredUsers = allUsers.filter(user => 
+                (!position || user.position === position) &&
+                (!nameFilter || user.fullName.toLowerCase().includes(nameFilter) || (user.nickname && user.nickname.toLowerCase().includes(nameFilter)))
+            );
+
+            filteredUsers.forEach(user => {
+                summary[user.fullName] = { 
+                    totalDays: 0, 
+                    position: user.position,
+                    nickname: user.nickname
+                };
+            });
+
+            approvedLeaves.forEach(notice => {
+                const name = notice.fullName;
+                if (summary[name]) {
+                    summary[name].totalDays += calculateDays(notice);
+                }
+            });
+
+            const sortedSummary = Object.entries(summary).sort((a, b) => a[0].localeCompare(b[0], 'th'));
+            
+            dashboardCurrentPage = 1; // Reset page on filter
+            renderDashboardPage(sortedSummary);
+        }
+
+        function renderDashboardPage(sortedSummary) {
+            const tbody = document.getElementById('userLeaveDashboardTable');
+            const totalPages = Math.ceil(sortedSummary.length / dashboardItemsPerPage) || 1;
+            const pageData = sortedSummary.slice((dashboardCurrentPage - 1) * dashboardItemsPerPage, dashboardCurrentPage * dashboardItemsPerPage);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-500 py-4">ไม่พบข้อมูลบุคลากร</td></tr>`;
+            } else {
+                tbody.innerHTML = pageData.map(([name, data]) => {
+                    return `
+                        <tr data-username="${name}">
+                            <td><button class="text-left w-full hover:text-blue-600 font-semibold" onclick="showUserLeaveDetails('${name}', this)">${name}</button></td>
+                            <td><button class="text-left w-full hover:text-blue-600" onclick="showUserLeaveDetails('${name}', this)">${data.nickname || '-'}</button></td>
+                            <td class="text-center"><span class="badge ${getPositionBadgeClass(data.position)}">${data.position}</span></td>
+                            <td class="text-center font-bold">${data.totalDays} วัน</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const paginationControls = document.getElementById('dashboardPaginationControls');
+            paginationControls.innerHTML = `
+                <button id="dashboardPrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${dashboardCurrentPage === 1 ? 'disabled' : ''}>&lt;</button>
+                <span class="px-4 py-2 rounded-lg font-semibold">${dashboardCurrentPage} / ${totalPages}</span>
+                <button id="dashboardNextPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${dashboardCurrentPage === totalPages ? 'disabled' : ''}>&gt;</button>
+            `;
+
+            document.getElementById('dashboardPrevPage').onclick = () => { if (dashboardCurrentPage > 1) { dashboardCurrentPage--; renderDashboardPage(sortedSummary); } };
+            document.getElementById('dashboardNextPage').onclick = () => { if (dashboardCurrentPage < totalPages) { dashboardCurrentPage++; renderDashboardPage(sortedSummary); } };
+        }
+
+
+        function showUserLeaveDetails(userName, element) {
+            userDetailCurrentPage = 1; // Reset page to 1 every time modal is opened
+            document.querySelectorAll('#userLeaveDashboardTable tr').forEach(row => row.classList.remove('selected-row'));
+            if (element) {
+                element.closest('tr').classList.add('selected-row');
+            }
+            renderUserLeaveDetailsPage(userName);
+            openModal('userDetailModal');
+        }
+
+        function renderUserLeaveDetailsPage(userName) {
+            const modalTitle = document.getElementById('userDetailModalTitle');
+            const modalContent = document.getElementById('userDetailModalContent');
+            const fiscalYear = document.getElementById('dashboardFiscalYearFilter').value;
+
+            modalTitle.innerHTML = `รายละเอียดการลาของ <span class="font-bold text-blue-600">${userName}</span>`;
+
+            const userLeaves = allNotices.filter(n =>
+                n.fullName === userName &&
+                n.status === 'approved' &&
+                (!fiscalYear || getFiscalYear(n.startDate) == fiscalYear)
+            ).sort((a, b) => new Date(b.startDate) - new Date(a.startDate)); // Sort by most recent
+
+            const leaveSummary = { 'ลาพักผ่อน': 0, 'ลากิจ': 0, 'ลาป่วย': 0, 'ลาคลอด': 0 };
+            userLeaves.forEach(notice => {
+                const days = calculateDays(notice);
+                if (notice.leaveType === 'ลากิจ' || notice.leaveType === 'ลากิจฉุกเฉิน') {
+                    leaveSummary['ลากิจ'] += days;
+                } else if (leaveSummary.hasOwnProperty(notice.leaveType)) {
+                    leaveSummary[notice.leaveType] += days;
+                }
+            });
+
+            const totalPages = Math.ceil(userLeaves.length / userDetailPerPage) || 1;
+            const pageLeaves = userLeaves.slice((userDetailCurrentPage - 1) * userDetailPerPage, userDetailCurrentPage * userDetailPerPage);
+
+            const tableRows = pageLeaves.length > 0 ? pageLeaves.map(leave => {
+                 const startDateFormatted = formatThaiDate(leave.startDate);
+                const endDateFormatted = formatThaiDate(leave.endDate);
+                const dateRange = startDateFormatted === endDateFormatted ? startDateFormatted : `${startDateFormatted} - ${endDateFormatted}`;
+                return `
+                    <tr>
+                        <td><span class="font-bold ${getLeaveTypeClass(leave.leaveType)}">${leave.leaveType}</span></td>
+                        <td>${dateRange}</td>
+                        <td class="text-center">${calculateDays(leave)}</td>
+                    </tr>
+                `;
+            }).join('') : `<tr><td colspan="3" class="text-center text-gray-500 py-4">ไม่มีประวัติการลา</td></tr>`;
+
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-green-800 font-semibold">ลาพักผ่อน</div>
+                        <div class="text-2xl font-bold text-green-900">${leaveSummary['ลาพักผ่อน']}</div>
+                        <div class="text-xs">วัน</div>
+                    </div>
+                    <div class="bg-indigo-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-indigo-800 font-semibold">ลากิจ / กิจฉุกเฉิน</div>
+                        <div class="text-2xl font-bold text-indigo-900">${leaveSummary['ลากิจ']}</div>
+                        <div class="text-xs">วัน</div>
+                    </div>
+                    <div class="bg-red-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-red-800 font-semibold">ลาป่วย</div>
+                        <div class="text-2xl font-bold text-red-900">${leaveSummary['ลาป่วย']}</div>
+                        <div class="text-xs">วัน</div>
+                    </div>
+                    <div class="bg-pink-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-pink-800 font-semibold">ลาคลอด</div>
+                        <div class="text-2xl font-bold text-pink-900">${leaveSummary['ลาคลอด']}</div>
+                        <div class="text-xs">วัน</div>
+                    </div>
+                </div>
+                <h4 class="font-semibold text-gray-700 mt-6">ประวัติการลาล่าสุด</h4>
+                <div class="overflow-x-auto">
+                    <table class="modern-table w-full">
+                        <thead><tr><th>ประเภท</th><th>วันที่</th><th class="text-center">จำนวนวัน</th></tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+                <div class="flex justify-center mt-4 space-x-2">
+                    <button id="userDetailPrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${userDetailCurrentPage === 1 ? 'disabled' : ''}>&lt;</button>
+                    <span class="px-4 py-2 rounded-lg font-semibold">${userDetailCurrentPage} / ${totalPages}</span>
+                    <button id="userDetailNextPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${userDetailCurrentPage === totalPages ? 'disabled' : ''}>&gt;</button>
+                </div>
+            `;
+
+            document.getElementById('userDetailPrevPage').onclick = () => { if (userDetailCurrentPage > 1) { userDetailCurrentPage--; renderUserLeaveDetailsPage(userName); } };
+            document.getElementById('userDetailNextPage').onclick = () => { if (userDetailCurrentPage < totalPages) { userDetailCurrentPage++; renderUserLeaveDetailsPage(userName); } };
+        }
+
 
         function updateNoticeTable() {
             const tbody = document.getElementById('noticeTableBody');
-            if (!filteredNotices) {
-                tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">กำลังโหลดข้อมูล...</td></tr>';
-                return;
-            }
+            const filterName = document.getElementById('filterName').value.toLowerCase();
+            const fiscalYear = document.getElementById('filterFiscalYear').value;
+            const position = document.getElementById('filterPosition').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            
+            let filteredNotices = allNotices.filter(n => 
+                (!filterName || n.fullName.toLowerCase().includes(filterName) || (n.nickname && n.nickname.toLowerCase().includes(filterName))) &&
+                (!fiscalYear || getFiscalYear(n.startDate) == fiscalYear) &&
+                (!position || n.position === position) &&
+                (!startDate || n.endDate >= startDate) &&
+                (!endDate || n.startDate <= endDate)
+            );
+            
+            noticeCurrentPage = 1;
+
             const pageNotices = filteredNotices.slice((noticeCurrentPage - 1) * noticesPerPage, noticeCurrentPage * noticesPerPage);
             if (pageNotices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">ไม่พบรายการแจ้งลา</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-gray-500">ไม่พบรายการแจ้งลา</td></tr>';
                 return;
             }
             tbody.innerHTML = pageNotices.map(notice => {
-                const start = new Date(notice.startDate);
-                const end = new Date(notice.endDate);
-                let days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                if (days === 1 && notice.timeRange && notice.timeRange.includes('ครึ่งวัน')) {
-                    days = 0.5;
-                }
+                const days = calculateDays(notice);
                 const startDateFormatted = formatThaiDate(notice.startDate);
                 const endDateFormatted = formatThaiDate(notice.endDate);
                 const dateRange = startDateFormatted === endDateFormatted ? startDateFormatted : `${startDateFormatted} - ${endDateFormatted}`;
                 
+                let statusCell = '';
                 let managementCell = '';
-                if (notice.status === 'approved') {
-                    managementCell = '<span class="text-2xl" title="อนุมัติแล้ว">✅</span>';
-                } else if (notice.status === 'disapproved') {
-                    managementCell = '<span class="text-2xl" title="ไม่อนุมัติ">❌</span>';
-                } else {
-                    const noticeData = JSON.stringify(notice).replace(/"/g, "'");
-                    managementCell = `
-                        <div class="flex space-x-2">
-                            <button onclick="handleApproval(${noticeData}, 'approved')" class="action-btn" title="อนุมัติ">✅</button>
-                            <button onclick="handleApproval(${noticeData}, 'disapproved')" class="action-btn" title="ไม่อนุมัติ">❌</button>
-                        </div>
-                    `;
+
+                switch(notice.status) {
+                    case 'approved':
+                        statusCell = '<span class="status-badge bg-green-100 text-green-700">อนุมัติแล้ว</span>';
+                        managementCell = '<span class="text-green-500 text-2xl" title="อนุมัติแล้ว">✅</span>';
+                        break;
+                    case 'disapproved':
+                        statusCell = '<span class="status-badge bg-red-100 text-red-700">ไม่อนุมัติ</span>';
+                        managementCell = '<span class="text-red-500 text-2xl" title="ไม่อนุมัติ">❌</span>';
+                        break;
+                    default: // pending
+                        statusCell = '<span class="status-badge bg-yellow-100 text-yellow-700">รออนุมัติ</span>';
+                        const noticeData = JSON.stringify(notice).replace(/"/g, "'");
+                        managementCell = `
+                            <div class="flex space-x-2 justify-center">
+                                <button onclick="handleApproval(${noticeData}, 'approved')" class="action-btn text-green-500 hover:bg-green-100" title="อนุมัติ">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                <button onclick="handleApproval(${noticeData}, 'disapproved')" class="action-btn text-red-500 hover:bg-red-100" title="ไม่อนุมัติ">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        `;
+                        break;
                 }
 
                 return `
                     <tr>
-                        <td>${formatThaiDate(notice.timestamp)}</td>
-                        <td>${formatThaiTime(notice.timestamp)}</td>
+                        <td>${formatThaiDateTime(notice.timestamp)}</td>
                         <td>${notice.fullName}</td>
                         <td>${notice.nickname || '-'}</td>
-                        <td>${notice.position}</td>
-                        <td>${notice.leaveType}</td>
+                        <td><span class="badge ${getPositionBadgeClass(notice.position)}">${notice.position}</span></td>
+                        <td><span class="font-bold ${getLeaveTypeClass(notice.leaveType)}">${notice.leaveType}</span></td>
                         <td>${dateRange}</td>
                         <td class="text-center">${days}</td>
                         <td>${notice.timeRange || '-'}</td>
                         <td>${notice.approver}</td>
+                        <td class="text-center">${statusCell}</td>
                         <td class="text-center">${managementCell}</td>
                     </tr>
                 `;
             }).join('');
+            updateNoticePagination(filteredNotices);
         }
 
         async function handleApproval(leaveDetails, status) {
             const actionText = status === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ';
             const { isConfirmed } = await Swal.fire({
                 title: `ยืนยันการ${actionText}?`,
-                text: `คุณต้องการ${actionText}การลาของ ${leaveDetails.fullName} ใช่หรือไม่?`,
+                html: `คุณต้องการ<b>${actionText}</b>การลาของ <br><b>${leaveDetails.fullName}</b> ใช่หรือไม่?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: status === 'approved' ? '#28a745' : '#d33',
@@ -461,29 +769,30 @@
 
             if (isConfirmed) {
                 try {
-                    await apiCall('updateLeaveStatus', {
+                    const dataToUpdate = {
                         timestamp: leaveDetails.timestamp,
                         status: status,
-                        leaveDetails: leaveDetails
+                        leaveDetails: {
+                           'วันที่เริ่มต้น': leaveDetails.startDate,
+                           'Event ID': leaveDetails.eventId
+                        }
+                    };
+                    await apiCall('updateLeaveStatus', dataToUpdate, true); // Pass true for save operation
+                    Swal.fire({
+                        icon: 'success',
+                        title: `การลาได้ถูก${actionText}แล้ว`,
+                        showConfirmButton: true
+                    }).then(() => {
+                        loadInitialData();
                     });
-                    
-                    const noticeIndex = allNotices.findIndex(n => n.timestamp === leaveDetails.timestamp);
-                    if (noticeIndex > -1) {
-                        allNotices[noticeIndex].status = status;
-                    }
-                    applyNoticeFilters();
-
-                    Swal.fire('สำเร็จ!', `การลาได้ถูก${actionText}แล้ว`, 'success');
-                } catch (e) {
-                    // Error is handled in apiCall
-                }
+                } catch (e) { /* Error is handled in apiCall */ }
             }
         }
 
-        function updateNoticePagination() {
+        function updateNoticePagination(filteredData) {
             const controls = document.getElementById('noticePaginationControls');
-            if (!filteredNotices) return;
-            const totalPages = Math.ceil(filteredNotices.length / noticesPerPage) || 1;
+            if (!filteredData) return;
+            const totalPages = Math.ceil(filteredData.length / noticesPerPage) || 1;
             controls.innerHTML = `
                 <button id="noticePrevPage" class="bg-gray-200 text-gray-700 w-10 h-10 rounded-lg hover:bg-gray-300" ${noticeCurrentPage === 1 ? 'disabled' : ''}>&lt;</button>
                 <span class="px-4 py-2 rounded-lg font-semibold">${noticeCurrentPage} / ${totalPages}</span>
@@ -499,11 +808,42 @@
             if (newPage >= 1 && newPage <= totalPages) {
                 noticeCurrentPage = newPage;
                 updateNoticeTable();
-                updateNoticePagination();
             }
         }
         
         // --- UTILITIES ---
+        function setupModalListeners(modalId, openBtnId, closeBtnId, openCallback) {
+            const modal = document.getElementById(modalId);
+            const closeBtn = document.getElementById(closeBtnId);
+            if (openBtnId) document.getElementById(openBtnId).addEventListener('click', openCallback || (() => openModal(modalId)));
+            if (closeBtn) closeBtn.addEventListener('click', () => closeModal(modalId));
+            if (modal) modal.addEventListener('click', (e) => e.target.id === modalId && closeModal(modalId));
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            // When closing the detail modal, remove the highlight from the table
+            if (modalId === 'userDetailModal') {
+                document.querySelectorAll('#userLeaveDashboardTable tr').forEach(row => row.classList.remove('selected-row'));
+            }
+        }
+
+        function calculateDays(notice) {
+            const start = new Date(notice.startDate);
+            const end = new Date(notice.endDate);
+            let days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            if (days === 1 && notice.timeRange && notice.timeRange.includes('ครึ่งวัน')) {
+                days = 0.5;
+            }
+            return days;
+        }
+
         function setDefaultDates() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').value = today;
@@ -517,30 +857,37 @@
             if (isNaN(d.getTime())) return null;
             const year = d.getFullYear();
             const month = d.getMonth() + 1;
-            const buddhistYear = month >= 10 ? year + 544 : year + 543;
-            return buddhistYear;
+            return month >= 10 ? year + 544 : year + 543;
         };
 
         const formatThaiDate = (dateString) => {
             if (!dateString) return '-';
             const date = new Date(dateString);
              if (isNaN(date.getTime())) return 'วันที่ไม่ถูกต้อง';
-            return date.toLocaleDateString('th-TH', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            });
+            return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
         };
 
-        const formatThaiTime = (dateString) => {
+        const formatThaiDateTime = (dateString) => {
             if (!dateString) return '-';
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return '-';
-            return date.toLocaleTimeString('th-TH', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
+            return date.toLocaleString('th-TH', {
+                year: '2-digit', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
             }) + ' น.';
+        };
+
+        const getPositionBadgeClass = (p) => ({'เภสัช':'badge-pharmacist','จพง':'badge-officer','จนท':'badge-staff'})[p]||'';
+        const getPositionButtonClass = (p) => ({'เภสัช':'bg-purple-100 text-purple-700','จพง':'bg-indigo-100 text-indigo-700','จนท':'bg-orange-100 text-orange-700'})[p]||'';
+        const getLeaveTypeClass = (type) => {
+            switch (type) {
+                case 'ลาพักผ่อน': return 'text-green-600';
+                case 'ลาป่วย': return 'text-red-600';
+                case 'ลากิจ':
+                case 'ลากิจฉุกเฉิน': return 'text-indigo-600';
+                case 'ลาคลอด': return 'text-pink-600';
+                default: return '';
+            }
         };
 
     </script>
