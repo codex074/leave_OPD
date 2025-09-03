@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดการการลาห้องยา OPD - รพ.อุตรดิตถ์</title>
+    <title>ระบบแจ้งลาห้องยา OPD - รพ.อุตรดิตถ์</title>
     <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +20,7 @@
 
     <header class="bg-white shadow-md relative">
         <div class="container mx-auto px-6 py-4">
-            <h1 class="text-3xl font-bold text-gray-800 text-center">🏥 ระบบจัดการการลาห้องยา OPD - รพ.อุตรดิตถ์</h1>
+            <h1 class="text-3xl font-bold text-gray-800 text-center">🏥 ระบบแจ้งลาห้องยา OPD - รพ.อุตรดิตถ์</h1>
             <div class="text-center mt-2"><span id="db-status" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">⏳ Connecting</span></div>
         </div>
         <div id="datetime-display" class="absolute top-4 right-6 text-sm font-semibold text-amber-800 bg-amber-200 px-3 py-1 rounded-lg shadow"></div>
@@ -60,7 +60,7 @@
                 <div class="form-wrapper-animated">
                     <div class="container-animated">
                         <div class="header-animated">
-                            <h1>📋 ลาชั่วโมง/ใช้ชั่วโมง</h1>
+                            <h1>📋 ลา/ใช้ชั่วโมง</h1>
                             <p>กรุณากรอกข้อมูลให้ครบถ้วน</p>
                         </div>
                         
@@ -120,7 +120,7 @@
 
                 <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-800">สรุปลาชั่วโมงรายบุคคล</h3>
+                        <h3 class="text-xl font-bold text-gray-800">สรุปลาชั่วโมง</h3>
                          <div class="flex items-center space-x-4">
                             <div>
                                 <label for="hourly-summary-filter-position" class="text-sm font-medium text-gray-700 mr-2">ตำแหน่ง:</label>
@@ -132,7 +132,7 @@
                                 </select>
                             </div>
                              <div>
-                                 <label for="hourly-filter-fiscal-year" class="text-sm font-medium text-gray-700 mr-2">ปีงบประมาณ:</label>
+                                 <label for="hourly-filter-fiscal-year" class="text-sm font-medium text-gray-700 mr-2">ปีงบ:</label>
                                 <select id="hourly-filter-fiscal-year"></select>
                             </div>
                         </div>
@@ -296,7 +296,7 @@
                                     <input type="password" id="register-pin-confirm" required maxlength="4" pattern="[0-9]{4}" placeholder="กรอก PIN อีกครั้ง">
                                 </div>
                                 <div class="form-group-animated">
-                                    <button type="submit" class="submit-btn-animated">✅ ลงทะเบียน</button>
+                                    <button type="submit" class="submit-btn-animated">ลงทะเบียน</button>
                                 </div>
                             </form>
                         </div>
@@ -318,5 +318,6 @@
 </body>
 
 </html>
+
 
 
