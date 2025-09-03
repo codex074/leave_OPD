@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการการลาห้องยา OPD - รพ.อุตรดิตถ์</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="initial-loader" class="popup-overlay" style="display: flex;">
+        <div class="popup-loading"><div class="spinner"></div><div class="popup-text">กำลังโหลดข้อมูล...</div></div>
+    </div>
+
+    <header class="bg-white shadow-md relative">
+        <div class="container mx-auto px-6 py-4">
+            <h1 class="text-3xl font-bold text-gray-800 text-center">🏥 ระบบจัดการการลาห้องยา OPD - รพ.อุตรดิตถ์</h1>
+            <div class="text-center mt-2"><span id="db-status" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">⏳ Connecting</span></div>
+        </div>
+        <div id="datetime-display" class="absolute top-4 right-6 text-sm font-semibold text-amber-800 bg-amber-200 px-3 py-1 rounded-lg shadow"></div>
+    </header>
+
+    <button id="menu-toggle" onclick="toggleSidebar()" class="fixed top-4 left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 flex items-center space-x-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        <span>เมนู</span>
+    </button>
+
+    <nav id="sidebar" class="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
+        <div class="p-6 border-b border-gray-200"><h2 class="text-xl font-bold text-gray-800">เมนูหลัก</h2></div>
+        <div class="p-4 space-y-3">
+            <button onclick="showTab('hourly')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="hourly-tab">
+                <div class="flex items-center"><div class="text-3xl mr-4">⏰</div><div><h3 class="text-lg font-semibold text-gray-800">แจ้งลาชั่วโมง</h3><p class="text-sm text-gray-600">จัดการการลาและใช้ชั่วโมง</p></div></div>
+            </button>
+            <button onclick="showTab('leave')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="leave-tab">
+                <div class="flex items-center"><div class="text-3xl mr-4">📢</div><div><h3 class="text-lg font-semibold text-gray-800">แจ้งลา/ลาล่วงหน้า</h3><p class="text-sm text-gray-600">ยื่นคำขอลาประเภทต่างๆ</p></div></div>
+            </button>
+            <button onclick="showTab('calendar')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="calendar-tab">
+                <div class="flex items-center"><div class="text-3xl mr-4">📅</div><div><h3 class="text-lg font-semibold text-gray-800">ปฏิทินแจ้งลา</h3><p class="text-sm text-gray-600">ดูปฏิทินการลาทั้งหมด</p></div></div>
+            </button>
+            <button onclick="showTab('register')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="register-tab">
+                <div class="flex items-center"><div class="text-3xl mr-4">👤</div><div><h3 class="text-lg font-semibold text-gray-800">ลงทะเบียน</h3><p class="text-sm text-gray-600">ลงทะเบียนผู้ใช้ใหม่</p></div></div>
+            </button>
+            <button onclick="showTab('pin')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="pin-tab">
+                <div class="flex items-center"><div class="text-3xl mr-4">🔑</div><div><h3 class="text-lg font-semibold text-gray-800">จัดการ PIN</h3><p class="text-sm text-gray-600">ตั้งค่ารหัส PIN ของระบบ</p></div></div>
+            </button>
+        </div>
+    </nav>
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden" onclick="closeSidebar()"></div>
+
+    <main class="container mx-auto px-6 pb-8 pt-20">
+        <div class="main-content-wrapper">
+            <div id="hourly-content" class="tab-content hidden">
+                <div class="form-wrapper-animated">
+                    <div class="container-animated">
+                        <div class="header-animated">
+                            <h1>📋 ลาชั่วโมง/ใช้ชั่วโมง</h1>
+                            <p>กรุณากรอกข้อมูลให้ครบถ้วน</p>
+                        </div>
+                        
+                        <div class="form-container-animated">
+                            <form id="hourly-form">
+                                <div class="form-group-animated">
+                                    <label for="hourly-user">ชื่อผู้ใช้</label>
+                                    <select id="hourly-user" required></select>
+                                </div>
+                                <div class="form-group-animated">
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">ประเภทรายการ</label>
+                                    <div class="radio-group-animated">
+                                        <label class="radio-option-animated leave-hour" data-type="leave">
+                                            <input type="radio" name="hourlyLeaveType" value="leave" class="hidden" required>
+                                            <span class="radio-label">ลาชั่วโมง</span>
+                                        </label>
+                                        <label class="radio-option-animated use-hour" data-type="use">
+                                            <input type="radio" name="hourlyLeaveType" value="use" class="hidden" required>
+                                            <span class="radio-label">ใช้ชั่วโมง</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="hourly-date">วันที่</label>
+                                    <input type="date" id="hourly-date" required>
+                                </div>
+                                <div class="form-group-animated">
+                                    <div class="time-group-animated">
+                                        <div><label for="hourly-start">เวลาเริ่มต้น</label><input type="time" id="hourly-start" required></div>
+                                        <div><label for="hourly-end">เวลาสิ้นสุด</label><input type="time" id="hourly-end" required></div>
+                                    </div>
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="hourly-note">หมายเหตุ</label>
+                                    <textarea id="hourly-note" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+                                </div>
+                                <div class="form-group-animated">
+                                    <button type="submit" class="submit-btn-animated">✅ บันทึกข้อมูล</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+                    <div class="podium-card">
+                        <h1 class="podium-title">🏆 Top 3 ติดลบ 🏆</h1>
+                        <div id="negative-ranking" class="podium-wrapper">
+                        </div>
+                    </div>
+                    <div class="podium-card">
+                        <h1 class="podium-title">🥇 Top 3 คงเหลือ 🥇</h1>
+                        <div id="positive-ranking" class="podium-wrapper">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">สรุปข้อมูลการลาชั่วโมงรายบุคคล</h3>
+                         <div class="flex items-center space-x-4">
+                            <div>
+                                <label for="hourly-summary-filter-position" class="text-sm font-medium text-gray-700 mr-2">ตำแหน่ง:</label>
+                                <select id="hourly-summary-filter-position" class="p-2 border rounded-lg text-sm">
+                                    <option value="">ทุกตำแหน่ง</option>
+                                    <option value="เภสัช">เภสัช</option>
+                                    <option value="จพง">จพง</option>
+                                    <option value="จนท">จนท</option>
+                                </select>
+                            </div>
+                             <div>
+                                 <label for="hourly-filter-fiscal-year" class="text-sm font-medium text-gray-700 mr-2">เลือกปีงบประมาณ:</label>
+                                <select id="hourly-filter-fiscal-year"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชั่วโมงที่ลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชั่วโมงที่ใช้</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ผลรวม</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">สถานะ</th></tr></thead><tbody id="hourly-summary-table"></tbody></table></div>
+                    <div id="hourly-summary-pagination-controls" class="flex justify-between items-center mt-4">
+                        <button id="hourly-summary-prev-btn" onclick="changeHourlySummaryPage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button>
+                        <span id="hourly-summary-page-info" class="text-sm"></span>
+                        <button id="hourly-summary-next-btn" onclick="changeHourlySummaryPage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">รายการล่าสุด</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border rounded-lg bg-gray-50"><input type="text" id="hourly-search-name" placeholder="ค้นหาชื่อ..." class="p-2 border rounded-lg col-span-1 md:col-span-2"><select id="hourly-filter-position" class="p-2 border rounded-lg"><option value="">ทุกตำแหน่ง</option><option value="เภสัช">เภสัช</option><option value="จพง">จพง</option><option value="จนท">จนท</option></select><input type="date" id="hourly-filter-start" class="p-2 border rounded-lg"><input type="date" id="hourly-filter-end" class="p-2 border rounded-lg"></div>
+                    <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">วันที่</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ประเภท</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">เวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ระยะเวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="hourly-records-table"></tbody></table></div>
+                    <div id="hourly-pagination-controls" class="flex justify-between items-center mt-4"><button id="hourly-prev-btn" onclick="changeHourlyPage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button><span id="hourly-page-info" class="text-sm"></span><button id="hourly-next-btn" onclick="changeHourlyPage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button></div>
+                </div>
+            </div>
+
+            <div id="leave-content" class="tab-content hidden">
+                <div class="form-wrapper-animated">
+                    <div class="container-animated">
+                        <div class="header-animated-orange">
+                            <a href="http://122.154.234.182:3001/authen?redirect=http://122.154.234.182:3001/leave/p&name=%E0%B8%A3%E0%B8%B0%E0%B8%9A%E0%B8%9A%E0%B8%A7%E0%B8%B1%E0%B8%99%E0%B8%A5%E0%B8%B2" target="_blank" rel="noopener noreferrer" 
+                               class="absolute top-4 right-4 z-10 bg-white hover:bg-orange-100 text-orange-600 font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:-translate-y-1">
+                                <span>เข้าระบบลา รพ.</span>
+                            </a>
+                            <h1>📢 แจ้งลา/ลาล่วงหน้า</h1>
+                            <p>กรุณากรอกข้อมูลการลาให้ครบถ้วน</p>
+                            <p class="text-amber-200 font-bold text-sm mt-4">**เป็นเพียงระบบแจ้งลา/จองวันลาเท่านั้น ให้ลาในระบบของโรงพยาบาลด้วย**</p>
+                        </div>
+                        <div class="form-container-animated">
+                            <form id="leave-form" class="space-y-6">
+                                <div class="slide-in">
+                                    <label class="block text-sm font-semibold text-black mb-2">ชื่อผู้ใช้</label>
+                                    <select id="leave-user" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></select>
+                                </div>
+                                <div class="slide-in">
+                                    <label class="block text-sm font-semibold text-black mb-4">ประเภทการลา</label>
+                                    <div id="leave-type-buttons-new" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                                        <button type="button" class="leave-type-btn px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-purple-400" data-type="ลากิจ" data-color="purple">ลากิจ</button>
+                                        <button type="button" class="leave-type-btn px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-green-400" data-type="ลาพักผ่อน" data-color="green">ลาพักผ่อน</button>
+                                        <button type="button" class="leave-type-btn px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-red-400" data-type="ลาป่วย" data-color="red">ลาป่วย</button>
+                                        <button type="button" class="leave-type-btn px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-purple-400" data-type="ลากิจฉุกเฉิน" data-color="purple">ลากิจฉุกเฉิน</button>
+                                        <button type="button" class="leave-type-btn px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:border-pink-400" data-type="ลาคลอด" data-color="pink">ลาคลอด</button>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div class="slide-in">
+                                        <label class="block text-sm font-semibold text-black mb-2">วันที่เริ่มต้น</label>
+                                        <input type="date" id="leave-start-date" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <label class="block text-sm font-semibold text-black mt-3 mb-2">ช่วงเวลา</label>
+                                        <select id="leave-start-period" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                            <option value="เต็มวัน">เต็มวัน</option>
+                                            <option value="ครึ่งวัน-เช้า">ครึ่งวัน-เช้า</option>
+                                            <option value="ครึ่งวัน-บ่าย">ครึ่งวัน-บ่าย</option>
+                                        </select>
+                                    </div>
+                                    <div class="slide-in">
+                                        <label class="block text-sm font-semibold text-black mb-2">วันที่สิ้นสุด</label>
+                                        <input type="date" id="leave-end-date" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <label class="block text-sm font-semibold text-black mt-3 mb-2">ช่วงเวลา</label>
+                                        <select id="leave-end-period" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                            <option value="เต็มวัน">เต็มวัน</option>
+                                            <option value="ครึ่งวัน-เช้า">ครึ่งวัน-เช้า</option>
+                                            <option value="ครึ่งวัน-บ่าย">ครึ่งวัน-บ่าย</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="slide-in">
+                                    <label class="block text-sm font-semibold text-black mb-2">หมายเหตุ</label>
+                                    <textarea id="leave-note" rows="4" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+                                </div>
+                                <div class="slide-in">
+                                    <label class="block text-sm font-semibold text-black mb-2">ผู้อนุมัติ</label>
+                                    <select id="leave-approver" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                        <option value="">เลือกผู้อนุมัติ</option>
+                                        <option value="สุฐิยาภรณ์ อยู่สุข">สุฐิยาภรณ์ อยู่สุข</option>
+                                        <option value="กัญญามาส เศษวงศ์">กัญญามาส เศษวงศ์</option>
+                                    </select>
+                                </div>
+                                <div class="text-center pt-6 bounce-in">
+                                    <button type="submit" class="submit-btn px-8 py-4 text-white font-semibold rounded-lg text-lg">แจ้งลา</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 mt-8">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-gray-800">สรุปข้อมูลวันลาสะสม (ปีงบประมาณ <span id="leave-summary-fiscal-year"></span>)</h3><div><label for="leave-filter-fiscal-year" class="text-sm font-medium text-gray-700 mr-2">เลือกปีงบประมาณ:</label><select id="leave-filter-fiscal-year"></select></div></div><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border rounded-lg bg-gray-50"><input type="text" id="summary-search-name" placeholder="ค้นหาชื่อ..." class="p-2 border rounded-lg col-span-2"><select id="summary-filter-position" class="p-2 border rounded-lg col-span-2"><option value="">ทุกตำแหน่ง</option><option value="เภสัช">เภสัช</option><option value="จพง">จพง</option><option value="จนท">จนท</option></select></div>
+                    <div class="table-container-no-scroll"><table class="w-full table-auto"><thead class="bg-gray-50 sticky top-0"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อ-สกุล</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">รวมวันลา (อนุมัติ)</th></tr></thead><tbody id="leave-summary-table"></tbody></table></div>
+                    <div id="leave-summary-pagination-controls" class="flex justify-between items-center mt-4"><button id="summary-prev-btn" onclick="changeLeaveSummaryPage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button><span id="summary-page-info" class="text-sm"></span><button id="summary-next-btn" onclick="changeLeaveSummaryPage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button></div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 mt-6"><h3 class="text-xl font-bold text-gray-800 mb-4">รายการล่าสุด</h3><div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border rounded-lg bg-gray-50"><input type="text" id="records-search-name" placeholder="ค้นหาชื่อ..." class="p-2 border rounded-lg col-span-1 md:col-span-2"><select id="records-filter-position" class="p-2 border rounded-lg"><option value="">ทุกตำแหน่ง</option><option value="เภสัช">เภสัช</option><option value="จพง">จพง</option><option value="จนท">จนท</option></select><input type="date" id="records-filter-start" class="p-2 border rounded-lg"><input type="date" id="records-filter-end" class="p-2 border rounded-lg"></div><div class="table-container overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50 sticky top-0"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">timeStamp</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อ-สกุล</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ประเภท</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">วันที่ลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">จำนวนวัน</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ผู้อนุมัติ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">สถานะ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="leave-records-table"></tbody></table></div><div id="leave-pagination-controls" class="flex justify-between items-center mt-4"><button id="leave-prev-btn" onclick="changeLeavePage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button><span id="leave-page-info" class="text-sm"></span><button id="leave-next-btn" onclick="changeLeavePage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button></div></div>
+            </div>
+
+            <div id="calendar-content" class="tab-content hidden">
+                 <div class="bg-white rounded-2xl shadow-xl p-6 hover-lift slide-in calendar-card">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <div class="flex items-center gap-4">
+                            <button onclick="goToToday()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-colors">วันนี้</button>
+                            <div class="flex items-center gap-2">
+                                <button id="calendar-prev-btn" onclick="navigateCalendar(-1)" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+                                <button id="calendar-next-btn" onclick="navigateCalendar(1)" class="p-2 rounded-full hover:bg-gray-100 transition-colors"><svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                            </div>
+                            <h3 id="calendar-title" class="text-xl font-semibold text-gray-800 w-48"></h3>
+                        </div>
+                        <div class="relative">
+                            <button id="view-dropdown-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2">
+                                <span id="current-view-text">เดือน</span>
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div id="view-dropdown-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-10 hidden">
+                                <a href="#" onclick="changeCalendarView('day')" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">วัน</a>
+                                <a href="#" onclick="changeCalendarView('week')" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">สัปดาห์</a>
+                                <a href="#" onclick="changeCalendarView('month')" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 bg-gray-50 font-semibold">เดือน</a>
+                                <a href="#" onclick="changeCalendarView('year')" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">ปี</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="calendar-grid-container"></div>
+                    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"><div class="flex items-center"><div class="w-4 h-4 sick-leave rounded mr-2"></div><span class="text-sm">ลาป่วย</span></div><div class="flex items-center"><div class="w-4 h-4 vacation-leave rounded mr-2"></div><span class="text-sm">ลาพักผ่อน</span></div><div class="flex items-center"><div class="w-4 h-4 personal-leave rounded mr-2"></div><span class="text-sm">ลากิจ</span></div><div class="flex items-center"><div class="w-4 h-4 maternity-leave rounded mr-2"></div><span class="text-sm">ลาคลอด</span></div></div>
+                </div>
+            </div>
+
+            <div id="register-content" class="tab-content hidden">
+                <div class="form-wrapper-animated">
+                    <div class="container-animated">
+                        <div class="header-animated-green">
+                            <h1>👤 ลงทะเบียนผู้ใช้งาน</h1>
+                            <p>กรุณากรอกข้อมูลให้ครบถ้วน</p>
+                        </div>
+                        <div class="form-container-animated">
+                            <form id="register-form">
+                                <div class="form-group-animated">
+                                    <label for="register-fullname">ชื่อ-สกุล</label>
+                                    <input type="text" id="register-fullname" required placeholder="กรอกชื่อและนามสกุล">
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="register-nickname">ชื่อเล่น</label>
+                                    <input type="text" id="register-nickname" required placeholder="กรอกชื่อเล่น">
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="register-position">ตำแหน่ง</label>
+                                    <select id="register-position" required>
+                                        <option value="">เลือกตำแหน่ง</option>
+                                        <option value="เภสัช">เภสัช</option>
+                                        <option value="จพง">จพง</option>
+                                        <option value="จนท">จนท</option>
+                                    </select>
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="register-pin">กำหนด PIN (4 หลัก)</label>
+                                    <input type="password" id="register-pin" required maxlength="4" pattern="[0-9]{4}" placeholder="กรอก PIN 4 หลัก">
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="register-pin-confirm">ยืนยัน PIN</label>
+                                    <input type="password" id="register-pin-confirm" required maxlength="4" pattern="[0-9]{4}" placeholder="กรอก PIN อีกครั้ง">
+                                </div>
+                                <div class="form-group-animated">
+                                    <button type="submit" class="submit-btn-animated">✅ ลงทะเบียน</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 mt-8"><h3 class="text-xl font-bold text-gray-800 mb-4">รายชื่อผู้ใช้ที่ลงทะเบียนแล้ว</h3><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border rounded-lg bg-gray-50"><input type="text" id="user-search-name" placeholder="ค้นหาชื่อ-ชื่อเล่น..." class="p-2 border rounded-lg col-span-2"><select id="user-filter-position" class="p-2 border rounded-lg col-span-2"><option value="">ทุกตำแหน่ง</option><option value="เภสัช">เภสัช</option><option value="จพง">จพง</option><option value="จนท">จนท</option></select></div><div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อ-สกุล</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="users-table"></tbody></table></div><div id="user-pagination-controls" class="flex justify-between items-center mt-4"><button id="user-prev-btn" onclick="changeUserPage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button><span id="user-page-info" class="text-sm"></span><button id="user-next-btn" onclick="changeUserPage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button></div></div>
+            </div>
+
+            <div id="pin-content" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover-lift"><h2 class="text-xl font-bold text-gray-800 mb-4 text-center">เปลี่ยน PIN ส่วนบุคคล</h2><form id="change-personal-pin-form"><div class="mb-4"><label for="change-pin-user" class="block text-sm font-medium text-gray-700 mb-2">เลือกผู้ใช้</label><select id="change-pin-user" placeholder="ค้นหาหรือเลือกผู้ใช้..." required></select></div><div class="mb-4"><label for="old-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN เดิม</label><input type="password" id="old-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-4"><label for="new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ใหม่ (4 หลัก)</label><input type="password" id="new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-6"><label for="confirm-new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN ใหม่</label><input type="password" id="confirm-new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><button type="submit" class="w-full bg-blue-600">เปลี่ยนรหัส PIN</button></form></div>
+                    <div id="system-pin-management-container" class="hover-lift"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
