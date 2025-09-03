@@ -1710,15 +1710,18 @@ function renderMonthView() {
         });
 
         dayEvents.slice(0, 5).forEach(leave => {
-            const user = users.find(u => u.nickname === leave.userNickname);
-            if (user) {
-                const eventDiv = document.createElement('div');
-                eventDiv.className = `calendar-event ${getEventClass(leave.leaveType)}`;
-                eventDiv.textContent = `${user.nickname}(${user.position})-${leave.leaveType}`;
-                eventDiv.onclick = () => showLeaveDetailModal(leave.id);
-                dayCell.appendChild(eventDiv);
-            }
-        });
+    const user = users.find(u => u.nickname === leave.userNickname);
+    if (user) {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = `calendar-event ${getEventClass(leave.leaveType)}`;
+        eventDiv.textContent = `${user.nickname}(${user.position})-${leave.leaveType}`;
+        
+        // ----> ตรวจสอบว่ามีบรรทัดนี้อยู่ <----
+        eventDiv.onclick = () => showLeaveDetailModal(leave.id);
+        
+        dayCell.appendChild(eventDiv);
+    }
+});
 
         if (dayEvents.length > 5) {
             const showMore = document.createElement('div');
@@ -2102,4 +2105,5 @@ window.manageRecord = async function(action, id) {
         console.error("Error managing record:", error);
         showErrorPopup('เกิดข้อผิดพลาด: ' + error.message); 
     }
+
 }
