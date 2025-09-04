@@ -60,7 +60,7 @@
                 <div class="form-wrapper-animated">
                     <div class="container-animated">
                         <div class="header-animated">
-                            <h1>⏰ บันทึกลาชั่วโมง</h1>
+                            <h1>📋 ลา/ใช้ - ชั่วโมง</h1>
                             <p>กรุณากรอกข้อมูลให้ครบถ้วน</p>
                         </div>
                         
@@ -92,6 +92,11 @@
                                         <div><label for="hourly-start">เวลาเริ่มต้น</label><input type="time" id="hourly-start" required></div>
                                         <div><label for="hourly-end">เวลาสิ้นสุด</label><input type="time" id="hourly-end" required></div>
                                     </div>
+                                </div>
+                                <div class="form-group-animated">
+                                    <label for="hourly-approver">ผู้อนุมัติ</label>
+                                    <select id="hourly-approver" required>
+                                        </select>
                                 </div>
                                 <div class="form-group-animated">
                                     <label for="hourly-note">หมายเหตุ</label>
@@ -148,7 +153,7 @@
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">รายการ</h3>
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border rounded-lg bg-gray-50"><input type="text" id="hourly-search-name" placeholder="ค้นหาชื่อ..." class="p-2 border rounded-lg col-span-1 md:col-span-2"><select id="hourly-filter-position" class="p-2 border rounded-lg"><option value="">ทุกตำแหน่ง</option><option value="เภสัช">เภสัช</option><option value="จพง">จพง</option><option value="จนท">จนท</option></select><input type="date" id="hourly-filter-start" class="p-2 border rounded-lg"><input type="date" id="hourly-filter-end" class="p-2 border rounded-lg"></div>
-                    <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">วันที่</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ประเภท</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">เวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ระยะเวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="hourly-records-table"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">วันที่</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ประเภท</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">เวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ผู้อนุมัติ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">สถานะ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="hourly-records-table"></tbody></table></div>
                     <div id="hourly-pagination-controls" class="flex justify-between items-center mt-4"><button id="hourly-prev-btn" onclick="changeHourlyPage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button><span id="hourly-page-info" class="text-sm"></span><button id="hourly-next-btn" onclick="changeHourlyPage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button></div>
                 </div>
             </div>
@@ -210,11 +215,8 @@
                                 <div class="slide-in">
                                     <label class="block text-sm font-semibold text-black mb-2">ผู้อนุมัติ</label>
                                     <select id="leave-approver" class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                                        <option value="">เลือกผู้อนุมัติ</option>
-                                        <option value="สุฐิยาภรณ์ อยู่สุข">สุฐิยาภรณ์ อยู่สุข</option>
-                                        <option value="กัญญามาส เศษวงศ์">กัญญามาส เศษวงศ์</option>
-                                    </select>
-                                </div>
+                                        </select>
+                                    </div>
                                 <div class="text-center pt-6 bounce-in">
                                     <button type="submit" class="submit-btn px-8 py-4 text-white font-semibold rounded-lg text-lg">💾 บันทึกข้อมูล</button>
                                 </div>
