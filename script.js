@@ -1695,7 +1695,7 @@ function renderHourlyRecords(records) {
             <td class="px-4 py-3">${formatDateThaiShort(r.date)}</td>
             <td class="px-4 py-3">${r.userNickname}</td>
             <td class="px-4 py-3 font-semibold ${r.type === 'leave' ? 'text-red-500':'text-green-500'}">${r.type === 'leave' ? 'ลา' : 'ใช้'}</td>
-            <td class="px-4 py-3">${r.startTime}-${r.endTime}</td>
+            <td class="px-4 py-3">${r.startTime}-${r.endTime} <span class="font-semibold ${r.type === 'leave' ? 'text-red-500' : 'text-green-500'}">(${formatHoursAndMinutes(r.duration)})</span></td>
             <td class="px-4 py-3">${r.approver || '-'}</td>
             <td class="px-4 py-3 font-semibold ${statusClass}">${statusText}</td>
             <td class="px-4 py-3 flex items-center space-x-1">
@@ -1969,16 +1969,9 @@ window.manageRecord = async function(action, id) {
     const isApprovalAction = action === 'approveLeave' || action === 'approveHourly';
     const isDeleteAction = action === 'deleteLeave' || action === 'deleteHourly';
 
-    if (isDeleteAction) {
-        if (systemPIN === null) {
-            return showErrorPopup('ยังไม่ได้ตั้งค่า PIN ของระบบ (สำหรับลบ) กรุณาไปที่เมนู "จัดการ PIN"');
-        }
-        const enteredPin = await getSystemPinConfirmation();
-        if (!enteredPin) return; // User cancelled
-    }
-    
-    let record, recordCollectionName, approverUsername, summaryHtml;
+    let record, recordCollectionName;
 
+    // ค้นหาข้อมูลจาก ID ที่ส่งมา
     if (action.includes('Leave')) {
         record = allLeaveRecords.find(r => r.id === id);
         recordCollectionName = 'leaveRecords';
@@ -1987,13 +1980,71 @@ window.manageRecord = async function(action, id) {
         recordCollectionName = 'hourlyRecords';
     }
 
-    if (!record) return showErrorPopup('ไม่พบข้อมูลที่ต้องการจัดการ');
-    
-    approverUsername = record.approver;
+    if (!record) {
+        return showErrorPopup('ไม่พบข้อมูลที่ต้องการจัดการ');
+    }
 
+    // --- ส่วนจัดการการลบ (Logic ใหม่) ---
+    if (isDeleteAction) {
+        let isApproved;
+        let summaryHtml;
+        let isPinCorrect = false;
+
+        // ตรวจสอบสถานะการอนุมัติและสร้างข้อความสรุป
+        if (action === 'deleteHourly') {
+            isApproved = record.confirmed;
+            const user = users.find(u => u.nickname === record.userNickname) || {};
+            summaryHtml = `
+                <p class="text-center"><b>ยืนยันการลบรายการลาชั่วโมงของ</b></p>
+                <p class="text-center font-semibold text-blue-600 text-lg">${user.nickname}</p>
+                <p><b>ประเภท:</b> ${record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
+                <p><b>วันที่:</b> ${formatDateThaiShort(record.date)}</p>
+            `;
+        } else { // deleteLeave
+            isApproved = record.status === 'อนุมัติแล้ว';
+            const user = users.find(u => u.nickname === record.userNickname) || {};
+            const leaveDays = calculateLeaveDays(record.startDate, record.endDate, record.startPeriod, record.endPeriod);
+            const dateDisplay = record.startDate === record.endDate ? formatDateThaiShort(record.startDate) : `${formatDateThaiShort(record.startDate)} - ${formatDateThaiShort(record.endDate)}`;
+            summaryHtml = `
+                <p class="text-center"><b>ยืนยันการลบรายการลาของ</b></p>
+                <p class="text-center font-semibold text-blue-600 text-lg">${user.fullname}</p>
+                <p><b>ประเภท:</b> ${record.leaveType}</p>
+                <p><b>วันที่:</b> ${dateDisplay} (${leaveDays} วัน)</p>
+            `;
+        }
+
+        // --- ตรวจสอบเงื่อนไขและเรียกใช้ PIN ที่ถูกต้อง ---
+        if (isApproved) {
+            // ถ้าอนุมัติแล้ว ต้องใช้ PIN ของผู้อนุมัติ
+            if (!record.approver) {
+                return showErrorPopup('ไม่สามารถลบได้: ไม่พบข้อมูลผู้อนุมัติในรายการนี้');
+            }
+            isPinCorrect = await confirmWithAdminPin(record.approver, summaryHtml);
+        } else {
+            // ถ้ายังไม่ได้อนุมัติ ใช้ PIN ของผู้แจ้ง
+            isPinCorrect = await confirmWithUserPin(record.userNickname, summaryHtml);
+        }
+
+        // ถ้า PIN ถูกต้อง ให้ดำเนินการลบ
+        if (isPinCorrect) {
+            showLoadingPopup('กำลังลบข้อมูล...');
+            try {
+                await deleteDoc(doc(db, recordCollectionName, id));
+                showSuccessPopup('ลบข้อมูลสำเร็จ');
+            } catch (error) {
+                console.error("Error deleting record:", error);
+                showErrorPopup('เกิดข้อผิดพลาดในการลบข้อมูล');
+            }
+        }
+        return; // จบการทำงานในส่วนของการลบ
+    }
+
+    // --- ส่วนจัดการการอนุมัติ (Logic เดิม) ---
     if (isApprovalAction) {
+        const approverUsername = record.approver;
         if (!approverUsername) return showErrorPopup('ไม่พบข้อมูลผู้อนุมัติในรายการนี้');
-        
+
+        let summaryHtml;
         if (action === 'approveLeave') {
             const user = users.find(u => u.nickname === record.userNickname) || {};
             const leaveDays = calculateLeaveDays(record.startDate, record.endDate, record.startPeriod, record.endPeriod);
@@ -2002,7 +2053,7 @@ window.manageRecord = async function(action, id) {
                 <p><strong>ประเภท:</strong> ${record.leaveType}</p>
                 <p><strong>จำนวน:</strong> ${leaveDays} วัน</p>
             `;
-        } else if (action === 'approveHourly') {
+        } else { // approveHourly
              const user = users.find(u => u.nickname === record.userNickname) || {};
              summaryHtml = `
                 <p><strong>อนุมัติรายการของ:</strong> ${user.nickname}</p>
@@ -2010,85 +2061,22 @@ window.manageRecord = async function(action, id) {
                 <p><strong>เวลา:</strong> ${record.startTime} - ${record.endTime}</p>
             `;
         }
-        
+
         const isPinCorrect = await confirmWithAdminPin(approverUsername, summaryHtml);
-        if (!isPinCorrect) return; // Admin PIN incorrect or cancelled
-    }
-    
-    if (isDeleteAction) {
-        let confirmationDetails = {};
-        
-        if (action === 'deleteHourly') {
-            const recordToDelete = allHourlyRecords.find(r => r.id === id);
-            if (!recordToDelete) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
-            const user = users.find(u => u.nickname === recordToDelete.userNickname) || {};
-            
-            confirmationDetails = {
-                title: 'ยืนยันการลบรายการลาชั่วโมง',
-                html: `
-                    <div style="text-align: left; padding: 0 1rem;">
-                        <p><strong>ผู้ใช้:</strong> ${user.nickname}</p>
-                        <p><strong>ประเภท:</strong> ${recordToDelete.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
-                        <p><strong>วันที่:</strong> ${formatDateThaiShort(recordToDelete.date)}</p>
-                        <p><strong>เวลา:</strong> ${recordToDelete.startTime} - ${recordToDelete.endTime}</p>
-                    </div>
-                `,
-                collectionName: 'hourlyRecords'
-            };
-        } else if (action === 'deleteLeave') {
-            const recordToDelete = allLeaveRecords.find(r => r.id === id);
-            if (!recordToDelete) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
-            const user = users.find(u => u.nickname === recordToDelete.userNickname) || {};
-            const leaveDays = calculateLeaveDays(recordToDelete.startDate, recordToDelete.endDate, recordToDelete.startPeriod, recordToDelete.endPeriod);
+        if (!isPinCorrect) return;
 
-            confirmationDetails = {
-                title: 'ยืนยันการลบรายการลา',
-                html: `
-                    <div style="text-align: left; padding: 0 1rem;">
-                        <p><strong>ผู้ใช้:</strong> ${user.fullname}</p>
-                        <p><strong>ประเภท:</strong> ${recordToDelete.leaveType}</p>
-                        <p><strong>วันที่ลา:</strong> ${recordToDelete.startDate === recordToDelete.endDate ? formatDateThaiShort(recordToDelete.startDate) : `${formatDateThaiShort(recordToDelete.startDate)} - ${formatDateThaiShort(recordToDelete.endDate)}`}</p>
-                        <p><strong>จำนวน:</strong> ${leaveDays} วัน</p>
-                    </div>
-                `,
-                collectionName: 'leaveRecords'
-            };
-        }
-
-        Swal.fire({
-            title: confirmationDetails.title,
-            html: confirmationDetails.html,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'ใช่, ลบเลย!',
-            cancelButtonText: 'ยกเลิก'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                showLoadingPopup('กำลังลบข้อมูล...');
-                try {
-                    await deleteDoc(doc(db, confirmationDetails.collectionName, id));
-                    showSuccessPopup('ลบข้อมูลสำเร็จ');
-                } catch (error) {
-                    console.error("Error deleting record:", error);
-                    showErrorPopup('เกิดข้อผิดพลาดในการลบข้อมูล');
-                }
-            }
-        });
-    } else if (isApprovalAction) {
         showLoadingPopup('กำลังอนุมัติ...');
         try {
             const recordDoc = doc(db, recordCollectionName, id);
             if (action === 'approveLeave') {
                 await updateDoc(recordDoc, { status: 'อนุมัติแล้ว' });
-            } else if (action === 'approveHourly') {
+            } else { // approveHourly
                 await updateDoc(recordDoc, { confirmed: true });
             }
             showSuccessPopup('อนุมัติสำเร็จ');
-        } catch(error) { 
+        } catch(error) {
             console.error("Error approving record:", error);
-            showErrorPopup('เกิดข้อผิดพลาดในการอนุมัติ: ' + error.message); 
+            showErrorPopup('เกิดข้อผิดพลาดในการอนุมัติ: ' + error.message);
         }
     }
 }
@@ -2427,5 +2415,3 @@ function getEventClass(leaveType) {
 }
 window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
 window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
-
-
