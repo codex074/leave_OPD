@@ -2092,3 +2092,338 @@ window.manageRecord = async function(action, id) {
         }
     }
 }
+// --- CALENDAR RENDERING ---
+window.changeCalendarView = function(view) {
+    currentCalendarView = view;
+    
+    const viewText = { day: 'วัน', week: 'สัปดาห์', month: 'เดือน', year: 'ปี' };
+    document.getElementById('current-view-text').textContent = viewText[view];
+
+    const menuItems = document.querySelectorAll('#view-dropdown-menu a');
+    menuItems.forEach(item => {
+        item.classList.remove('bg-gray-100', 'font-semibold');
+        if (item.textContent.trim() === viewText[view]) {
+            item.classList.add('bg-gray-100', 'font-semibold');
+        }
+    });
+    
+    document.getElementById('view-dropdown-menu').classList.add('hidden');
+    renderCalendar();
+}
+
+window.goToToday = function() {
+    currentDate = new Date();
+    renderCalendar();
+}
+
+window.navigateCalendar = function(direction) {
+    if (currentCalendarView === 'month') {
+        currentDate.setMonth(currentDate.getMonth() + direction);
+    } else if (currentCalendarView === 'week') {
+        currentDate.setDate(currentDate.getDate() + (7 * direction));
+    } else if (currentCalendarView === 'day') {
+        currentDate.setDate(currentDate.getDate() + direction);
+    } else if (currentCalendarView === 'year') {
+        currentDate.setFullYear(currentDate.getFullYear() + direction);
+    }
+    renderCalendar();
+}
+
+window.renderCalendar = function() {
+    const container = document.getElementById('calendar-grid-container');
+    if (!container) return;
+
+    switch(currentCalendarView) {
+        case 'day':
+            renderDayView();
+            break;
+        case 'week':
+            renderWeekView();
+            break;
+        case 'year':
+            renderYearView();
+            break;
+        case 'month':
+        default:
+            renderMonthView();
+            break;
+    }
+}
+
+function renderMonthView() {
+    const container = document.getElementById('calendar-grid-container');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const today = new Date();
+    document.getElementById('calendar-title').textContent = new Intl.DateTimeFormat('th-TH', {month: 'long', year: 'numeric'}).format(currentDate);
+    
+    container.innerHTML = `<div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2"><div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>`;
+    const calendarGrid = document.getElementById('calendar-grid');
+
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    let gridHtml = '';
+
+    // Days from previous month
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        const day = daysInPrevMonth - firstDayOfMonth + 1 + i;
+        gridHtml += `<div class="calendar-day other-month-day"><div>${day}</div></div>`;
+    }
+
+    // Days in current month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateString = toLocalISOString(date);
+        const holidayInfo = holidays.find(h => h.date === dateString);
+        
+        const isTodayClass = date.toDateString() === today.toDateString() ? 'today-day' : '';
+        const isWeekendClass = (date.getDay() === 0 || date.getDay() === 6) ? 'weekend-day' : 'bg-white';
+        const isHolidayClass = holidayInfo ? 'holiday-day' : '';
+        const dayNumberClass = holidayInfo ? 'text-red-700' : '';
+
+        let dayEventsHtml = '';
+
+        if (holidayInfo) {
+            dayEventsHtml += `<div class="holiday-event">${holidayInfo.name}</div>`;
+        }
+        
+        const dayEvents = allLeaveRecords.filter(r => {
+            if (r.status !== 'อนุมัติแล้ว') return false;
+            const currentDateString = toLocalISOString(date);
+            return currentDateString >= r.startDate && currentDateString <= r.endDate;
+        });
+
+        dayEvents.slice(0, 5).forEach(leave => {
+            const user = users.find(u => u.nickname === leave.userNickname);
+            if (user) {
+                dayEventsHtml += `<div class="calendar-event ${getEventClass(leave.leaveType)}" onclick="showLeaveDetailModal('${leave.id}')">${user.nickname}(${user.position})-${leave.leaveType}</div>`;
+            }
+        });
+
+        if (dayEvents.length > 5) {
+            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${dayEvents.length - 5} เพิ่มเติม</div>`;
+        }
+
+        gridHtml += `
+            <div class="calendar-day border p-2 min-h-[120px] flex flex-col ${isHolidayClass} ${isWeekendClass} ${isTodayClass}">
+                <div class="current-month-day font-semibold text-sm mb-1 ${dayNumberClass}">${day}</div>
+                ${dayEventsHtml}
+            </div>`;
+    }
+
+    // Days from next month
+    const totalCells = 42;
+    const renderedCells = firstDayOfMonth + daysInMonth;
+    const remainingCells = totalCells - renderedCells;
+    for (let i = 1; i <= remainingCells; i++) {
+        gridHtml += `<div class="calendar-day other-month-day"><div>${i}</div></div>`;
+    }
+
+    calendarGrid.innerHTML = gridHtml;
+}
+
+
+function renderDayView() {
+    const container = document.getElementById('calendar-grid-container');
+    document.getElementById('calendar-title').textContent = new Intl.DateTimeFormat('th-TH', {dateStyle: 'full'}).format(currentDate);
+    container.innerHTML = '';
+    container.appendChild(createDayCard(currentDate));
+}
+
+function renderWeekView() {
+    const container = document.getElementById('calendar-grid-container');
+    const week = getWeekDays(currentDate);
+    document.getElementById('calendar-title').textContent = `${formatDateThaiShort(week[0])} - ${formatDateThaiShort(week[6])}`;
+    
+    let gridHtml = '<div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">';
+    week.forEach(day => {
+        const dayName = new Intl.DateTimeFormat('th-TH', { weekday: 'short' }).format(day);
+        gridHtml += `<div>${dayName}${day.getDate()}</div>`;
+    });
+    gridHtml += '</div><div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>';
+    container.innerHTML = gridHtml;
+
+    const calendarGrid = document.getElementById('calendar-grid');
+    week.forEach(day => {
+        calendarGrid.appendChild(createDayCard(day, true));
+    });
+}
+
+function renderYearView() {
+    const container = document.getElementById('calendar-grid-container');
+    const year = currentDate.getFullYear();
+    document.getElementById('calendar-title').textContent = `ปี ${year + 543}`;
+    
+    container.innerHTML = '<div class="year-grid"></div>';
+    const yearGrid = container.querySelector('.year-grid');
+    const today = new Date();
+    const todayString = toLocalISOString(today);
+
+    for (let month = 0; month < 12; month++) {
+        const monthContainer = document.createElement('div');
+        monthContainer.className = 'month-container';
+        monthContainer.onclick = () => {
+            currentDate = new Date(year, month, 1);
+            changeCalendarView('month');
+        };
+        
+        const monthDate = new Date(year, month, 1);
+        const monthHeader = document.createElement('div');
+        monthHeader.className = 'month-header';
+        monthHeader.textContent = new Intl.DateTimeFormat('th-TH', { month: 'long' }).format(monthDate);
+        monthContainer.appendChild(monthHeader);
+
+        const weekDaysHeader = document.createElement('div');
+        weekDaysHeader.className = 'week-days-header';
+        ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.textContent = day;
+            weekDaysHeader.appendChild(dayEl);
+        });
+        monthContainer.appendChild(weekDaysHeader);
+
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'days-grid';
+        
+        const firstDayOfMonth = monthDate.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            daysGrid.innerHTML += '<div class="day-cell-mini"></div>';
+        }
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateString = toLocalISOString(date);
+            
+            const hasLeave = allLeaveRecords.some(r => {
+                if (r.status !== 'อนุมัติแล้ว') return false;
+                return dateString >= r.startDate && dateString <= r.endDate;
+            });
+            
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day-cell-mini';
+            if (dateString === todayString) {
+                dayCell.classList.add('is-today-mini');
+            } else if (hasLeave) {
+                dayCell.classList.add('has-leave-mini');
+            }
+            dayCell.textContent = day;
+            daysGrid.appendChild(dayCell);
+        }
+        
+        monthContainer.appendChild(daysGrid);
+        yearGrid.appendChild(monthContainer);
+    }
+}
+
+function createDayCard(date, isWeekView = false) {
+    const container = document.createElement('div');
+    
+    const dayEvents = allLeaveRecords.filter(r => {
+        if (r.status !== 'อนุมัติแล้ว') return false;
+        const currentDateString = toLocalISOString(date);
+        return currentDateString >= r.startDate && currentDateString <= r.endDate;
+    });
+
+    let eventsHtml = '';
+    if (dayEvents.length > 0) {
+        dayEvents.forEach(leave => {
+            const user = users.find(u => u.nickname === leave.userNickname);
+            if (user) eventsHtml += `<div class="calendar-event ${getEventClass(leave.leaveType)}" onclick="showLeaveDetailModal('${leave.id}')">${user.nickname} - ${leave.leaveType}</div>`;
+        });
+    } else {
+        eventsHtml = isWeekView ? '' : '<div class="events-list empty">ไม่มีรายการลา</div>';
+    }
+
+    if (isWeekView) {
+        container.className = `border p-2 min-h-[120px] flex flex-col ${toLocalISOString(date) === toLocalISOString(new Date()) ? 'today-day' : ''}`;
+        container.innerHTML = `<div class="events-list">${eventsHtml}</div>`;
+    } else {
+        const dayName = new Intl.DateTimeFormat('th-TH', {weekday: 'long'}).format(date);
+        const dateFormatted = new Intl.DateTimeFormat('th-TH', {dateStyle: 'long'}).format(date);
+        container.innerHTML = `
+            <div class="list-view-container">
+                <div class="day-header">
+                    <span class="day-header-date">${dateFormatted}</span>
+                    <span class="day-header-day">${dayName}</span>
+                </div>
+                <div class="events-list">${eventsHtml}</div>
+            </div>
+        `;
+    }
+    return container;
+}
+
+function getWeekDays(date) {
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+    const week = [];
+    for(let i=0; i<7; i++){
+        const day = new Date(startOfWeek);
+        day.setDate(startOfWeek.getDate() + i);
+        week.push(day);
+    }
+    return week;
+}
+
+window.showMoreEventsModal = function(dateString) {
+    const date = new Date(dateString + 'T00:00:00');
+    const dayEvents = allLeaveRecords.filter(r => {
+        if (r.status !== 'อนุมัติแล้ว') return false;
+        const startDate = new Date(r.startDate + 'T00:00:00');
+        const endDate = new Date(r.endDate + 'T00:00:00');
+        return date >= startDate && date <= endDate;
+    });
+
+    let eventsHtml = '<div class="space-y-2">';
+    dayEvents.forEach(leave => {
+        const user = users.find(u => u.nickname === leave.userNickname);
+        if (user) {
+            eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${leave.id}')" class="calendar-event ${getEventClass(leave.leaveType)}">${user.nickname}(${user.position})-${leave.leaveType}</div>`;
+        }
+    });
+    eventsHtml += '</div>';
+
+    Swal.fire({
+        title: `รายการลาทั้งหมดวันที่ ${formatDateThaiShort(date)}`,
+        html: eventsHtml,
+        confirmButtonText: 'ปิด'
+    });
+}
+
+window.showLeaveDetailModal = function(id) {
+    const record = allLeaveRecords.find(r => r.id === id);
+    if (!record) return;
+    const user = users.find(u => u.nickname === record.userNickname);
+    if (!user) return;
+
+    const sPeriod = record.startPeriod || record.period;
+    const ePeriod = record.endPeriod || record.period;
+    const leaveDays = calculateLeaveDays(record.startDate, record.endDate, sPeriod, ePeriod);
+    const dateDisplay = record.startDate === record.endDate ? formatDateThaiShort(record.startDate) : `${formatDateThaiShort(record.startDate)} - ${formatDateThaiShort(record.endDate)}`;
+
+    const html = `
+        <div class="space-y-1">
+            <p><b>ชื่อ-สกุล:</b> ${user.fullname}</p>
+            <p><b>ชื่อเล่น:</b> ${user.nickname}</p>
+            <p><b>ตำแหน่ง:</b> ${user.position}</p>
+            <p><b>ประเภทการลา:</b> ${record.leaveType}</p>
+            <p><b>วันที่ลา:</b> ${dateDisplay}</p>
+            <p><b>จำนวนวันลา:</b> ${leaveDays} วัน</p>
+            <p><b>ผู้อนุมัติ:</b> ${record.approver}</p>
+        </div>
+    `;
+    Swal.fire({ title: 'รายละเอียดการลา', html: html, confirmButtonText: 'ปิด' });
+}
+
+
+function getEventClass(leaveType) {
+    if (leaveType.includes('ป่วย')) return 'sick-leave'; if (leaveType.includes('พักผ่อน')) return 'vacation-leave';
+    if (leaveType.includes('กิจ')) return 'personal-leave'; if (leaveType.includes('คลอด')) return 'maternity-leave';
+    return 'personal-leave';
+}
+window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
