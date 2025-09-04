@@ -249,6 +249,7 @@ button[type="submit"]:active, .generic-button:active {
 .radio-option-animated {
     display: flex;
     align-items: center;
+    text-align: center;
     justify-content: center;
     cursor: pointer;
     padding: 12px 20px;
@@ -260,6 +261,8 @@ button[type="submit"]:active, .generic-button:active {
 }
 
 .radio-option-animated .radio-label {
+    flex: 1;                /* ขยายเต็มพื้นที่ปุ่ม */
+    text-align: center;      /* จัดข้อความให้อยู่กึ่งกลาง */
     font-weight: 600;
 }
 
@@ -941,16 +944,16 @@ button[type="submit"]:active, .generic-button:active {
 .podium-card {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    padding: 40px;
+    padding: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 .podium-title {
     text-align: center;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #2d3748;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
     font-family: 'Sarabun', sans-serif;
 }
@@ -959,15 +962,15 @@ button[type="submit"]:active, .generic-button:active {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    gap: 20px;
-    margin-top: 40px;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .podium-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 150px;
+    width: 100px;
     animation: bounceIn 1s ease-out;
 }
 .podium-item:nth-child(1) { order: 2; animation-delay: 0.2s; } /* No. 2 */
@@ -983,31 +986,31 @@ button[type="submit"]:active, .generic-button:active {
 }
 
 .podium-name {
-    font-size: 1.3rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #2d3748;
     margin-bottom: 10px;
     text-align: center;
-    min-height: 40px;
+    min-height: 30px;
     display: flex;
     align-items: center;
     font-family: 'Sarabun', sans-serif;
 }
 
 .podium-time {
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 400;
     color: #4a5568;
     margin-bottom: 15px;
     background: rgba(255, 255, 255, 0.8);
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-radius: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     font-family: 'Sarabun', sans-serif;
 }
 
 .podium-bar {
-    width: 120px;
+    width: 80px;
     border-radius: 10px 10px 0 0;
     position: relative;
     display: flex;
@@ -1015,7 +1018,7 @@ button[type="submit"]:active, .generic-button:active {
     align-items: flex-start;
     padding-top: 20px;
     color: white;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease;
@@ -1293,3 +1296,13 @@ button[type="submit"]:active, .generic-button:active {
 .bg-theme-calendar { background-color: #f3e8ff; }  /* Slightly Deeper Purple, e.g., purple-100 */
 .bg-theme-register { background-color: #dcfce7; }  /* Slightly Deeper Green, e.g., green-100 */
 .bg-theme-pin { background-color: #fffde6; }        /* Slightly Deeper Yellow, e.g., yellow-50 */
+
+@media (max-width: 768px) {
+    .header-animated-orange a {
+        position: static;       /* ยกเลิก absolute */
+        display: block;
+        margin: 10px auto 0;    /* จัดกึ่งกลางและเว้นระยะ */
+        text-align: center;
+        width: fit-content;
+    }
+}
