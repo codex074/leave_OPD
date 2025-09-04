@@ -887,9 +887,9 @@ async function sendHourlyTelegramNotification(hourlyData, user) {
     const durationDisplay = formatHoursAndMinutes(hourlyData.duration);
 
     const message = `
-⏰ <b>มีรายการแจ้งลา/ใช้ชั่วโมงใหม่</b>
+⏰ <b>มีรายการแจ้งลาชั่วโมงใหม่</b>
 --------------------------------------
-👨‍⚕️ <b>ผู้แจ้ง:</b> ${user.fullname} (${user.nickname})
+👨‍⚕️ <b>ผู้แจ้ง:</b> ${user.fullname} (${user.nickname})-${position}
 📋 <b>ประเภท:</b> ${typeDisplay}
 📅 <b>วันที่:</b> ${formatDateThaiShort(hourlyData.date)}
 ⏱️ <b>เวลา:</b> ${hourlyData.startTime} - ${hourlyData.endTime}
@@ -951,7 +951,7 @@ async function sendTelegramNotification(leaveData, user, leaveDays) {
     const message = `
 📢 <b>มีรายการแจ้งลาใหม่</b>
 --------------------------------------
-👨‍⚕️ <b>ผู้ลา:</b> ${user.fullname} (${user.nickname})
+👨‍⚕️ <b>ผู้ลา:</b> ${user.fullname} (${user.nickname})-${position}
 📋 <b>ประเภท:</b> ${leaveData.leaveType}
 📅 <b>วันที่:</b> ${dateDisplay} ${periodDisplay}
 ⏱️ <b>จำนวน:</b> ${leaveDays} วัน
@@ -1025,7 +1025,7 @@ async function handleLeaveSubmit(e) {
             icon: 'warning',
             title: 'ตรวจพบการลาซ้ำซ้อน',
             html: `คุณมีข้อมูลการลาในวันที่ <b>${formatDateThaiShort(conflict.date)}</b> อยู่แล้ว<br>(${conflict.type})<br><br>กรุณาตรวจสอบข้อมูลอีกครั้ง`,
-            confirmButtonText: 'รับทราบ',
+            confirmButtonText: 'ตกลง',
             confirmButtonColor: '#f59e0b'
         });
         return;
@@ -2427,3 +2427,4 @@ function getEventClass(leaveType) {
 }
 window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
 window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+
