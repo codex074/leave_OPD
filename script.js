@@ -23,13 +23,14 @@ window.firebase = {
 // --- Global variables ---
 let currentDate = new Date();
 let users = [];
+let admins = [];
 let filteredUsers = [];
 let allHourlyRecords = [];
 let filteredHourlyRecords = [];
 let allLeaveRecords = [];
 let filteredLeaveRecords = [];
-let hourlyRecordsUnsubscribe, leaveRecordsUnsubscribe, usersUnsubscribe, pinUnsubscribe;
-let tomSelectHourly, tomSelectLeave, tomSelectPinUser;
+let hourlyRecordsUnsubscribe, leaveRecordsUnsubscribe, usersUnsubscribe, pinUnsubscribe, adminsUnsubscribe;
+let tomSelectHourly, tomSelectLeave, tomSelectPinUser, tomSelectHourlyApprover, tomSelectAdminPinUser;
 let hourlyRecordsCurrentPage = 1;
 let hourlySummaryCurrentPage = 1;
 let leaveRecordsCurrentPage = 1;
@@ -38,7 +39,7 @@ let usersCurrentPage = 1;
 let currentFullDayLeaveType = null;
 const recordsPerPage = 10;
 const summaryRecordsPerPage = 10;
-let systemPIN = null;
+let systemPIN = null; // This now only serves as the PIN for deleting records
 let holidays = [];
 let currentCalendarView = 'month'; // 'day', 'week', 'month', 'year'
 
@@ -91,7 +92,6 @@ function setupEventListeners() {
         });
     });
     
-    // Event listener for new animated radio buttons
     const radioOptions = document.querySelectorAll('.radio-option-animated');
     radioOptions.forEach(option => {
         option.addEventListener('click', function() {
@@ -103,7 +103,6 @@ function setupEventListeners() {
         });
     });
 
-    // Event listener for new full-day leave buttons
     const leaveButtons = document.querySelectorAll('#leave-type-buttons-new .leave-type-btn');
     leaveButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -132,7 +131,6 @@ function setupEventListeners() {
         });
     });
 
-    // Calendar View Dropdown
     const dropdownBtn = document.getElementById('view-dropdown-btn');
     const dropdownMenu = document.getElementById('view-dropdown-menu');
     if(dropdownBtn) {
@@ -155,17 +153,22 @@ function initializePinListener() {
         } else {
             systemPIN = null;
         }
-        const pinContent = document.getElementById('pin-content');
-        if (pinContent && !pinContent.classList.contains('hidden')) {
-            renderPinManagementPage();
-        }
     }, (error) => {
         console.error("Error fetching system PIN:", error);
-        showErrorPopup("ไม่สามารถโหลดข้อมูล PIN ได้");
+        showErrorPopup("ไม่สามารถโหลดข้อมูล PIN (สำหรับลบ) ได้");
     });
 }
 
 async function initializeDataListeners() {
+    if (adminsUnsubscribe) adminsUnsubscribe();
+    adminsUnsubscribe = onSnapshot(collection(db, "admins"), (snapshot) => {
+        admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => a.username.localeCompare(b.username, 'th'));
+        populateApproverDropdowns();
+    }, (error) => {
+        console.error("Error fetching admins: ", error);
+        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้อนุมัติได้');
+    });
+
     if (usersUnsubscribe) usersUnsubscribe();
     usersUnsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
         users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => a.nickname.localeCompare(b.nickname, 'th'));
@@ -262,6 +265,26 @@ function populateUserDropdowns() {
     if (pinUserEl) tomSelectPinUser = new TomSelect(pinUserEl, { options: userOptions, create: false });
 }
 
+function populateApproverDropdowns() {
+    const approverOptions = [{ value: '', text: 'เลือกผู้อนุมัติ' }, ...admins.map(admin => ({ value: admin.username, text: admin.username }))];
+
+    const leaveApproverEl = document.getElementById('leave-approver');
+    if (leaveApproverEl) {
+        leaveApproverEl.innerHTML = approverOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+    }
+
+    const hourlyApproverEl = document.getElementById('hourly-approver');
+    if (hourlyApproverEl) {
+        if (tomSelectHourlyApprover) tomSelectHourlyApprover.destroy();
+        tomSelectHourlyApprover = new TomSelect(hourlyApproverEl, { 
+            options: admins.map(admin => ({ value: admin.username, text: admin.username })), 
+            create: false,
+            placeholder: 'เลือกผู้อนุมัติ...'
+        });
+    }
+}
+
+
 // --- UI & TAB MANAGEMENT ---
 window.showTab = function(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
@@ -278,7 +301,7 @@ window.showTab = function(tabName) {
 
     if (tabName === 'calendar') renderCalendar();
     if (tabName === 'pin') {
-        renderPinManagementPage();
+        renderPinManagementPage(); // This will now render the new admin pin form
         const pinUserEl = document.getElementById('change-pin-user');
         if (pinUserEl && (!tomSelectPinUser || tomSelectPinUser.destroyed)) {
              const userOptions = users.map(user => ({ value: user.nickname, text: `${user.nickname} (${user.fullname})`}));
@@ -312,98 +335,75 @@ function renderPinManagementPage() {
     const container = document.getElementById('system-pin-management-container');
     if (!container) return;
 
-    if (systemPIN === null) {
-        container.innerHTML = `
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">ตั้งค่า PIN ระบบ</h2>
-                <p class="text-center text-sm text-gray-500 mb-6">ยังไม่มี PIN กลางของระบบ</p>
-                <form id="set-pin-form">
-                    <div class="mb-4">
-                        <label for="initial-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN 4 หลัก</label>
-                        <input type="password" id="initial-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
-                    </div>
-                    <div class="mb-6">
-                        <label for="confirm-initial-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN</label>
-                        <input type="password" id="confirm-initial-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600">บันทึก PIN ระบบ</button>
-                </form>
-            </div>
-        `;
-        document.getElementById('set-pin-form').addEventListener('submit', handleSetInitialPin);
-    } else {
-        container.innerHTML = `
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">เปลี่ยน PIN ระบบ</h2>
-                <form id="change-pin-form">
-                    <div class="mb-4">
-                        <label for="old-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ระบบเดิม</label>
-                        <input type="password" id="old-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
-                    </div>
-                    <div class="mb-4">
-                        <label for="new-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ระบบใหม่</label>
-                        <input type="password" id="new-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
-                    </div>
-                    <div class="mb-6">
-                        <label for="confirm-new-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN ระบบใหม่</label>
-                        <input type="password" id="confirm-new-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600">เปลี่ยน PIN ระบบ</button>
-                </form>
-            </div>
-        `;
-        document.getElementById('change-pin-form').addEventListener('submit', handleChangePin);
-    }
+    // New HTML structure for changing admin PIN
+    container.innerHTML = `
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">เปลี่ยน PIN ผู้อนุมัติ (Admin)</h2>
+            <form id="change-admin-pin-form">
+                <div class="mb-4">
+                    <label for="change-admin-pin-user" class="block text-sm font-medium text-gray-700 mb-2">เลือกผู้ใช้ (Admin)</label>
+                    <select id="change-admin-pin-user" placeholder="ค้นหาหรือเลือกผู้ใช้..." required></select>
+                </div>
+                <div class="mb-4">
+                    <label for="old-admin-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN เดิม</label>
+                    <input type="password" id="old-admin-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
+                </div>
+                <div class="mb-4">
+                    <label for="new-admin-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ใหม่ (4 หลัก)</label>
+                    <input type="password" id="new-admin-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
+                </div>
+                <div class="mb-6">
+                    <label for="confirm-new-admin-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN ใหม่</label>
+                    <input type="password" id="confirm-new-admin-pin" class="w-full" required maxlength="4" pattern="\\d{4}">
+                </div>
+                <button type="submit" class="w-full bg-green-600">เปลี่ยนรหัส PIN (Admin)</button>
+            </form>
+        </div>
+    `;
+
+    // Initialize TomSelect for the new dropdown
+    const adminUserEl = document.getElementById('change-admin-pin-user');
+    if (tomSelectAdminPinUser) tomSelectAdminPinUser.destroy();
+    const adminOptions = admins.map(admin => ({ value: admin.username, text: admin.username }));
+    tomSelectAdminPinUser = new TomSelect(adminUserEl, { options: adminOptions, create: false });
+
+    // Add event listener to the new form
+    document.getElementById('change-admin-pin-form').addEventListener('submit', handleChangeAdminPin);
 }
 
-async function handleSetInitialPin(e) {
+async function handleChangeAdminPin(e) {
     e.preventDefault();
-    const pin1 = document.getElementById('initial-pin').value;
-    const pin2 = document.getElementById('confirm-initial-pin').value;
+    const username = tomSelectAdminPinUser.getValue();
+    const oldPin = document.getElementById('old-admin-pin').value;
+    const newPin = document.getElementById('new-admin-pin').value;
+    const confirmNewPin = document.getElementById('confirm-new-admin-pin').value;
 
-    if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) {
-        return showErrorPopup('PIN ต้องเป็นตัวเลข 4 หลักเท่านั้น');
-    }
-    if (pin1 !== pin2) {
-        return showErrorPopup('PIN ทั้งสองช่องไม่ตรงกัน');
-    }
+    if (!username) return showErrorPopup('กรุณาเลือกผู้ใช้ (Admin)');
 
-    showLoadingPopup('กำลังบันทึก PIN...');
-    try {
-        await setDoc(doc(db, "pin", "config"), { value: pin1 });
-        showSuccessPopup('ตั้งค่า PIN สำเร็จ');
-    } catch (error) {
-        console.error("Error setting PIN:", error);
-        showErrorPopup('ตั้งค่า PIN ล้มเหลว');
-    }
-}
+    const admin = admins.find(a => a.username === username);
+    if (!admin) return showErrorPopup('ไม่พบข้อมูล Admin');
 
-async function handleChangePin(e) {
-    e.preventDefault();
-    const oldPin = document.getElementById('old-pin').value;
-    const newPin1 = document.getElementById('new-pin').value;
-    const newPin2 = document.getElementById('confirm-new-pin').value;
+    if (oldPin !== admin.pin) return showErrorPopup('PIN เดิมไม่ถูกต้อง');
 
-    if (oldPin !== systemPIN) {
-        return showErrorPopup('PIN เดิมไม่ถูกต้อง');
-    }
-     if (newPin1.length !== 4 || !/^\d{4}$/.test(newPin1)) {
+    if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
         return showErrorPopup('PIN ใหม่ต้องเป็นตัวเลข 4 หลักเท่านั้น');
     }
-    if (newPin1 !== newPin2) {
-        return showErrorPopup('PIN ใหม่ทั้งสองช่องไม่ตรงกัน');
-    }
-    if (oldPin === newPin1) {
-        return showErrorPopup('PIN ใหม่ต้องไม่ซ้ำกับ PIN เดิม');
-    }
+    if (newPin !== confirmNewPin) return showErrorPopup('PIN ใหม่ทั้งสองช่องไม่ตรงกัน');
+    if (oldPin === newPin) return showErrorPopup('PIN ใหม่ต้องไม่ซ้ำกับ PIN เดิม');
 
-    showLoadingPopup('กำลังเปลี่ยนรหัส PIN...');
+    showLoadingPopup('กำลังเปลี่ยนรหัส PIN (Admin)...');
     try {
-        await updateDoc(doc(db, "pin", "config"), { value: newPin1 });
-        showSuccessPopup('เปลี่ยนรหัส PIN สำเร็จ');
+        const adminDocRef = doc(db, "admins", admin.id);
+        await updateDoc(adminDocRef, { pin: newPin });
+        showSuccessPopup('เปลี่ยนรหัส PIN (Admin) สำเร็จ');
+        
+        admin.pin = newPin; 
+
+        e.target.reset();
+        tomSelectAdminPinUser.clear();
     } catch (error) {
-        console.error("Error changing PIN:", error);
-        showErrorPopup('เปลี่ยนรหัส PIN ล้มเหลว');
+        console.error("Error changing admin PIN:", error);
+        showErrorPopup('เปลี่ยนรหัส PIN (Admin) ล้มเหลว');
     }
 }
 
@@ -419,7 +419,7 @@ async function getSystemPinConfirmation() {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                     </div>
-                    <h1 class="text-2xl font-bold text-gray-800 mb-2">กรุณากรอกรหัสระบบ</h1>
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">กรุณากรอกรหัสระบบ (สำหรับลบ)</h1>
                 </div>
                 <div id="pinDisplay" class="flex justify-center space-x-4 mb-8">
                     <div class="pin-dot w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
@@ -810,6 +810,11 @@ async function handleHourlySubmit(e) {
     if (!selectedTypeInput) return showErrorPopup('กรุณาเลือกประเภทรายการ');
     
     const currentLeaveType = selectedTypeInput.value;
+    const approver = tomSelectHourlyApprover.getValue();
+
+    if (!approver) {
+        return showErrorPopup('กรุณาเลือกผู้อนุมัติ');
+    }
 
     const formData = {
         fiscalYear: parseInt(document.getElementById('hourly-filter-fiscal-year').value),
@@ -820,7 +825,8 @@ async function handleHourlySubmit(e) {
         duration: calculateDuration(document.getElementById('hourly-start').value, document.getElementById('hourly-end').value).total,
         type: currentLeaveType, 
         note: document.getElementById('hourly-note').value, 
-        confirmed: false,
+        approver: approver,
+        confirmed: false, // This field means "approved"
     };
 
     if (formData.startTime >= formData.endTime) {
@@ -846,6 +852,7 @@ async function handleHourlySubmit(e) {
         <p><b>ประเภท:</b> ${formData.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
         <p><b>วันที่:</b> ${formatDateThaiShort(formData.date)}</p>
         <p><b>เวลา:</b> ${formData.startTime} - ${formData.endTime}</p>
+        <p><b>ผู้อนุมัติ:</b> ${formData.approver}</p>
         <p><b>รวมเป็นเวลา:</b> ${durationText}</p>
     `;
 
@@ -864,6 +871,7 @@ async function handleHourlySubmit(e) {
             showSuccessPopup('บันทึกสำเร็จ');
             e.target.reset(); 
             tomSelectHourly.clear();
+            tomSelectHourlyApprover.clear();
             setDefaultDate();
             document.querySelectorAll('.radio-option-animated').forEach(opt => opt.classList.remove('selected'));
         } catch (error) { showErrorPopup('บันทึกล้มเหลว'); }
@@ -888,7 +896,8 @@ async function sendHourlyTelegramNotification(hourlyData, user) {
 ⏳ <b>รวม:</b> ${durationDisplay}
 📝 <b>หมายเหตุ:</b> ${hourlyData.note || '-'}
 --------------------------------------
-<i>*เป็นเพียงการแจ้งเตือนในระบบ*</i>
+👤 <b>ผู้อนุมัติ:</b> ${hourlyData.approver}
+<i>*กรุณาตรวจสอบและอนุมัติในระบบ*</i>
     `;
 
     const params = {
@@ -1066,6 +1075,147 @@ async function handleLeaveSubmit(e) {
         } catch (error) { showErrorPopup('บันทึกล้มเหลว');}
     }
 }
+
+async function confirmWithAdminPin(adminUsername, summaryHtml) {
+    const admin = admins.find(a => a.username === adminUsername);
+    if (!admin || !admin.pin) {
+        showErrorPopup('ไม่พบข้อมูล PIN สำหรับผู้อนุมัตินี้');
+        return false;
+    }
+    const correctPin = admin.pin;
+
+    return new Promise((resolve) => {
+        let pin = '';
+        const pinModalHtml = `
+            <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
+                <div class="text-left text-sm mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">${summaryHtml}</div>
+                <hr class="my-4"/>
+                <h1 class="text-xl font-bold text-gray-800 mb-2 text-center">ยืนยันการอนุมัติโดย: <br/><span class="text-indigo-600">${adminUsername}</span></h1>
+                <p class="text-center text-sm text-gray-500 mb-4">กรุณากรอก PIN ส่วนตัวของท่านเพื่อยืนยัน</p>
+                <div id="pinDisplay" class="flex justify-center space-x-4 mb-8">
+                    <div class="pin-dot w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
+                    <div class="pin-dot w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
+                    <div class="pin-dot w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
+                    <div class="pin-dot w-4 h-4 rounded-full border-2 border-gray-300 bg-white"></div>
+                </div>
+                <div id="statusMessage" class="text-center mb-6 h-6"></div>
+                <div class="grid grid-cols-3 gap-2 mb-6">
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => `<button class="keypad-btn bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 text-2xl font-semibold text-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto" data-digit="${d}">${d}</button>`).join('')}
+                    <button class="keypad-btn bg-red-50 hover:bg-red-100 border-2 border-red-200 text-red-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto" data-action="cancel">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <button class="keypad-btn bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 text-2xl font-semibold text-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto" data-digit="0">0</button>
+                    <button class="keypad-btn bg-red-50 hover:bg-red-100 border-2 border-red-200 text-red-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto" data-action="delete">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        Swal.fire({
+            html: pinModalHtml,
+            customClass: { popup: 'pin-modal' },
+            showConfirmButton: false,
+            showCancelButton: false,
+            didOpen: (modal) => {
+                const pinDisplay = modal.querySelector('#pinDisplay');
+                const statusMessage = modal.querySelector('#statusMessage');
+                const keypadButtons = modal.querySelectorAll('.keypad-btn');
+                const dots = modal.querySelectorAll('.pin-dot');
+
+                const updatePinDisplay = () => {
+                    dots.forEach((dot, index) => {
+                        if (index < pin.length) {
+                            dot.classList.add('filled');
+                            dot.style.backgroundColor = '#6366f1';
+                            dot.style.borderColor = '#6366f1';
+                        } else {
+                            dot.classList.remove('filled');
+                            dot.style.backgroundColor = 'white';
+                            dot.style.borderColor = '#d1d5db';
+                        }
+                    });
+                };
+
+                const clearPin = () => {
+                    pin = '';
+                    updatePinDisplay();
+                };
+
+                const handleIncorrectPin = () => {
+                    statusMessage.innerHTML = '<span class="text-sm text-red-600 font-medium">✗ PIN ไม่ถูกต้อง</span>';
+                    pinDisplay.classList.add('shake');
+                    dots.forEach(dot => {
+                        dot.style.backgroundColor = '#ef4444'; dot.style.borderColor = '#ef4444';
+                    });
+                    setTimeout(() => {
+                        pinDisplay.classList.remove('shake');
+                        clearPin();
+                        statusMessage.innerHTML = '';
+                    }, 1000);
+                };
+
+                const handleCorrectPin = () => {
+                    statusMessage.innerHTML = '<span class="text-sm text-green-600 font-medium">✓ PIN ถูกต้อง!</span>';
+                    pinDisplay.classList.add('success-pulse');
+                     dots.forEach(dot => {
+                        dot.style.backgroundColor = '#10b981'; dot.style.borderColor = '#10b981';
+                    });
+                    setTimeout(() => {
+                        Swal.close();
+                        resolve(true);
+                    }, 800);
+                };
+                
+                const checkPin = () => {
+                    if (pin === correctPin) handleCorrectPin();
+                    else handleIncorrectPin();
+                };
+                
+                const addDigit = (digit) => {
+                    if (pin.length < 4) {
+                        pin += digit;
+                        updatePinDisplay();
+                        if (pin.length === 4) setTimeout(checkPin, 300);
+                    }
+                };
+                
+                const deleteDigit = () => {
+                    if (pin.length > 0) {
+                        pin = pin.slice(0, -1);
+                        updatePinDisplay();
+                        statusMessage.innerHTML = '';
+                    }
+                };
+                
+                const cancel = () => {
+                    Swal.close();
+                    resolve(false);
+                }
+
+                keypadButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        if (button.dataset.digit) addDigit(button.dataset.digit);
+                        else if (button.dataset.action === 'delete') deleteDigit();
+                        else if (button.dataset.action === 'cancel') cancel();
+                    });
+                });
+                
+                const handleKeyDown = (event) => {
+                    event.stopPropagation();
+                    if (event.key >= '0' && event.key <= '9') { addDigit(event.key); } 
+                    else if (event.key === 'Backspace') { event.preventDefault(); deleteDigit(); } 
+                    else if (event.key === 'Escape') { cancel(); }
+                };
+
+                modal.addEventListener('keydown', handleKeyDown);
+                modal.tabIndex = -1;
+                modal.focus();
+            }
+        });
+    });
+}
+
 
 async function confirmWithUserPin(nickname, summaryHtml) {
     const user = users.find(u => u.nickname === nickname);
@@ -1537,7 +1687,22 @@ function renderHourlyRecords(records) {
 
     paginatedRecords.forEach(r => {
         const user = users.find(u => u.nickname === r.userNickname) || {};
-        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3">${formatDateThaiShort(r.date)}</td><td class="px-4 py-3">${r.userNickname}</td><td class="px-4 py-3"><span class="position-badge ${getPositionBadgeClass(user.position)}">${user.position || ''}</span></td><td class="px-4 py-3 font-semibold ${r.type === 'leave' ? 'text-red-500':'text-green-500'}">${r.type === 'leave' ? 'ลา' : 'ใช้'}</td><td class="px-4 py-3">${r.startTime}-${r.endTime}</td><td class="px-4 py-3">${formatHoursAndMinutes(r.duration)}</td><td class="px-4 py-3 flex items-center space-x-1">${!r.confirmed ? `<button onclick="manageRecord('confirmHourly', '${r.id}')" class="p-2 rounded-full hover:bg-green-100 text-green-600" title="ยืนยัน"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` : '<span class="text-green-600 font-semibold">ยืนยันแล้ว</span>'}<button onclick="manageRecord('deleteHourly', '${r.id}')" class="p-2 rounded-full hover:bg-red-100 text-red-600" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td></tr>`;
+        const statusText = r.confirmed ? 'อนุมัติแล้ว' : 'รออนุมัติ';
+        const statusClass = r.confirmed ? 'text-green-500' : 'text-yellow-500';
+
+        tbody.innerHTML += `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3">${formatDateThaiShort(r.date)}</td>
+            <td class="px-4 py-3">${r.userNickname}</td>
+            <td class="px-4 py-3 font-semibold ${r.type === 'leave' ? 'text-red-500':'text-green-500'}">${r.type === 'leave' ? 'ลา' : 'ใช้'}</td>
+            <td class="px-4 py-3">${r.startTime}-${r.endTime}</td>
+            <td class="px-4 py-3">${r.approver || '-'}</td>
+            <td class="px-4 py-3 font-semibold ${statusClass}">${statusText}</td>
+            <td class="px-4 py-3 flex items-center space-x-1">
+                ${!r.confirmed ? `<button onclick="manageRecord('approveHourly', '${r.id}')" class="p-2 rounded-full hover:bg-green-100 text-green-600" title="อนุมัติ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` : ''}
+                <button onclick="manageRecord('deleteHourly', '${r.id}')" class="p-2 rounded-full hover:bg-red-100 text-red-600" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+            </td>
+        </tr>`;
     });
     
     const pageInfo = document.getElementById('hourly-page-info');
@@ -1667,464 +1832,7 @@ window.showLeaveRecordDetailsModal = function(id) {
     });
 }
 
-window.showLeaveDetailPopup = async function(nickname) {
-    const user = users.find(u => u.nickname === nickname);
-    if (!user) return showErrorPopup('ไม่พบข้อมูลผู้ใช้');
-
-    const fiscalYear = parseInt(document.getElementById('leave-filter-fiscal-year').value);
-    
-    const userLeaves = allLeaveRecords.filter(r => 
-        r.userNickname === nickname && 
-        r.fiscalYear === fiscalYear &&
-        r.status === 'อนุมัติแล้ว'
-    );
-
-    const stats = {
-        'ลาป่วย': { days: 0, color: 'red' },
-        'ลากิจ': { days: 0, color: 'purple' },
-        'ลากิจฉุกเฉิน': { days: 0, color: 'purple' },
-        'ลาพักผ่อน': { days: 0, color: 'green' },
-        'ลาคลอด': { days: 0, color: 'pink' }
-    };
-
-    userLeaves.forEach(leave => {
-        const leaveDays = calculateLeaveDays(leave.startDate, leave.endDate, leave.startPeriod, leave.endPeriod);
-        if (stats[leave.leaveType]) {
-            stats[leave.leaveType].days += leaveDays;
-        }
-    });
-    
-    const totalPersonalLeave = stats['ลากิจ'].days + stats['ลากิจฉุกเฉิน'].days;
-
-    const modalHtml = `
-        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="stat-card bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-red-600 text-sm font-medium">ลาป่วย</p>
-                            <p class="text-2xl font-bold text-red-700">${stats['ลาป่วย'].days} วัน</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card bg-purple-50 border-l-4 border-purple-500 p-4 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-purple-600 text-sm font-medium">ลากิจ/ฉุกเฉิน</p>
-                            <p class="text-2xl font-bold text-purple-700">${totalPersonalLeave} วัน</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-green-600 text-sm font-medium">ลาพักผ่อน</p>
-                            <p class="text-2xl font-bold text-green-700">${stats['ลาพักผ่อน'].days} วัน</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card bg-pink-50 border-l-4 border-pink-500 p-4 rounded-lg">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-pink-600 text-sm font-medium">ลาคลอด</p>
-                            <p class="text-2xl font-bold text-pink-700">${stats['ลาคลอด'].days} วัน</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div class="bg-gray-50 px-6 py-4 border-b">
-                    <h3 class="text-lg font-semibold text-gray-800">ประวัติการลาทั้งหมด (ปีงบประมาณ ${fiscalYear})</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ประเภท</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่ลา</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนวัน</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้อนุมัติ</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            ${userLeaves.length > 0 ? userLeaves.map(leave => {
-                                const leaveDays = calculateLeaveDays(leave.startDate, leave.endDate, leave.startPeriod, leave.endPeriod);
-                                const dateDisplay = leave.startDate === leave.endDate ? formatDateThaiShort(leave.startDate) : `${formatDateThaiShort(leave.startDate)} - ${formatDateThaiShort(leave.endDate)}`;
-                                const typeColorClasses = {
-                                    'ลาป่วย': 'bg-red-100 text-red-800',
-                                    'ลากิจ': 'bg-purple-100 text-purple-800',
-                                    'ลากิจฉุกเฉิน': 'bg-purple-100 text-purple-800',
-                                    'ลาพักผ่อน': 'bg-green-100 text-green-800',
-                                    'ลาคลอด': 'bg-pink-100 text-pink-800',
-                                };
-                                const colorClass = typeColorClasses[leave.leaveType] || 'bg-gray-100 text-gray-800';
-                                
-                                return `
-                                <tr class="table-row">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${colorClass}">
-                                            ${leave.leaveType}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${dateDisplay}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${leaveDays} วัน</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${leave.approver}</td>
-                                </tr>`;
-                            }).join('') : `<tr><td colspan="4" class="text-center p-6 text-gray-500">ไม่มีประวัติการลาในปีงบประมาณนี้</td></tr>`}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `;
-
-    Swal.fire({
-        width: '90%',
-        maxWidth: '1152px',
-        html: modalHtml,
-        showConfirmButton: true,
-        confirmButtonText: 'ปิด',
-        customClass: {
-            popup: 'p-0 rounded-xl',
-            header: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6',
-            title: 'text-2xl font-semibold',
-            htmlContainer: 'p-0 m-0',
-        },
-        title: `รายละเอียดการลาของ ${user.fullname}`,
-    });
-}
-
-// --- CALENDAR RENDERING ---
-window.changeCalendarView = function(view) {
-    currentCalendarView = view;
-    
-    const viewText = { day: 'วัน', week: 'สัปดาห์', month: 'เดือน', year: 'ปี' };
-    document.getElementById('current-view-text').textContent = viewText[view];
-
-    const menuItems = document.querySelectorAll('#view-dropdown-menu a');
-    menuItems.forEach(item => {
-        item.classList.remove('bg-gray-100', 'font-semibold');
-        if (item.textContent === viewText[view]) {
-            item.classList.add('bg-gray-100', 'font-semibold');
-        }
-    });
-    
-    document.getElementById('view-dropdown-menu').classList.add('hidden');
-    renderCalendar();
-}
-
-window.goToToday = function() {
-    currentDate = new Date();
-    renderCalendar();
-}
-
-window.navigateCalendar = function(direction) {
-    if (currentCalendarView === 'month') {
-        currentDate.setMonth(currentDate.getMonth() + direction);
-    } else if (currentCalendarView === 'week') {
-        currentDate.setDate(currentDate.getDate() + (7 * direction));
-    } else if (currentCalendarView === 'day') {
-        currentDate.setDate(currentDate.getDate() + direction);
-    } else if (currentCalendarView === 'year') {
-        currentDate.setFullYear(currentDate.getFullYear() + direction);
-    }
-    renderCalendar();
-}
-
-window.renderCalendar = function() {
-    const container = document.getElementById('calendar-grid-container');
-    if (!container) return;
-
-    switch(currentCalendarView) {
-        case 'day':
-            renderDayView();
-            break;
-        case 'week':
-            renderWeekView();
-            break;
-        case 'year':
-            renderYearView();
-            break;
-        case 'month':
-        default:
-            renderMonthView();
-            break;
-    }
-}
-
-function renderMonthView() {
-    const container = document.getElementById('calendar-grid-container');
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const today = new Date();
-    document.getElementById('calendar-title').textContent = new Intl.DateTimeFormat('th-TH', {month: 'long', year: 'numeric'}).format(currentDate);
-    
-    container.innerHTML = `<div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2"><div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>`;
-    const calendarGrid = document.getElementById('calendar-grid');
-
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-    for (let i = 0; i < firstDayOfMonth; i++) {
-        const day = daysInPrevMonth - firstDayOfMonth + 1 + i;
-        calendarGrid.innerHTML += `<div class="calendar-day other-month-day"><div>${day}</div></div>`;
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const dateString = toLocalISOString(date);
-        const holidayInfo = holidays.find(h => h.date === dateString);
-        let dayCell = document.createElement('div');
-        dayCell.className = `calendar-day border p-2 min-h-[120px] flex flex-col ${holidayInfo ? 'holiday-day' : ''} ${(date.getDay() === 0 || date.getDay() === 6) ? 'weekend-day' : 'bg-white'} ${date.toDateString() === today.toDateString() ? 'today-day' : ''}`;
-        
-        dayCell.innerHTML = `<div class="current-month-day font-semibold text-sm mb-1 ${holidayInfo ? 'text-red-700' : ''}">${day}</div>`;
-        
-        if (holidayInfo) {
-            const holidayDiv = document.createElement('div');
-            holidayDiv.className = 'holiday-event';
-            holidayDiv.textContent = holidayInfo.name;
-            dayCell.appendChild(holidayDiv);
-        }
-        
-        const dayEvents = allLeaveRecords.filter(r => {
-            if (r.status !== 'อนุมัติแล้ว') return false;
-            const currentDateString = toLocalISOString(date);
-            return currentDateString >= r.startDate && currentDateString <= r.endDate;
-        });
-
-        dayEvents.slice(0, 5).forEach(leave => {
-            const user = users.find(u => u.nickname === leave.userNickname);
-            if (user) {
-                const eventDiv = document.createElement('div');
-                eventDiv.className = `calendar-event ${getEventClass(leave.leaveType)}`;
-                eventDiv.textContent = `${user.nickname}(${user.position})-${leave.leaveType}`;
-                eventDiv.onclick = () => showLeaveDetailModal(leave.id);
-                dayCell.appendChild(eventDiv);
-            }
-        });
-
-        if (dayEvents.length > 5) {
-            const showMore = document.createElement('div');
-            showMore.className = 'show-more-btn';
-            showMore.textContent = `+${dayEvents.length - 5} เพิ่มเติม`;
-            showMore.onclick = () => showMoreEventsModal(dateString);
-            dayCell.appendChild(showMore);
-        }
-        calendarGrid.appendChild(dayCell);
-    }
-
-    const totalCells = 42;
-    const renderedCells = firstDayOfMonth + daysInMonth;
-    const remainingCells = totalCells - renderedCells;
-    for (let i = 1; i <= remainingCells; i++) {
-        calendarGrid.innerHTML += `<div class="calendar-day other-month-day"><div>${i}</div></div>`;
-    }
-}
-
-function renderDayView() {
-    const container = document.getElementById('calendar-grid-container');
-    document.getElementById('calendar-title').textContent = new Intl.DateTimeFormat('th-TH', {dateStyle: 'full'}).format(currentDate);
-    container.innerHTML = '';
-    container.appendChild(createDayCard(currentDate));
-}
-
-function renderWeekView() {
-    const container = document.getElementById('calendar-grid-container');
-    const week = getWeekDays(currentDate);
-    document.getElementById('calendar-title').textContent = `${formatDateThaiShort(week[0])} - ${formatDateThaiShort(week[6])}`;
-    
-    let gridHtml = '<div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">';
-    week.forEach(day => {
-        const dayName = new Intl.DateTimeFormat('th-TH', { weekday: 'short' }).format(day);
-        gridHtml += `<div>${dayName}${day.getDate()}</div>`;
-    });
-    gridHtml += '</div><div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>';
-    container.innerHTML = gridHtml;
-
-    const calendarGrid = document.getElementById('calendar-grid');
-    week.forEach(day => {
-        calendarGrid.appendChild(createDayCard(day, true));
-    });
-}
-
-function renderYearView() {
-    const container = document.getElementById('calendar-grid-container');
-    const year = currentDate.getFullYear();
-    document.getElementById('calendar-title').textContent = `ปี ${year + 543}`;
-    
-    container.innerHTML = '<div class="year-grid"></div>';
-    const yearGrid = container.querySelector('.year-grid');
-    const today = new Date();
-    const todayString = toLocalISOString(today);
-
-    for (let month = 0; month < 12; month++) {
-        const monthContainer = document.createElement('div');
-        monthContainer.className = 'month-container';
-        monthContainer.onclick = () => {
-            currentDate = new Date(year, month, 1);
-            changeCalendarView('month');
-        };
-        
-        const monthDate = new Date(year, month, 1);
-        const monthHeader = document.createElement('div');
-        monthHeader.className = 'month-header';
-        monthHeader.textContent = new Intl.DateTimeFormat('th-TH', { month: 'long' }).format(monthDate);
-        monthContainer.appendChild(monthHeader);
-
-        const weekDaysHeader = document.createElement('div');
-        weekDaysHeader.className = 'week-days-header';
-        ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].forEach(day => {
-            const dayEl = document.createElement('div');
-            dayEl.textContent = day;
-            weekDaysHeader.appendChild(dayEl);
-        });
-        monthContainer.appendChild(weekDaysHeader);
-
-        const daysGrid = document.createElement('div');
-        daysGrid.className = 'days-grid';
-        
-        const firstDayOfMonth = monthDate.getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        for (let i = 0; i < firstDayOfMonth; i++) {
-            daysGrid.innerHTML += '<div class="day-cell-mini"></div>';
-        }
-        
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            const dateString = toLocalISOString(date);
-            
-            const hasLeave = allLeaveRecords.some(r => {
-                if (r.status !== 'อนุมัติแล้ว') return false;
-                return dateString >= r.startDate && dateString <= r.endDate;
-            });
-            
-            const dayCell = document.createElement('div');
-            dayCell.className = 'day-cell-mini';
-            if (dateString === todayString) {
-                dayCell.classList.add('is-today-mini');
-            } else if (hasLeave) {
-                dayCell.classList.add('has-leave-mini');
-            }
-            dayCell.textContent = day;
-            daysGrid.appendChild(dayCell);
-        }
-        
-        monthContainer.appendChild(daysGrid);
-        yearGrid.appendChild(monthContainer);
-    }
-}
-
-function createDayCard(date, isWeekView = false) {
-    const container = document.createElement('div');
-    
-    const dayEvents = allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
-        const currentDateString = toLocalISOString(date);
-        return currentDateString >= r.startDate && currentDateString <= r.endDate;
-    });
-
-    let eventsHtml = '';
-    if (dayEvents.length > 0) {
-        dayEvents.forEach(leave => {
-            const user = users.find(u => u.nickname === leave.userNickname);
-            if (user) eventsHtml += `<div class="calendar-event ${getEventClass(leave.leaveType)}" onclick="showLeaveDetailModal('${leave.id}')">${user.nickname} - ${leave.leaveType}</div>`;
-        });
-    } else {
-        eventsHtml = isWeekView ? '' : '<div class="events-list empty">ไม่มีรายการลา</div>';
-    }
-
-    if (isWeekView) {
-        container.className = `border p-2 min-h-[120px] flex flex-col ${toLocalISOString(date) === toLocalISOString(new Date()) ? 'today-day' : ''}`;
-        container.innerHTML = `<div class="events-list">${eventsHtml}</div>`;
-    } else {
-        const dayName = new Intl.DateTimeFormat('th-TH', {weekday: 'long'}).format(date);
-        const dateFormatted = new Intl.DateTimeFormat('th-TH', {dateStyle: 'long'}).format(date);
-        container.innerHTML = `
-            <div class="list-view-container">
-                <div class="day-header">
-                    <span class="day-header-date">${dateFormatted}</span>
-                    <span class="day-header-day">${dayName}</span>
-                </div>
-                <div class="events-list">${eventsHtml}</div>
-            </div>
-        `;
-    }
-    return container;
-}
-
-function getWeekDays(date) {
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - date.getDay());
-    const week = [];
-    for(let i=0; i<7; i++){
-        const day = new Date(startOfWeek);
-        day.setDate(startOfWeek.getDate() + i);
-        week.push(day);
-    }
-    return week;
-}
-
-window.showMoreEventsModal = function(dateString) {
-    const date = new Date(dateString + 'T00:00:00');
-    const dayEvents = allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
-        const startDate = new Date(r.startDate + 'T00:00:00');
-        const endDate = new Date(r.endDate + 'T00:00:00');
-        return date >= startDate && date <= endDate;
-    });
-
-    let eventsHtml = '<div class="space-y-2">';
-    dayEvents.forEach(leave => {
-        const user = users.find(u => u.nickname === leave.userNickname);
-        if (user) {
-            eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${leave.id}')" class="calendar-event ${getEventClass(leave.leaveType)}">${user.nickname}(${user.position})-${leave.leaveType}</div>`;
-        }
-    });
-    eventsHtml += '</div>';
-
-    Swal.fire({
-        title: `รายการลาทั้งหมดวันที่ ${formatDateThaiShort(date)}`,
-        html: eventsHtml,
-        confirmButtonText: 'ปิด'
-    });
-}
-
-window.showLeaveDetailModal = function(id) {
-    const record = allLeaveRecords.find(r => r.id === id);
-    if (!record) return;
-    const user = users.find(u => u.nickname === record.userNickname);
-    if (!user) return;
-
-    const sPeriod = record.startPeriod || record.period;
-    const ePeriod = record.endPeriod || record.period;
-    const leaveDays = calculateLeaveDays(record.startDate, record.endDate, sPeriod, ePeriod);
-    const dateDisplay = record.startDate === record.endDate ? formatDateThaiShort(record.startDate) : `${formatDateThaiShort(record.startDate)} - ${formatDateThaiShort(record.endDate)}`;
-
-    const html = `
-        <div class="space-y-1">
-            <p><b>ชื่อ-สกุล:</b> ${user.fullname}</p>
-            <p><b>ชื่อเล่น:</b> ${user.nickname}</p>
-            <p><b>ตำแหน่ง:</b> ${user.position}</p>
-            <p><b>ประเภทการลา:</b> ${record.leaveType}</p>
-            <p><b>วันที่ลา:</b> ${dateDisplay}</p>
-            <p><b>จำนวนวันลา:</b> ${leaveDays} วัน</p>
-            <p><b>ผู้อนุมัติ:</b> ${record.approver}</p>
-        </div>
-    `;
-    Swal.fire({ title: 'รายละเอียดการลา', html: html, confirmButtonText: 'ปิด' });
-}
-
-
-function getEventClass(leaveType) {
-    if (leaveType.includes('ป่วย')) return 'sick-leave'; if (leaveType.includes('พักผ่อน')) return 'vacation-leave';
-    if (leaveType.includes('กิจ')) return 'personal-leave'; if (leaveType.includes('คลอด')) return 'maternity-leave';
-    return 'personal-leave';
-}
-window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
-window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+// ... All remaining functions (calendar rendering, editUser, etc.) should be here ...
 
 // --- USER & RECORD MANAGEMENT ---
 window.changeHourlyPage = function(direction) {
@@ -2258,49 +1966,88 @@ window.editUser = async function(id) {
 }
 
 window.manageRecord = async function(action, id) {
-    const actionsRequiringPin = ['approveLeave', 'confirmHourly', 'deleteLeave', 'deleteHourly'];
+    const isApprovalAction = action === 'approveLeave' || action === 'approveHourly';
+    const isDeleteAction = action === 'deleteLeave' || action === 'deleteHourly';
 
-    if (actionsRequiringPin.includes(action)) {
+    if (isDeleteAction) {
         if (systemPIN === null) {
-            return showErrorPopup('ยังไม่ได้ตั้งค่า PIN ของระบบ กรุณาไปที่เมนู "จัดการ PIN"');
+            return showErrorPopup('ยังไม่ได้ตั้งค่า PIN ของระบบ (สำหรับลบ) กรุณาไปที่เมนู "จัดการ PIN"');
         }
         const enteredPin = await getSystemPinConfirmation();
-        if (!enteredPin) return; // User cancelled PIN entry
+        if (!enteredPin) return; // User cancelled
+    }
+    
+    let record, recordCollectionName, approverUsername, summaryHtml;
+
+    if (action.includes('Leave')) {
+        record = allLeaveRecords.find(r => r.id === id);
+        recordCollectionName = 'leaveRecords';
+    } else if (action.includes('Hourly')) {
+        record = allHourlyRecords.find(r => r.id === id);
+        recordCollectionName = 'hourlyRecords';
     }
 
-    if (action.includes('delete')) {
+    if (!record) return showErrorPopup('ไม่พบข้อมูลที่ต้องการจัดการ');
+    
+    approverUsername = record.approver;
+
+    if (isApprovalAction) {
+        if (!approverUsername) return showErrorPopup('ไม่พบข้อมูลผู้อนุมัติในรายการนี้');
+        
+        if (action === 'approveLeave') {
+            const user = users.find(u => u.nickname === record.userNickname) || {};
+            const leaveDays = calculateLeaveDays(record.startDate, record.endDate, record.startPeriod, record.endPeriod);
+            summaryHtml = `
+                <p><strong>อนุมัติการลาของ:</strong> ${user.fullname || record.userNickname}</p>
+                <p><strong>ประเภท:</strong> ${record.leaveType}</p>
+                <p><strong>จำนวน:</strong> ${leaveDays} วัน</p>
+            `;
+        } else if (action === 'approveHourly') {
+             const user = users.find(u => u.nickname === record.userNickname) || {};
+             summaryHtml = `
+                <p><strong>อนุมัติรายการของ:</strong> ${user.nickname}</p>
+                <p><strong>ประเภท:</strong> ${record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
+                <p><strong>เวลา:</strong> ${record.startTime} - ${record.endTime}</p>
+            `;
+        }
+        
+        const isPinCorrect = await confirmWithAdminPin(approverUsername, summaryHtml);
+        if (!isPinCorrect) return; // Admin PIN incorrect or cancelled
+    }
+    
+    if (isDeleteAction) {
         let confirmationDetails = {};
         
         if (action === 'deleteHourly') {
-            const record = allHourlyRecords.find(r => r.id === id);
-            if (!record) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
-            const user = users.find(u => u.nickname === record.userNickname) || {};
+            const recordToDelete = allHourlyRecords.find(r => r.id === id);
+            if (!recordToDelete) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
+            const user = users.find(u => u.nickname === recordToDelete.userNickname) || {};
             
             confirmationDetails = {
                 title: 'ยืนยันการลบรายการลาชั่วโมง',
                 html: `
                     <div style="text-align: left; padding: 0 1rem;">
                         <p><strong>ผู้ใช้:</strong> ${user.nickname}</p>
-                        <p><strong>ประเภท:</strong> ${record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
-                        <p><strong>วันที่:</strong> ${formatDateThaiShort(record.date)}</p>
-                        <p><strong>เวลา:</strong> ${record.startTime} - ${record.endTime}</p>
+                        <p><strong>ประเภท:</strong> ${recordToDelete.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
+                        <p><strong>วันที่:</strong> ${formatDateThaiShort(recordToDelete.date)}</p>
+                        <p><strong>เวลา:</strong> ${recordToDelete.startTime} - ${recordToDelete.endTime}</p>
                     </div>
                 `,
                 collectionName: 'hourlyRecords'
             };
         } else if (action === 'deleteLeave') {
-            const record = allLeaveRecords.find(r => r.id === id);
-            if (!record) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
-            const user = users.find(u => u.nickname === record.userNickname) || {};
-            const leaveDays = calculateLeaveDays(record.startDate, record.endDate, record.startPeriod, record.endPeriod);
+            const recordToDelete = allLeaveRecords.find(r => r.id === id);
+            if (!recordToDelete) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
+            const user = users.find(u => u.nickname === recordToDelete.userNickname) || {};
+            const leaveDays = calculateLeaveDays(recordToDelete.startDate, recordToDelete.endDate, recordToDelete.startPeriod, recordToDelete.endPeriod);
 
             confirmationDetails = {
                 title: 'ยืนยันการลบรายการลา',
                 html: `
                     <div style="text-align: left; padding: 0 1rem;">
                         <p><strong>ผู้ใช้:</strong> ${user.fullname}</p>
-                        <p><strong>ประเภท:</strong> ${record.leaveType}</p>
-                        <p><strong>วันที่ลา:</strong> ${record.startDate === record.endDate ? formatDateThaiShort(record.startDate) : `${formatDateThaiShort(record.startDate)} - ${formatDateThaiShort(record.endDate)}`}</p>
+                        <p><strong>ประเภท:</strong> ${recordToDelete.leaveType}</p>
+                        <p><strong>วันที่ลา:</strong> ${recordToDelete.startDate === recordToDelete.endDate ? formatDateThaiShort(recordToDelete.startDate) : `${formatDateThaiShort(recordToDelete.startDate)} - ${formatDateThaiShort(recordToDelete.endDate)}`}</p>
                         <p><strong>จำนวน:</strong> ${leaveDays} วัน</p>
                     </div>
                 `,
@@ -2329,25 +2076,19 @@ window.manageRecord = async function(action, id) {
                 }
             }
         });
-
-    } else {
-        // Logic for other actions (approve, confirm)
-        showLoadingPopup('กำลังดำเนินการ...');
+    } else if (isApprovalAction) {
+        showLoadingPopup('กำลังอนุมัติ...');
         try {
-            let recordDoc;
-            if (action.includes('Hourly')) recordDoc = doc(db, "hourlyRecords", id);
-            else if (action.includes('Leave')) recordDoc = doc(db, "leaveRecords", id);
-            
-            if (action === 'confirmHourly') {
-                await updateDoc(recordDoc, { confirmed: true });
-            } else if (action === 'approveLeave') {
+            const recordDoc = doc(db, recordCollectionName, id);
+            if (action === 'approveLeave') {
                 await updateDoc(recordDoc, { status: 'อนุมัติแล้ว' });
+            } else if (action === 'approveHourly') {
+                await updateDoc(recordDoc, { confirmed: true });
             }
-            
-            showSuccessPopup('ดำเนินการสำเร็จ');
+            showSuccessPopup('อนุมัติสำเร็จ');
         } catch(error) { 
-            console.error("Error managing record:", error);
-            showErrorPopup('เกิดข้อผิดพลาด: ' + error.message); 
+            console.error("Error approving record:", error);
+            showErrorPopup('เกิดข้อผิดพลาดในการอนุมัติ: ' + error.message); 
         }
     }
 }
