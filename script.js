@@ -274,8 +274,7 @@ window.showTab = function(tabName) {
     if(tabEl) tabEl.classList.add('active-tab');
     
     const body = document.body;
-    body.className = "bg-gray-50 min-h-screen";
-    body.classList.add(`bg-theme-${tabName}`);
+    body.className = `min-h-screen bg-theme-${tabName}`;
 
     if (tabName === 'calendar') renderCalendar();
     if (tabName === 'pin') {
@@ -856,12 +855,131 @@ async function handleHourlySubmit(e) {
         showLoadingPopup();
         try {
             await addDoc(collection(db, "hourlyRecords"), {...formData, timestamp: serverTimestamp()});
+
+            const user = users.find(u => u.nickname === formData.userNickname);
+            if (user) {
+                await sendHourlyTelegramNotification(formData, user);
+            }
+
             showSuccessPopup('บันทึกสำเร็จ');
             e.target.reset(); 
             tomSelectHourly.clear();
             setDefaultDate();
             document.querySelectorAll('.radio-option-animated').forEach(opt => opt.classList.remove('selected'));
         } catch (error) { showErrorPopup('บันทึกล้มเหลว'); }
+    }
+}
+
+async function sendHourlyTelegramNotification(hourlyData, user) {
+    const apiToken = '8256265459:AAGPbAd_-wDPW0FSZUm49SwZD8FdEzy2zTQ';
+    const chatId = '-1002988996292';
+    const url = `https://api.telegram.org/bot${apiToken}/sendMessage`;
+
+    const typeDisplay = hourlyData.type === 'leave' ? 'ลาชั่วโมง 🔴' : 'ใช้ชั่วโมง 🟢';
+    const durationDisplay = formatHoursAndMinutes(hourlyData.duration);
+
+    const message = `
+⏰ <b>มีรายการแจ้งลา/ใช้ชั่วโมงใหม่</b>
+--------------------------------------
+👨‍⚕️ <b>ผู้แจ้ง:</b> ${user.fullname} (${user.nickname})
+📋 <b>ประเภท:</b> ${typeDisplay}
+📅 <b>วันที่:</b> ${formatDateThaiShort(hourlyData.date)}
+⏱️ <b>เวลา:</b> ${hourlyData.startTime} - ${hourlyData.endTime}
+⏳ <b>รวม:</b> ${durationDisplay}
+📝 <b>หมายเหตุ:</b> ${hourlyData.note || '-'}
+--------------------------------------
+<i>*เป็นเพียงการแจ้งเตือนในระบบ*</i>
+    `;
+
+    const params = {
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML',
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [{ text: '🔗 เปิดระบบแจ้งลา', url: 'https://codex074.github.io/leave_OPD/' }]
+            ]
+        })
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+            console.log('Hourly Telegram notification sent successfully.');
+        } else {
+            console.error('Failed to send hourly Telegram notification:', data.description);
+        }
+    } catch (error) {
+        console.error('Error sending hourly Telegram notification:', error);
+    }
+}
+
+
+async function sendTelegramNotification(leaveData, user, leaveDays) {
+    const apiToken = '8256265459:AAGPbAd_-wDPW0FSZUm49SwZD8FdEzy2zTQ';
+    const chatId = '-1002988996292';
+    const url = `https://api.telegram.org/bot${apiToken}/sendMessage`;
+
+    const dateDisplay = leaveData.startDate === leaveData.endDate
+        ? formatDateThaiShort(leaveData.startDate)
+        : `${formatDateThaiShort(leaveData.startDate)} - ${formatDateThaiShort(leaveData.endDate)}`;
+
+    let periodDisplay = '';
+    if (leaveData.startDate === leaveData.endDate) {
+        periodDisplay = `(${leaveData.startPeriod})`;
+    } else {
+        periodDisplay = `(เริ่ม${leaveData.startPeriod} - สิ้นสุด${leaveData.endPeriod})`;
+    }
+
+    const message = `
+📢 <b>มีรายการแจ้งลาใหม่</b>
+--------------------------------------
+👨‍⚕️ <b>ผู้ลา:</b> ${user.fullname} (${user.nickname})
+📋 <b>ประเภท:</b> ${leaveData.leaveType}
+📅 <b>วันที่:</b> ${dateDisplay} ${periodDisplay}
+⏱️ <b>จำนวน:</b> ${leaveDays} วัน
+📝 <b>หมายเหตุ:</b> ${leaveData.note || '-'}
+--------------------------------------
+👤 <b>ผู้อนุมัติ:</b> ${leaveData.approver}
+<i>*กรุณาตรวจสอบและอนุมัติในระบบ*</i>
+    `;
+
+    const params = {
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML',
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [{ text: '🔗 เปิดระบบแจ้งลา', url: 'https://codex074.github.io/leave_OPD/' }]
+            ]
+        })
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+            console.log('Telegram notification sent successfully.');
+        } else {
+            console.error('Failed to send Telegram notification:', data.description);
+        }
+    } catch (error) {
+        console.error('Error sending Telegram notification:', error);
     }
 }
 
@@ -927,6 +1045,12 @@ async function handleLeaveSubmit(e) {
         showLoadingPopup();
         try {
             await addDoc(collection(db, "leaveRecords"), {...formData, createdDate: serverTimestamp()});
+            
+            const user = users.find(u => u.nickname === formData.userNickname);
+            if (user) {
+                await sendTelegramNotification(formData, user, leaveDays);
+            }
+
             showSuccessPopup('บันทึกสำเร็จ');
             e.target.reset(); 
             tomSelectLeave.clear(); 
@@ -1211,7 +1335,7 @@ function applyHourlyFiltersAndRender() {
     });
     
     allHourlyRecords.forEach(r => {
-        if (r.fiscalYear === fiscalYear && summaryMap[r.userNickname]) {
+        if (r.fiscalYear === fiscalYear && summaryMap[r.userNickname] && r.confirmed) {
             if (r.type === 'leave') summaryMap[r.userNickname].leaveHours += r.duration || 0;
             else if (r.type === 'use') summaryMap[r.userNickname].usedHours += r.duration || 0;
         }
@@ -1468,7 +1592,22 @@ function renderLeaveRecords(records) {
         const sPeriod = r.startPeriod || r.period;
         const ePeriod = r.endPeriod || r.period;
         const leaveDays = calculateLeaveDays(r.startDate, r.endDate, sPeriod, ePeriod);
-        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="px-4 py-3 text-xs">${formatDateTimeThaiShort(r.createdDate)}</td><td class="px-4 py-3">${user.fullname || r.userNickname}</td><td class="px-4 py-3">${user.nickname}</td><td class="px-4 py-3"><span class="position-badge ${getPositionBadgeClass(user.position)}">${user.position}</span></td><td class="px-4 py-3"><span class="font-semibold ${getLeaveTypeClass(r.leaveType)}">${r.leaveType}</span></td><td class="px-4 py-3">${dateDisplay}</td><td class="px-4 py-3">${leaveDays}</td><td class="px-4 py-3 text-xs">${r.approver}</td><td class="px-4 py-3 font-semibold ${r.status === 'อนุมัติแล้ว' ? 'text-green-500' : 'text-yellow-500'}">${r.status}</td><td class="px-4 py-3 flex items-center space-x-1">${r.status === 'รออนุมัติ' ? `<button onclick="manageRecord('approveLeave', '${r.id}')" class="p-2 rounded-full hover:bg-green-100 text-green-600" title="อนุมัติ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` : ''}<button onclick="manageRecord('deleteLeave', '${r.id}')" class="p-2 rounded-full hover:bg-red-100 text-red-600" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td></tr>`;
+        
+        tbody.innerHTML += `
+        <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="showLeaveRecordDetailsModal('${r.id}')">
+            <td class="px-4 py-3">${user.fullname || r.userNickname}</td>
+            <td class="px-4 py-3">${user.nickname}</td>
+            <td class="px-4 py-3"><span class="position-badge ${getPositionBadgeClass(user.position)}">${user.position}</span></td>
+            <td class="px-4 py-3"><span class="font-semibold ${getLeaveTypeClass(r.leaveType)}">${r.leaveType}</span></td>
+            <td class="px-4 py-3">${dateDisplay}</td>
+            <td class="px-4 py-3">${leaveDays}</td>
+            <td class="px-4 py-3">${r.approver}</td>
+            <td class="px-4 py-3 font-semibold ${r.status === 'อนุมัติแล้ว' ? 'text-green-500' : 'text-yellow-500'}">${r.status}</td>
+            <td class="px-4 py-3 flex items-center space-x-1">
+                ${r.status === 'รออนุมัติ' ? `<button onclick="event.stopPropagation(); manageRecord('approveLeave', '${r.id}')" class="p-2 rounded-full hover:bg-green-100 text-green-600" title="อนุมัติ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` : ''}
+                <button onclick="event.stopPropagation(); manageRecord('deleteLeave', '${r.id}')" class="p-2 rounded-full hover:bg-red-100 text-red-600" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+            </td>
+        </tr>`;
     });
     
     const pageInfo = document.getElementById('leave-page-info');
@@ -1480,7 +1619,54 @@ function renderLeaveRecords(records) {
     if(nextBtn) nextBtn.disabled = leaveRecordsCurrentPage === totalPages || totalPages === 0;
 }
 
-// --- START: NEW MODAL FUNCTION ---
+window.showLeaveRecordDetailsModal = function(id) {
+    const record = allLeaveRecords.find(r => r.id === id);
+    if (!record) {
+        return showErrorPopup('ไม่พบข้อมูลการลา');
+    }
+
+    const user = users.find(u => u.nickname === record.userNickname);
+    if (!user) {
+        return showErrorPopup('ไม่พบข้อมูลผู้ใช้');
+    }
+
+    const leaveDays = calculateLeaveDays(record.startDate, record.endDate, record.startPeriod, record.endPeriod);
+
+    let combinedDatePeriodDisplay = '';
+    if (record.startDate === record.endDate) {
+        combinedDatePeriodDisplay = `${formatDateThaiShort(record.startDate)} (${record.startPeriod})`;
+    } else {
+        combinedDatePeriodDisplay = `${formatDateThaiShort(record.startDate)} (${record.startPeriod}) - ${formatDateThaiShort(record.endDate)} (${record.endPeriod})`;
+    }
+
+    const statusClass = record.status === 'อนุมัติแล้ว' ? 'text-green-500' : 'text-yellow-500';
+    
+    const leaveTypeClass = getLeaveTypeClass(record.leaveType);
+
+    const modalHtml = `
+        <div class="space-y-3 text-left p-4">
+            <p><strong>ชื่อ-สกุล:</strong> ${user.fullname} (${user.nickname})</p>
+            <p><strong>ตำแหน่ง:</strong> ${user.position}</p>
+            <hr class="my-2">
+            <p><strong>ประเภทการลา:</strong> <span class="font-semibold ${leaveTypeClass}">${record.leaveType}</span></p>
+            <p><strong>วันที่ลา:</strong> ${combinedDatePeriodDisplay}</p>
+            <p><strong>จำนวนวัน:</strong> ${leaveDays} วัน</p>
+            <p><strong>ผู้อนุมัติ:</strong> ${record.approver || '-'}</p>
+            <p><strong>สถานะ:</strong> <span class="font-semibold ${statusClass}">${record.status}</span></p>
+            <p><strong>หมายเหตุ:</strong> ${record.note || '-'}</p>
+            <hr class="my-2">
+            <p class="text-xs text-gray-500"><strong>วันที่แจ้งลา:</strong> ${formatDateTimeThaiShort(record.createdDate)}</p>
+        </div>
+    `;
+
+    Swal.fire({
+        title: 'รายละเอียดการลา',
+        html: modalHtml,
+        confirmButtonText: 'ปิด',
+        width: '500px'
+    });
+}
+
 window.showLeaveDetailPopup = async function(nickname) {
     const user = users.find(u => u.nickname === nickname);
     if (!user) return showErrorPopup('ไม่พบข้อมูลผู้ใช้');
@@ -1608,7 +1794,6 @@ window.showLeaveDetailPopup = async function(nickname) {
         title: `รายละเอียดการลาของ ${user.fullname}`,
     });
 }
-// --- END: NEW MODAL FUNCTION ---
 
 // --- CALENDAR RENDERING ---
 window.changeCalendarView = function(view) {
@@ -1710,18 +1895,15 @@ function renderMonthView() {
         });
 
         dayEvents.slice(0, 5).forEach(leave => {
-    const user = users.find(u => u.nickname === leave.userNickname);
-    if (user) {
-        const eventDiv = document.createElement('div');
-        eventDiv.className = `calendar-event ${getEventClass(leave.leaveType)}`;
-        eventDiv.textContent = `${user.nickname}(${user.position})-${leave.leaveType}`;
-        
-        // ----> ตรวจสอบว่ามีบรรทัดนี้อยู่ <----
-        eventDiv.onclick = () => showLeaveDetailModal(leave.id);
-        
-        dayCell.appendChild(eventDiv);
-    }
-});
+            const user = users.find(u => u.nickname === leave.userNickname);
+            if (user) {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `calendar-event ${getEventClass(leave.leaveType)}`;
+                eventDiv.textContent = `${user.nickname}(${user.position})-${leave.leaveType}`;
+                eventDiv.onclick = () => showLeaveDetailModal(leave.id);
+                dayCell.appendChild(eventDiv);
+            }
+        });
 
         if (dayEvents.length > 5) {
             const showMore = document.createElement('div');
@@ -2077,33 +2259,95 @@ window.editUser = async function(id) {
 
 window.manageRecord = async function(action, id) {
     const actionsRequiringPin = ['approveLeave', 'confirmHourly', 'deleteLeave', 'deleteHourly'];
-    
+
     if (actionsRequiringPin.includes(action)) {
         if (systemPIN === null) {
             return showErrorPopup('ยังไม่ได้ตั้งค่า PIN ของระบบ กรุณาไปที่เมนู "จัดการ PIN"');
         }
         const enteredPin = await getSystemPinConfirmation();
-        if (!enteredPin) return;
-    }
-    
-    showLoadingPopup('กำลังดำเนินการ...');
-    try {
-        let recordDoc;
-        if (action.includes('Hourly')) recordDoc = doc(db, "hourlyRecords", id);
-        else if (action.includes('Leave')) recordDoc = doc(db, "leaveRecords", id);
-        
-        if (action.includes('delete')) {
-            await deleteDoc(recordDoc);
-        } else if (action === 'confirmHourly') {
-            await updateDoc(recordDoc, { confirmed: true });
-        } else if (action === 'approveLeave') {
-            await updateDoc(recordDoc, { status: 'อนุมัติแล้ว' });
-        }
-        
-        showSuccessPopup('ดำเนินการสำเร็จ');
-    } catch(error) { 
-        console.error("Error managing record:", error);
-        showErrorPopup('เกิดข้อผิดพลาด: ' + error.message); 
+        if (!enteredPin) return; // User cancelled PIN entry
     }
 
+    if (action.includes('delete')) {
+        let confirmationDetails = {};
+        
+        if (action === 'deleteHourly') {
+            const record = allHourlyRecords.find(r => r.id === id);
+            if (!record) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
+            const user = users.find(u => u.nickname === record.userNickname) || {};
+            
+            confirmationDetails = {
+                title: 'ยืนยันการลบรายการลาชั่วโมง',
+                html: `
+                    <div style="text-align: left; padding: 0 1rem;">
+                        <p><strong>ผู้ใช้:</strong> ${user.nickname}</p>
+                        <p><strong>ประเภท:</strong> ${record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง'}</p>
+                        <p><strong>วันที่:</strong> ${formatDateThaiShort(record.date)}</p>
+                        <p><strong>เวลา:</strong> ${record.startTime} - ${record.endTime}</p>
+                    </div>
+                `,
+                collectionName: 'hourlyRecords'
+            };
+        } else if (action === 'deleteLeave') {
+            const record = allLeaveRecords.find(r => r.id === id);
+            if (!record) return showErrorPopup('ไม่พบข้อมูลที่ต้องการลบ');
+            const user = users.find(u => u.nickname === record.userNickname) || {};
+            const leaveDays = calculateLeaveDays(record.startDate, record.endDate, record.startPeriod, record.endPeriod);
+
+            confirmationDetails = {
+                title: 'ยืนยันการลบรายการลา',
+                html: `
+                    <div style="text-align: left; padding: 0 1rem;">
+                        <p><strong>ผู้ใช้:</strong> ${user.fullname}</p>
+                        <p><strong>ประเภท:</strong> ${record.leaveType}</p>
+                        <p><strong>วันที่ลา:</strong> ${record.startDate === record.endDate ? formatDateThaiShort(record.startDate) : `${formatDateThaiShort(record.startDate)} - ${formatDateThaiShort(record.endDate)}`}</p>
+                        <p><strong>จำนวน:</strong> ${leaveDays} วัน</p>
+                    </div>
+                `,
+                collectionName: 'leaveRecords'
+            };
+        }
+
+        Swal.fire({
+            title: confirmationDetails.title,
+            html: confirmationDetails.html,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                showLoadingPopup('กำลังลบข้อมูล...');
+                try {
+                    await deleteDoc(doc(db, confirmationDetails.collectionName, id));
+                    showSuccessPopup('ลบข้อมูลสำเร็จ');
+                } catch (error) {
+                    console.error("Error deleting record:", error);
+                    showErrorPopup('เกิดข้อผิดพลาดในการลบข้อมูล');
+                }
+            }
+        });
+
+    } else {
+        // Logic for other actions (approve, confirm)
+        showLoadingPopup('กำลังดำเนินการ...');
+        try {
+            let recordDoc;
+            if (action.includes('Hourly')) recordDoc = doc(db, "hourlyRecords", id);
+            else if (action.includes('Leave')) recordDoc = doc(db, "leaveRecords", id);
+            
+            if (action === 'confirmHourly') {
+                await updateDoc(recordDoc, { confirmed: true });
+            } else if (action === 'approveLeave') {
+                await updateDoc(recordDoc, { status: 'อนุมัติแล้ว' });
+            }
+            
+            showSuccessPopup('ดำเนินการสำเร็จ');
+        } catch(error) { 
+            console.error("Error managing record:", error);
+            showErrorPopup('เกิดข้อผิดพลาด: ' + error.message); 
+        }
+    }
 }
