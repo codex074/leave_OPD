@@ -887,14 +887,13 @@ async function sendHourlyTelegramNotification(hourlyData, user) {
     const durationDisplay = formatHoursAndMinutes(hourlyData.duration);
 
     const message = `
-⏰ <b>มีรายการแจ้งลาชั่วโมงใหม่</b>
+⏰ <b>มีรายการแจ้งลาชั่วโมงใหม่</b> ⏰
 --------------------------------------
-👨‍⚕️ <b>ผู้แจ้ง:</b> ${user.fullname} (${user.nickname})-${user.position}
-📋 <b>ประเภท:</b> ${typeDisplay}
-📅 <b>วันที่:</b> ${formatDateThaiShort(hourlyData.date)}
-⏱️ <b>เวลา:</b> ${hourlyData.startTime} - ${hourlyData.endTime}
-⏳ <b>รวม:</b> ${durationDisplay}
-📝 <b>หมายเหตุ:</b> ${hourlyData.note || '-'}
+<b>ชื่อ:</b> ${user.fullname} (${user.nickname})-${user.position}
+<b>ประเภท:</b> ${typeDisplay}
+<b>วันที่:</b> ${formatDateThaiShort(hourlyData.date)}
+<b>เวลา:</b> ${hourlyData.startTime} - ${hourlyData.endTime} (${durationDisplay})
+<b>หมายเหตุ:</b> ${hourlyData.note || '-'}
 --------------------------------------
 👤 <b>ผู้อนุมัติ:</b> ${hourlyData.approver}
 <i>*กรุณาตรวจสอบและอนุมัติในระบบ*</i>
@@ -949,13 +948,12 @@ async function sendTelegramNotification(leaveData, user, leaveDays) {
     }
 
     const message = `
-📢 <b>มีรายการแจ้งลาใหม่</b>
+📅 <b>มีรายการแจ้งลาใหม่</b> 📅 
 --------------------------------------
-👨‍⚕️ <b>ผู้ลา:</b> ${user.fullname} (${user.nickname})-${user.position}
-📋 <b>ประเภท:</b> ${leaveData.leaveType}
-📅 <b>วันที่:</b> ${dateDisplay} ${periodDisplay}
-⏱️ <b>จำนวน:</b> ${leaveDays} วัน
-📝 <b>หมายเหตุ:</b> ${leaveData.note || '-'}
+<b>ผู้ลา:</b> ${user.fullname} (${user.nickname})-${user.position}
+<b>ประเภท:</b> ${leaveData.leaveType}
+<b>วันที่:</b> ${dateDisplay} ${periodDisplay} (${leaveDays} วัน)
+<b>หมายเหตุ:</b> ${leaveData.note || '-'}
 --------------------------------------
 👤 <b>ผู้อนุมัติ:</b> ${leaveData.approver}
 <i>*กรุณาตรวจสอบและอนุมัติในระบบ*</i>
@@ -1694,6 +1692,7 @@ function renderHourlyRecords(records) {
         <tr class="border-b hover:bg-gray-50">
             <td class="px-4 py-3">${formatDateThaiShort(r.date)}</td>
             <td class="px-4 py-3">${r.userNickname}</td>
+            <td class="px-4 py-3"><span class="position-badge ${getPositionBadgeClass(user.position)}">${user.position || 'N/A'}</span></td>
             <td class="px-4 py-3 font-semibold ${r.type === 'leave' ? 'text-red-500':'text-green-500'}">${r.type === 'leave' ? 'ลา' : 'ใช้'}</td>
             <td class="px-4 py-3">${r.startTime}-${r.endTime} <span class="font-semibold ${r.type === 'leave' ? 'text-red-500' : 'text-green-500'}">(${formatHoursAndMinutes(r.duration)})</span></td>
             <td class="px-4 py-3">${r.approver || '-'}</td>
@@ -2391,7 +2390,13 @@ window.showLeaveDetailModal = function(id) {
     const sPeriod = record.startPeriod || record.period;
     const ePeriod = record.endPeriod || record.period;
     const leaveDays = calculateLeaveDays(record.startDate, record.endDate, sPeriod, ePeriod);
-    const dateDisplay = record.startDate === record.endDate ? formatDateThaiShort(record.startDate) : `${formatDateThaiShort(record.startDate)} - ${formatDateThaiShort(record.endDate)}`;
+    
+    let dateDisplay;
+    if (record.startDate === record.endDate) {
+        dateDisplay = `${formatDateThaiShort(record.startDate)} (${sPeriod})`;
+    } else {
+        dateDisplay = `${formatDateThaiShort(record.startDate)} (${sPeriod}) - ${formatDateThaiShort(record.endDate)} (${ePeriod})`;
+    }
 
     const html = `
         <div class="space-y-1">
