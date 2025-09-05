@@ -1297,7 +1297,7 @@ button[type="submit"]:active, .generic-button:active {
 .bg-theme-register { background-color: #dcfce7; }  /* Slightly Deeper Green, e.g., green-100 */
 .bg-theme-pin { background-color: #fffde6; }        /* Slightly Deeper Yellow, e.g., yellow-50 */
 
-@media (max-width: 768px) {
+@media (max-width: 780px) {
     .header-animated-orange a {
         position: static;       /* ยกเลิก absolute */
         display: block;
@@ -1306,3 +1306,4 @@ button[type="submit"]:active, .generic-button:active {
         width: fit-content;
     }
 }
+
