@@ -153,7 +153,7 @@
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">รายการ</h3>
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border rounded-lg bg-gray-50"><input type="text" id="hourly-search-name" placeholder="ค้นหาชื่อ..." class="p-2 border rounded-lg col-span-1 md:col-span-2"><select id="hourly-filter-position" class="p-2 border rounded-lg"><option value="">ทุกตำแหน่ง</option><option value="เภสัช">เภสัช</option><option value="จพง">จพง</option><option value="จนท">จนท</option></select><input type="date" id="hourly-filter-start" class="p-2 border rounded-lg"><input type="date" id="hourly-filter-end" class="p-2 border rounded-lg"></div>
-                    <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">วันที่</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ประเภท</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">เวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ผู้อนุมัติ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">สถานะ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="hourly-records-table"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50"><tr><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">วันที่</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่อเล่น</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ตำแหน่ง</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ประเภท</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">เวลา</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">ผู้อนุมัติ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">สถานะ</th><th class="px-4 py-3 text-left text-sm font-medium text-gray-700">การจัดการ</th></tr></thead><tbody id="hourly-records-table"></tbody></table></div>
                     <div id="hourly-pagination-controls" class="flex justify-between items-center mt-4"><button id="hourly-prev-btn" onclick="changeHourlyPage(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50" disabled>ก่อนหน้า</button><span id="hourly-page-info" class="text-sm"></span><button id="hourly-next-btn" onclick="changeHourlyPage(1)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50">ถัดไป</button></div>
                 </div>
             </div>
@@ -163,7 +163,11 @@
                     <div class="container-animated">
                         <div class="header-animated-orange">
                             <a href="http://122.154.234.182:3001/authen?redirect=http://122.154.234.182:3001/leave/p&name=%E0%B8%A3%E0%B8%B0%E0%B8%9A%E0%B8%9A%E0%B8%A7%E0%B8%B1%E0%B8%99%E0%B8%A5%E0%B8%B2" target="_blank" rel="noopener noreferrer" 
-                               class="absolute top-4 right-4 z-10 bg-white hover:bg-orange-100 text-orange-600 font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:-translate-y-1">
+                               class="absolute top-4 right-4 z-10 flex items-center space-x-2 bg-gradient-to-br from-teal-400 to-cyan-500 hover:from-teal-500 hover:to-cyan-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:-translate-y-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                                </svg>
                                 <span>เข้าระบบลา รพ.</span>
                             </a>
                             <h1>📢 แจ้งลา/ลาล่วงหน้า</h1>
@@ -320,4 +324,3 @@
 </body>
 
 </html>
-
