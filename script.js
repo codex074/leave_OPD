@@ -2487,27 +2487,39 @@ window.showMoreEventsModal = function(dateString) {
     const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString);
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
+    function leaveTypeToTagClass(leaveType) {
+        const t = String(leaveType || '').trim();
+        if (/พักผ่อน/i.test(t)) return 'modal-tag-green';       // Vacation
+        if (/ป่วย/i.test(t))    return 'modal-tag-red';         // Sick
+        if (/คลอด/i.test(t))    return 'modal-tag-pink';        // Maternity
+        if (/กิจ/i.test(t))     return 'modal-tag-purple';      // Personal/Emergency
+        return 'modal-tag-green'; // default
+    }
+
     let eventsHtml = '<div class="space-y-2">';
     combinedEvents.forEach(event => {
         const user = users.find(u => u.nickname === event.userNickname);
         if (!user) return;
 
-        const pendingEmoji = isApproved(event) ? '' : '🟡 ';
+        const statusClass = getStatusClass(event);
+        const pendingEmoji = statusClass === 'pending' ? '🟡 ' : '';
 
-        if (event.leaveType) { // Full-day leave (แจ้งลา/ลาล่วงหน้า) => left strip GREEN
-            eventsHtml += `<div class="calendar-event ${getStatusClass(event)} modal-left-green"
+        if (event.leaveType) { // Full-day leave (แจ้งลา/ลาล่วงหน้า) => left strip GREEN + tag color by type
+            const tagClass = leaveTypeToTagClass(event.leaveType);
+            eventsHtml += `<div class="calendar-event ${statusClass} modal-left-green"
                             onclick="Swal.close(); showLeaveDetailModal('${event.id || ''}')">
-                              ${pendingEmoji}<span class="modal-tag modal-tag-green">แจ้งลา</span>
-                              &nbsp; ${user.nickname} (${user.position}) - ${event.leaveType}
+                              ${pendingEmoji}<span class="modal-tag ${tagClass}">${event.leaveType}</span>
+                              &nbsp; ${user.nickname} (${user.position || ''})
                            </div>`;
-        } else { // Hourly leave/use => left strip BLUE ; text color: red (ลา) / green (ใช้)
+        } else { // Hourly leave/use => left strip BLUE ; text + tag color by action
             const isLeaveHour = event.type === 'leave'; // true = ลาชั่วโมง, false = ใช้ชั่วโมง
-            const shortType = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
+            const label = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
             const timeText = event.startTime && event.endTime ? ` (${event.startTime}-${event.endTime})` : '';
             const textClass = isLeaveHour ? 'hourly-text-red' : 'hourly-text-green';
-            eventsHtml += `<div class="calendar-event ${getStatusClass(event)} modal-left-blue"
+            const tagClass  = isLeaveHour ? 'modal-tag-red'    : 'modal-tag-green';
+            eventsHtml += `<div class="calendar-event ${statusClass} modal-left-blue"
                             onclick="Swal.close(); showHourlyDetailModal('${event.id || ''}')">
-                              ${pendingEmoji}<span class="modal-tag modal-tag-blue">${shortType}</span>
+                              ${pendingEmoji}<span class="modal-tag ${tagClass}">${label}</span>
                               &nbsp; <span class="${textClass}">${user.nickname}${timeText}</span>
                            </div>`;
         }
@@ -2519,7 +2531,7 @@ window.showMoreEventsModal = function(dateString) {
         html: eventsHtml,
         confirmButtonText: 'ปิด'
     });
-};;
+};;;
 
 window.showLeaveDetailModal = function(id) {
     const record = allLeaveRecords.find(r => r.id === id);
