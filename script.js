@@ -22,25 +22,6 @@ window.firebase = {
 
 // --- Global variables ---
 let currentDate = new Date();
-
-// === Approval helpers (added) ===
-function isApproved(rec) {
-    try {
-        if (!rec || typeof rec !== 'object') return false;
-        // Full-day leave records have 'leaveType' and use 'status' text
-        if ('leaveType' in rec) {
-            const s = (rec.status || '').toString();
-            return s.includes('อนุมัติ') || s.toLowerCase() === 'approved' || s === 'อนุมัติแล้ว';
-        }
-        // Hourly records use boolean 'confirmed'
-        if ('confirmed' in rec) {
-            return !!rec.confirmed;
-        }
-        return false;
-    } catch (e) { return false; }
-}
-function getStatusClass(rec) { return isApproved(rec) ? 'approved' : 'pending'; }
-
 let users = [];
 let admins = [];
 let filteredUsers = [];
@@ -2246,10 +2227,11 @@ function renderMonthView() {
         }
         
         let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
+            if (r.status !== 'อนุมัติแล้ว') return false;
             return dateString >= r.startDate && dateString <= r.endDate;
         }) : [];
         
-        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
+        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
 
         if (calendarPositionFilter) {
             dayEvents = dayEvents.filter(event => {
@@ -2269,11 +2251,11 @@ function renderMonthView() {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
                 if (event.leaveType) { // Full-day leave
-                    dayEventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    dayEventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    dayEventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
+                    dayEventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2379,6 +2361,7 @@ function renderYearView() {
             const dateString = toLocalISOString(date);
             
             const hasLeave = allLeaveRecords.some(r => {
+                if (r.status !== 'อนุมัติแล้ว') return false;
                 return dateString >= r.startDate && dateString <= r.endDate;
             });
             
@@ -2404,10 +2387,11 @@ function createDayCard(date, isWeekView = false) {
 
     // --- START: Added complete filtering logic ---
     let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
+        if (r.status !== 'อนุมัติแล้ว') return false;
         return dateString >= r.startDate && dateString <= r.endDate;
     }) : [];
     
-    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
+    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
 
     if (calendarPositionFilter) {
         dayEvents = dayEvents.filter(event => {
@@ -2430,11 +2414,11 @@ function createDayCard(date, isWeekView = false) {
             if (user) {
                 // Harmonized the display format to match the month view
                 if (event.leaveType) { // Full-day leave
-                    eventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
+                    eventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2479,12 +2463,13 @@ window.showMoreEventsModal = function(dateString) {
     const date = new Date(dateString + 'T00:00:00');
     
     const dayEvents = allLeaveRecords.filter(r => {
+        if (r.status !== 'อนุมัติแล้ว') return false;
         const startDate = new Date(r.startDate + 'T00:00:00');
         const endDate = new Date(r.endDate + 'T00:00:00');
         return date >= startDate && date <= endDate;
     });
 
-    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString);
+    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString && r.confirmed);
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '<div class="space-y-2">';
@@ -2492,11 +2477,11 @@ window.showMoreEventsModal = function(dateString) {
         const user = users.find(u => u.nickname === event.userNickname);
         if (user) {
             if (event.leaveType) { // Full-day leave
-                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
             } else { // Hourly leave
                 const dot = event.type === 'leave' ? '🔴' : '🟢';
                 const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
+                eventsHtml += `<div class="calendar-event hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
             }
         }
     });
@@ -2550,19 +2535,123 @@ window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() 
 window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
 
 
-// === Click empty day cell to open "all events for that day" (added) ===
-document.addEventListener('click', function(e){
-    const grid = document.getElementById('calendar-grid');
-    if (!grid || !grid.contains(e.target)) return;
-    // Detect clicks on existing event items or "show more" to avoid double handling
-    if (e.target.closest('.calendar-event') || e.target.closest('.show-more-btn') || e.target.closest('button')) return;
-    const cell = e.target.closest('.calendar-day');
-    if (!cell || cell.classList.contains('other-month-day')) return;
-    // The first child div usually contains the day number
-    let dayNumberEl = cell.querySelector(':scope > div');
-    let dayNum = dayNumberEl ? parseInt(dayNumberEl.textContent.trim(), 10) : NaN;
-    if (!dayNum || isNaN(dayNum)) return;
-    const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
-    const dateString = toLocalISOString(dateObj);
-    try { showMoreEventsModal(dateString); } catch(_) {}
-});
+/* ========= Pending Emoji Patch (appended) =========
+   Adds ⏳ emoji in front of any pending leave items on the calendar and in modals.
+   Detection rules (any match):
+   - element has class 'pending' or 'is-pending' or 'status-pending'
+   - element has attribute data-status="pending"
+   - element has attribute data-confirmed="false" or data-approved="false" or data-state="pending"
+   The patch is idempotent and uses a MutationObserver to catch dynamic renders.
+=================================================== */
+
+(function () {
+  // Inject a tiny CSS for spacing if not present
+  try {
+    var styleId = "pending-emoji-style";
+    if (!document.getElementById(styleId)) {
+      var st = document.createElement("style");
+      st.id = styleId;
+      st.textContent = ".pending-emoji{display:inline-block;margin-right:4px}";
+      document.head.appendChild(st);
+    }
+  } catch (e) { /* no-op */ }
+
+  function isPendingElement(el) {
+    if (!el || el.nodeType !== 1) return false;
+    var cl = (el.className || "") + "";
+    var ds = el.dataset || {};
+    if (cl.includes(" pending") || cl.startsWith("pending") || cl.includes("is-pending") || cl.includes("status-pending")) return true;
+    if (el.getAttribute && (
+        el.getAttribute("data-status") === "pending" ||
+        el.getAttribute("data-state") === "pending" ||
+        el.getAttribute("data-confirmed") === "false" ||
+        el.getAttribute("data-approved") === "false"
+      )) return true;
+    if (ds.status === "pending" || ds.state === "pending" || ds.confirmed === "false" || ds.approved === "false") return true;
+    return false;
+  }
+
+  function addEmojiIfNeeded(el) {
+    if (!isPendingElement(el)) return;
+    // prevent duplicate
+    if (el.querySelector(":scope > .pending-emoji")) return;
+
+    var emoji = document.createElement("span");
+    emoji.className = "pending-emoji";
+    emoji.textContent = "⏳ ";
+    try {
+      el.prepend(emoji);
+    } catch (e) {
+      // fallback: insert before first child
+      if (el.firstChild) {
+        el.insertBefore(emoji, el.firstChild);
+      } else {
+        el.appendChild(emoji);
+      }
+    }
+  }
+
+  function scan(root) {
+    if (!root || root.nodeType !== 1) return;
+    // Direct match
+    addEmojiIfNeeded(root);
+    // Common event selectors on this app
+    var selectors = [
+      ".pending",
+      ".is-pending",
+      ".status-pending",
+      "[data-status='pending']",
+      "[data-state='pending']",
+      "[data-confirmed='false']",
+      "[data-approved='false']",
+      // Try likely event classes used in calendar rendering
+      ".calendar-event",
+      ".event-item",
+      ".leave-item",
+      ".hourly-item",
+      ".full-leave-item"
+    ];
+    // Find all candidates and add emoji if they are pending
+    try {
+      var nodes = root.querySelectorAll(selectors.join(","));
+      nodes.forEach(function (n) {
+        addEmojiIfNeeded(n);
+      });
+    } catch (e) {
+      // If querySelectorAll fails, skip silently
+    }
+  }
+
+  // Initial scan on DOMContentLoaded (or immediately if already loaded)
+  function boot() {
+    scan(document.body);
+    // Observe future changes (calendar re-renders, modals, etc.)
+    var obs = new MutationObserver(function (mutList) {
+      for (var i = 0; i < mutList.length; i++) {
+        var m = mutList[i];
+        if (m.type === "childList") {
+          m.addedNodes && m.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) scan(node);
+          });
+        } else if (m.type === "attributes") {
+          if (m.target && m.target.nodeType === 1) {
+            scan(m.target);
+          }
+        }
+      }
+    });
+    obs.observe(document.body, {
+      childList: true,
+      attributes: true,
+      subtree: true,
+      attributeFilter: ["class", "data-status", "data-state", "data-confirmed", "data-approved"]
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+})();
+/* ========= End Pending Emoji Patch ========= */
