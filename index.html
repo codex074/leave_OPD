@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบแจ้งลาห้องยา OPD - รพ.อุตรดิตถ์</title>
+    <title>แจ้งลาห้องยา OPD - รพ.อุตรดิตถ์</title>
     <link rel="shortcut icon" href="sun.ico" type="image/x-icon">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +20,7 @@
 
     <header class="bg-white shadow-md relative">
         <div class="container mx-auto px-6 py-4">
-            <h1 class="text-3xl font-bold text-gray-800 text-center">🏥 ระบบแจ้งลาห้องยา OPD - รพ.อุตรดิตถ์</h1>
+            <h1 class="text-3xl font-bold text-gray-800 text-center">🏥 แจ้งลาห้องยา OPD - รพ.อุตรดิตถ์</h1>
             <div class="text-center mt-2"><span id="db-status" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">⏳ Connecting</span></div>
         </div>
         <div id="datetime-display" class="absolute top-4 right-6 text-sm font-semibold text-amber-800 bg-amber-200 px-3 py-1 rounded-lg shadow"></div>
@@ -172,7 +172,7 @@
                             </a>
                             <h1>📢 แจ้งลา/ลาล่วงหน้า</h1>
                             <p>กรุณากรอกข้อมูลการลาให้ครบถ้วน</p>
-                            <p class="text-amber-200 font-bold text-sm mt-4">**เป็นเพียงระบบแจ้งลา/จองวันลาเท่านั้น ให้ลาในระบบของโรงพยาบาลด้วย**</p>
+                            <p class="text-amber-200 font-bold text-sm mt-4">**เป็นเพียงระบบแจ้งลาภายในห้องยาเท่านั้น ให้ลาในระบบของโรงพยาบาลด้วย**</p>
                         </div>
                         <div class="form-container-animated">
                             <form id="leave-form" class="space-y-6">
@@ -266,10 +266,10 @@
                     <div class="flex flex-wrap items-center gap-4 mb-4 pb-4 border-b">
                         <span class="font-semibold text-gray-700">ตัวกรอง:</span>
                         <button onclick="toggleCalendarFilter('fullDay', this)" class="calendar-view-btn filter-btn-fullday active">
-                            แสดงลาเต็มวัน
+                            ลาในระบบ
                         </button>
                         <button onclick="toggleCalendarFilter('hourly', this)" class="calendar-view-btn filter-btn-hourly active">
-                            แสดงลาชั่วโมง
+                            ลาชั่วโมง
                         </button>
                         <div class="ml-auto">
                             <select id="calendar-filter-position" onchange="filterCalendarByPosition(this.value)" class="p-2 border rounded-lg text-sm">
