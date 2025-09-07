@@ -688,9 +688,7 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
 
     if (sDate > eDate) return 0;
 
-    let leaveDayCount = 0;
-    const currentDate = new Date(sDate);
-
+    // Helper
     const toYYYYMMDD = (d) => {
         const year = d.getFullYear();
         const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -698,10 +696,24 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
         return `${year}-${month}-${day}`;
     };
 
+    // === Special case: same start & end date ===
+    if (sDate.getTime() === eDate.getTime()) {
+        const dateString = toYYYYMMDD(sDate);
+        const isWeekend = (sDate.getDay() === 0 || sDate.getDay() === 6);
+        const isHoliday = holidays.find(h => h.date === dateString);
+        if (isWeekend || isHoliday) return 0;
+
+        const isHalf = (startPeriod && startPeriod.includes('ครึ่งวัน')) || (endPeriod && endPeriod.includes('ครึ่งวัน'));
+        return isHalf ? 0.5 : 1;
+    }
+
+    // === Multi-day logic (original) ===
+    let leaveDayCount = 0;
+    const currentDate = new Date(sDate);
+
     while (currentDate <= eDate) {
-        const dayOfWeek = currentDate.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const dateString = toYYYYMMDD(currentDate);
+        const isWeekend = (currentDate.getDay() === 0 || currentDate.getDay() === 6);
         const isHoliday = holidays.find(h => h.date === dateString);
 
         if (!isWeekend && !isHoliday) {
@@ -711,20 +723,20 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
+    // Adjust for half-day at start
     const sDateString = toYYYYMMDD(sDate);
     const sDateIsWorkday = (sDate.getDay() !== 0 && sDate.getDay() !== 6 && !holidays.find(h => h.date === sDateString));
     if (sDateIsWorkday && startPeriod && startPeriod.includes('ครึ่งวัน')) {
-         leaveDayCount -= 0.5;
+        leaveDayCount -= 0.5;
     }
 
-    if (sDate.getTime() !== eDate.getTime()) {
-        const eDateString = toYYYYMMDD(eDate);
-        const eDateIsWorkday = (eDate.getDay() !== 0 && eDate.getDay() !== 6 && !holidays.find(h => h.date === eDateString));
-        if (eDateIsWorkday && endPeriod && endPeriod.includes('ครึ่งวัน')) {
-             leaveDayCount -= 0.5;
-        }
+    // Adjust for half-day at end
+    const eDateString = toYYYYMMDD(eDate);
+    const eDateIsWorkday = (eDate.getDay() !== 0 && eDate.getDay() !== 6 && !holidays.find(h => h.date === eDateString));
+    if (eDateIsWorkday && endPeriod && endPeriod.includes('ครึ่งวัน')) {
+        leaveDayCount -= 0.5;
     }
-    
+
     return Math.max(0, leaveDayCount);
 }
 
