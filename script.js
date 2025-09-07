@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDataListeners();
     initializePinListener();
     setDefaultDate();
+    setupFormConstraints();
     setupEventListeners();
     updateDateTime();
     setInterval(updateDateTime, 1000);
@@ -351,6 +352,52 @@ function setDefaultDate() {
     if(leaveStartEl) leaveStartEl.value = today;
     if(leaveEndEl) leaveEndEl.value = today;
 }
+
+function setupFormConstraints(){
+    // ----- Full-day leave: end date >= start date -----
+    const startDateEl = document.getElementById('leave-start-date');
+    const endDateEl   = document.getElementById('leave-end-date');
+    if (startDateEl && endDateEl){
+        const applyMin = () => {
+            if (startDateEl.value){
+                endDateEl.min = startDateEl.value;
+                if (endDateEl.value && endDateEl.value < startDateEl.value){
+                    endDateEl.value = startDateEl.value;
+                }
+            }
+        };
+        startDateEl.addEventListener('change', applyMin);
+        // run once on load
+        applyMin();
+    }
+
+    // ----- Hourly: end time > start time -----
+    const startTimeEl = document.getElementById('hourly-start');
+    const endTimeEl   = document.getElementById('hourly-end');
+    if (startTimeEl && endTimeEl){
+        const applyMinTime = () => {
+            if (startTimeEl.value){
+                endTimeEl.min = startTimeEl.value;
+                // strictly later: if equal or earlier, clear end time
+                if (endTimeEl.value && endTimeEl.value <= startTimeEl.value){
+                    endTimeEl.value = '';
+                }
+            }
+        };
+        startTimeEl.addEventListener('change', applyMinTime);
+        endTimeEl.addEventListener('change', () => {
+            if (startTimeEl.value && endTimeEl.value <= startTimeEl.value){
+                // force end > start
+                endTimeEl.setCustomValidity('กรุณาเลือกเวลาสิ้นสุดหลังเวลาเริ่มต้น');
+            }else{
+                endTimeEl.setCustomValidity('');
+            }
+        });
+        // run once
+        applyMinTime();
+    }
+}
+
 
 // --- PIN Management ---
 function renderPinManagementPage() {
@@ -846,7 +893,14 @@ async function handleHourlySubmit(e) {
         return showErrorPopup('กรุณาเลือกผู้อนุมัติ');
     }
 
-    const formData = {
+    
+    // Validate time order: end > start
+    const startTimeVal = document.getElementById('hourly-start').value;
+    const endTimeVal   = document.getElementById('hourly-end').value;
+    if (startTimeVal && endTimeVal && endTimeVal <= startTimeVal){
+        return showErrorPopup('กรุณาเลือกเวลาสิ้นสุดหลังจากเวลาเริ่มต้น');
+    }
+const formData = {
         fiscalYear: parseInt(document.getElementById('hourly-filter-fiscal-year').value),
         userNickname: tomSelectHourly.getValue(), 
         date: document.getElementById('hourly-date').value,
@@ -1027,7 +1081,14 @@ async function handleLeaveSubmit(e) {
         return;
     }
     
-    const formData = {
+    
+    // Validate date order: endDate >= startDate
+    const sDateVal = document.getElementById('leave-start-date').value;
+    const eDateVal = document.getElementById('leave-end-date').value;
+    if (sDateVal && eDateVal && eDateVal < sDateVal){
+        return showErrorPopup('กรุณาเลือกวันที่สิ้นสุดไม่น้อยกว่าวันที่เริ่มต้น');
+    }
+const formData = {
         fiscalYear: parseInt(document.getElementById('leave-filter-fiscal-year').value),
         userNickname: tomSelectLeave.getValue(), 
         leaveType: currentFullDayLeaveType,
