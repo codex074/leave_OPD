@@ -2596,12 +2596,14 @@ window.showMoreEventsModal = function(dateString) {
             const isLeaveHour = event.type === 'leave'; // true = ลาชั่วโมง, false = ใช้ชั่วโมง
             const label = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
             const timeText = event.startTime && event.endTime ? ` (${event.startTime}-${event.endTime})` : '';
+            const durObj = (event.startTime && event.endTime) ? calculateDuration(event.startTime, event.endTime) : { total: 0 };
+            const durationText = durObj && durObj.total > 0 ? ` ${formatHoursAndMinutes(durObj.total)}` : '';
             const textClass = isLeaveHour ? 'hourly-text-red' : 'hourly-text-green';
             const tagClass  = isLeaveHour ? 'modal-tag-red'    : 'modal-tag-green';
             eventsHtml += `<div class="calendar-event ${statusClass} modal-left-blue"
                             onclick="Swal.close(); showHourlyDetailModal('${event.id || ''}')">
                               ${pendingEmoji}<span class="modal-tag ${tagClass}">${label}</span>
-                              &nbsp; <span class="${textClass}">${user.nickname}${timeText}</span>
+                              &nbsp; <span class="${textClass}">${user.nickname}${user.position ? ' ('+user.position+')' : ''}${timeText}${durationText}</span>
                            </div>`;
         }
     });
