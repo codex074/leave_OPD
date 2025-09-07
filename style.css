@@ -1333,3 +1333,16 @@ button[type="submit"]:active, .generic-button:active {
 .filter-btn-hourly.active:hover {
     background-color: #1d4ed8;
 }
+
+/* --- Approval status styles for calendar events --- */
+.calendar-event.approved {
+    border-left: 4px solid #10b981; /* green */
+    background: rgba(16, 185, 129, 0.12);
+}
+.calendar-event.pending {
+    border-left: 4px solid #f59e0b; /* amber */
+    background: rgba(245, 158, 11, 0.12);
+}
+.calendar-day .calendar-event.pending { 
+    filter: saturate(0.9);
+}
