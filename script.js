@@ -207,7 +207,7 @@ async function initializeDataListeners() {
         loadLeaveData(); 
 
         const dbStatus = document.getElementById('db-status');
-        dbStatus.textContent = '✅ Connected to Firebase';
+        dbStatus.textContent = '✅ Connected';
         dbStatus.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
         
         hideInitialLoader();
@@ -2571,7 +2571,7 @@ window.showMoreEventsModal = function(dateString) {
         if (!user) return;
 
         const statusClass = getStatusClass(event);
-        const pendingEmoji = statusClass === 'pending' ? '🟡 ' : '';
+        const pendingEmoji = statusClass === 'pending' ? '⏳ ' : '';
 
         if (event.leaveType) { // Full-day leave (แจ้งลา/ลาล่วงหน้า) => left strip GREEN + tag color by type
             const tagClass = leaveTypeToTagClass(event.leaveType);
