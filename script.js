@@ -592,6 +592,19 @@ function toLocalISOStringInThailand(date) {
     return new Intl.DateTimeFormat('en-CA', options).format(date);
 }
 
+/** Helper: date-range overlap for YYYY-MM-DD strings */
+function isRangeOverlap(startA, endA, startB, endB) {
+    const aStart = new Date(startA + 'T00:00:00');
+    const aEnd   = new Date(endA   + 'T23:59:59');
+    const bStart = new Date(startB + 'T00:00:00');
+    const bEnd   = new Date(endB   + 'T23:59:59');
+    return aStart <= bEnd && bStart <= aEnd;
+}
+
+/** Helper: exact same day for YYYY-MM-DD strings */
+function isSameDay(a, b) { return a === b; }
+
+
 function updateDateTime() {
     const now = new Date();
     const options = { 
@@ -1521,16 +1534,26 @@ function applyLeaveFiltersAndRender() {
     const recordsStart = document.getElementById('records-filter-start')?.value || '';
     const recordsEnd = document.getElementById('records-filter-end')?.value || '';
 
-    filteredLeaveRecords = allLeaveRecords.filter(record => {
+    
+filteredLeaveRecords = allLeaveRecords.filter(record => {
         if (record.fiscalYear !== fiscalYear) return false;
         const user = users.find(u => u.nickname === record.userNickname);
         if (!user) return false;
         const nameMatch = user.fullname.toLowerCase().includes(recordsSearchTerm) || user.nickname.toLowerCase().includes(recordsSearchTerm);
         const positionMatch = !recordsPosition || user.position === recordsPosition;
-        const startDateMatch = !recordsStart || record.startDate >= recordsStart;
-        const endDateMatch = !recordsEnd || record.endDate <= recordsEnd;
-        return nameMatch && positionMatch && startDateMatch && endDateMatch;
+        
+        // Optional leaveType filter
+        const typeEl = document.getElementById('records-filter-leave-type');
+        const leaveTypeFilter = typeEl ? (typeEl.value || '') : '';
+        const typeMatch = !leaveTypeFilter || record.leaveType === leaveTypeFilter;
+
+        // date overlap (support multi-day leaves)
+        const startOk = !recordsStart || isRangeOverlap(recordsStart, recordsStart, record.startDate, record.endDate);
+        const endOk   = !recordsEnd   || isRangeOverlap(recordsEnd, recordsEnd, record.startDate, record.endDate);
+
+        return nameMatch && positionMatch && typeMatch && startOk && endOk;
     });
+);
     
     renderLeaveSection(fiscalYear, filteredLeaveRecords, filteredSummaryUsers);
 }
