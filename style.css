@@ -1374,3 +1374,20 @@ button[type="submit"]:active, .generic-button:active {
 /* Hourly text colors */
 .hourly-text-red{   color:#dc2626 !important; }  /* red-600 */
 .hourly-text-green{ color:#16a34a !important; }  /* green-600 */
+
+/* === Extra tag colors for leave types === */
+.modal-tag-red{
+  background:#fee2e2;            /* red-100 */
+  color:#991b1b;                 /* red-800 */
+  border-left:4px solid #f87171; /* red-400 */
+}
+.modal-tag-purple{
+  background:#ede9fe;            /* violet-100 */
+  color:#5b21b6;                 /* violet-800 */
+  border-left:4px solid #a78bfa; /* violet-400 */
+}
+.modal-tag-pink{
+  background:#ffe4e6;            /* pink-100 */
+  color:#9d174d;                 /* pink-800 */
+  border-left:4px solid #f472b6; /* pink-400 */
+}
