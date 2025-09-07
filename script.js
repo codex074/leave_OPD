@@ -2193,11 +2193,19 @@ window.showHourlyDetailModal = function(id) {
     const user = users.find(u => u.nickname === record.userNickname) || {};
     const durationText = formatHoursAndMinutes(record.duration);
     
-    // --- START: โค้ดที่แก้ไข ---
-    const typeText = record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง';
-    const typeClass = record.type === 'leave' ? 'text-red-600 font-bold' : 'text-green-600 font-bold';
-    const typeHtml = `<span class="${typeClass}">${typeText}</span>`;
-    // --- END: โค้ดที่แก้ไข ---
+    
+        // --- START: โค้ดที่แก้ไข --- (unified list-item style)
+        const itemsToShow = 3;
+        combinedEvents.slice(0, itemsToShow).forEach(ev => {
+            const u = users.find(x => x.nickname === ev.userNickname);
+            if (!u) return;
+            dayEventsHtml += buildCalendarEventItemHTML(ev, u);
+        });
+        if (combinedEvents.length > itemsToShow) {
+            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - itemsToShow} เพิ่มเติม</div>`;
+        }
+        // --- END: โค้ดที่แก้ไข ---
+    
 
     const html = `
         <div class="space-y-2 text-left p-2">
@@ -2333,24 +2341,19 @@ function renderMonthView() {
         
         const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
-        // --- START: โค้ดที่แก้ไข ---
-        combinedEvents.slice(0, 3).forEach(event => {
-            const user = users.find(u => u.nickname === event.userNickname);
-            if (user) {
-                if (event.leaveType) { // Full-day leave
-                    dayEventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
-                } else { // Hourly leave
-                    const dot = event.type === 'leave' ? '🔴' : '🟢';
-                    const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    dayEventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
-                }
-            }
+        
+        // --- START: โค้ดที่แก้ไข --- (unified list-item style)
+        const itemsToShow = 3;
+        combinedEvents.slice(0, itemsToShow).forEach(ev => {
+            const u = users.find(x => x.nickname === ev.userNickname);
+            if (!u) return;
+            dayEventsHtml += buildCalendarEventItemHTML(ev, u);
         });
-
-        if (combinedEvents.length > 3) {
-            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - 3} เพิ่มเติม</div>`;
+        if (combinedEvents.length > itemsToShow) {
+            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - itemsToShow} เพิ่มเติม</div>`;
         }
         // --- END: โค้ดที่แก้ไข ---
+    
 
         gridHtml += `
             <div class="calendar-day border p-2 min-h-[120px] flex flex-col ${isHolidayClass} ${isWeekendClass} ${isTodayClass}">
@@ -2471,41 +2474,26 @@ function createDayCard(date, isWeekView = false) {
     const container = document.createElement('div');
     const dateString = toLocalISOString(date);
 
-    // --- START: Added complete filtering logic ---
-    let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-        return dateString >= r.startDate && dateString <= r.endDate;
-    }) : [];
-    
+    // Collect events of this day
+    let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => (dateString >= r.startDate && dateString <= r.endDate)) : [];
     let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
 
     if (calendarPositionFilter) {
-        dayEvents = dayEvents.filter(event => {
-            const user = users.find(u => u.nickname === event.userNickname);
-            return user && user.position === calendarPositionFilter;
-        });
-        hourlyDayEvents = hourlyDayEvents.filter(event => {
-            const user = users.find(u => u.nickname === event.userNickname);
-            return user && user.position === calendarPositionFilter;
-        });
+        const byPos = (e) => {
+            const u = users.find(u => u.nickname === e.userNickname);
+            return u && u.position === calendarPositionFilter;
+        };
+        dayEvents = dayEvents.filter(byPos);
+        hourlyDayEvents = hourlyDayEvents.filter(byPos);
     }
-    // --- END: Added complete filtering logic ---
-
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '';
     if (combinedEvents.length > 0) {
-        combinedEvents.forEach(event => {
-            const user = users.find(u => u.nickname === event.userNickname);
-            if (user) {
-                // Harmonized the display format to match the month view
-                if (event.leaveType) { // Full-day leave
-                    eventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
-                } else { // Hourly leave
-                    const dot = event.type === 'leave' ? '🔴' : '🟢';
-                    const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
-                }
-            }
+        combinedEvents.forEach(ev => {
+            const u = users.find(x => x.nickname === ev.userNickname);
+            if (!u) return;
+            eventsHtml += buildCalendarEventItemHTML(ev, u);
         });
     } else {
         eventsHtml = isWeekView ? '' : '<div class="events-list empty">ไม่มีรายการลา</div>';
@@ -2513,24 +2501,22 @@ function createDayCard(date, isWeekView = false) {
 
     if (isWeekView) {
         container.className = `calendar-day border p-2 min-h-[120px] flex flex-col ${dateString === toLocalISOString(new Date()) ? 'today-day bg-white' : 'bg-white'}`;
-        // Add a simple day number for context in week view
         const dayNumber = date.getDate();
         container.innerHTML = `<div class="text-sm text-gray-500 mb-1">${dayNumber}</div><div class="events-list">${eventsHtml}</div>`;
-    } else { // Day view
+    } else {
         const dayName = new Intl.DateTimeFormat('th-TH', {weekday: 'long'}).format(date);
         const dateFormatted = new Intl.DateTimeFormat('th-TH', {dateStyle: 'long'}).format(date);
-        container.innerHTML = `
-            <div class="list-view-container">
+        container.innerHTML = `<div class="list-view-container">
                 <div class="day-header">
                     <span class="day-header-date">${dateFormatted}</span>
                     <span class="day-header-day">${dayName}</span>
                 </div>
                 <div class="events-list">${eventsHtml}</div>
-            </div>
-        `;
+            </div>`;
     }
     return container;
 }
+
 
 function getWeekDays(date) {
     const startOfWeek = new Date(date);
@@ -2635,6 +2621,39 @@ window.showLeaveDetailModal = function(id) {
 
 
 function getEventClass(leaveType) {
+// === Unified Event Item Builder (matches "รายการลาทั้งหมด" style) ===
+function leaveTypeToTagClass(leaveType) {
+    const t = String(leaveType || '').trim();
+    if (/พักผ่อน/i.test(t)) return 'modal-tag-green';       // Vacation
+    if (/ป่วย/i.test(t))    return 'modal-tag-red';         // Sick
+    if (/คลอด/i.test(t))    return 'modal-tag-pink';        // Maternity
+    if (/กิจ/i.test(t))     return 'modal-tag-purple';      // Personal/Emergency
+    return 'modal-tag-green'; // default
+}
+// Build one line item HTML used in all calendar views
+function buildCalendarEventItemHTML(event, user, opts = {}) {
+    const statusClass = getStatusClass(event);
+    const pendingEmoji = statusClass === 'pending' ? '⏳ ' : '';
+    if (event.leaveType) {
+        // Full-day leave (แจ้งลา/ลาล่วงหน้า) -> green left strip; tag color by leave type
+        const tagClass = leaveTypeToTagClass(event.leaveType);
+        return `<div class="calendar-event ${statusClass} modal-left-green" onclick="showLeaveDetailModal('${event.id || ''}')">
+                    ${pendingEmoji}<span class="modal-tag ${tagClass}">${event.leaveType}</span>
+                    &nbsp; ${user.nickname} (${user.position || ''})
+                </div>`;
+    } else {
+        // Hourly leave/usage -> blue left strip; tag & text color by action
+        const isLeaveHour = event.type === 'leave';
+        const label    = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
+        const timeText = event.startTime && event.endTime ? ` (${event.startTime}-${event.endTime})` : '';
+        const textCls  = isLeaveHour ? 'hourly-text-red'   : 'hourly-text-green';
+        const tagCls   = isLeaveHour ? 'modal-tag-red'     : 'modal-tag-green';
+        return `<div class="calendar-event ${statusClass} modal-left-blue" onclick="showHourlyDetailModal('${event.id || ''}')">
+                    ${pendingEmoji}<span class="modal-tag ${tagCls}">${label}</span>
+                    &nbsp; <span class="${textCls}">${user.nickname}${timeText}</span>
+                </div>`;
+    }
+}
     if (leaveType.includes('ป่วย')) return 'sick-leave'; if (leaveType.includes('พักผ่อน')) return 'vacation-leave';
     if (leaveType.includes('กิจ')) return 'personal-leave'; if (leaveType.includes('คลอด')) return 'maternity-leave';
     return 'personal-leave';
