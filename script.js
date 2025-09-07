@@ -2621,6 +2621,13 @@ window.showLeaveDetailModal = function(id) {
 
 
 function getEventClass(leaveType) {
+    if (leaveType.includes('ป่วย')) return 'sick-leave'; 
+    if (leaveType.includes('พักผ่อน')) return 'vacation-leave';
+    if (leaveType.includes('กิจ')) return 'personal-leave'; 
+    if (leaveType.includes('คลอด')) return 'maternity-leave';
+    return 'personal-leave';
+}
+
 // === Unified Event Item Builder (matches "รายการลาทั้งหมด" style) ===
 function leaveTypeToTagClass(leaveType) {
     const t = String(leaveType || '').trim();
@@ -2654,10 +2661,41 @@ function buildCalendarEventItemHTML(event, user, opts = {}) {
                 </div>`;
     }
 }
-    if (leaveType.includes('ป่วย')) return 'sick-leave'; if (leaveType.includes('พักผ่อน')) return 'vacation-leave';
-    if (leaveType.includes('กิจ')) return 'personal-leave'; if (leaveType.includes('คลอด')) return 'maternity-leave';
-    return 'personal-leave';
+
+// === Unified Event Item Builder (matches "รายการลาทั้งหมด" style) ===
+function leaveTypeToTagClass(leaveType) {
+    const t = String(leaveType || '').trim();
+    if (/พักผ่อน/i.test(t)) return 'modal-tag-green';       // Vacation
+    if (/ป่วย/i.test(t))    return 'modal-tag-red';         // Sick
+    if (/คลอด/i.test(t))    return 'modal-tag-pink';        // Maternity
+    if (/กิจ/i.test(t))     return 'modal-tag-purple';      // Personal/Emergency
+    return 'modal-tag-green'; // default
 }
+// Build one line item HTML used in all calendar views
+) {
+    const statusClass = getStatusClass(event);
+    const pendingEmoji = statusClass === 'pending' ? '⏳ ' : '';
+    if (event.leaveType) {
+        // Full-day leave (แจ้งลา/ลาล่วงหน้า) -> green left strip; tag color by leave type
+        const tagClass = leaveTypeToTagClass(event.leaveType);
+        return `<div class="calendar-event ${statusClass} modal-left-green" onclick="showLeaveDetailModal('${event.id || ''}')">
+                    ${pendingEmoji}<span class="modal-tag ${tagClass}">${event.leaveType}</span>
+                    &nbsp; ${user.nickname} (${user.position || ''})
+                </div>`;
+    } else {
+        // Hourly leave/usage -> blue left strip; tag & text color by action
+        const isLeaveHour = event.type === 'leave';
+        const label    = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
+        const timeText = event.startTime && event.endTime ? ` (${event.startTime}-${event.endTime})` : '';
+        const textCls  = isLeaveHour ? 'hourly-text-red'   : 'hourly-text-green';
+        const tagCls   = isLeaveHour ? 'modal-tag-red'     : 'modal-tag-green';
+        return `<div class="calendar-event ${statusClass} modal-left-blue" onclick="showHourlyDetailModal('${event.id || ''}')">
+                    ${pendingEmoji}<span class="modal-tag ${tagCls}">${label}</span>
+                    &nbsp; <span class="${textCls}">${user.nickname}${timeText}</span>
+                </div>`;
+    }
+}
+
 window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
 window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
 
