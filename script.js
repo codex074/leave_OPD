@@ -22,6 +22,25 @@ window.firebase = {
 
 // --- Global variables ---
 let currentDate = new Date();
+
+// === Approval helpers (added) ===
+function isApproved(rec) {
+    try {
+        if (!rec || typeof rec !== 'object') return false;
+        // Full-day leave records have 'leaveType' and use 'status' text
+        if ('leaveType' in rec) {
+            const s = (rec.status || '').toString();
+            return s.includes('อนุมัติ') || s.toLowerCase() === 'approved' || s === 'อนุมัติแล้ว';
+        }
+        // Hourly records use boolean 'confirmed'
+        if ('confirmed' in rec) {
+            return !!rec.confirmed;
+        }
+        return false;
+    } catch (e) { return false; }
+}
+function getStatusClass(rec) { return isApproved(rec) ? 'approved' : 'pending'; }
+
 let users = [];
 let admins = [];
 let filteredUsers = [];
@@ -2227,11 +2246,10 @@ function renderMonthView() {
         }
         
         let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-            if (r.status !== 'อนุมัติแล้ว') return false;
             return dateString >= r.startDate && dateString <= r.endDate;
         }) : [];
         
-        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
+        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
 
         if (calendarPositionFilter) {
             dayEvents = dayEvents.filter(event => {
@@ -2251,11 +2269,11 @@ function renderMonthView() {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
                 if (event.leaveType) { // Full-day leave
-                    dayEventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    dayEventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    dayEventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
+                    dayEventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2361,7 +2379,6 @@ function renderYearView() {
             const dateString = toLocalISOString(date);
             
             const hasLeave = allLeaveRecords.some(r => {
-                if (r.status !== 'อนุมัติแล้ว') return false;
                 return dateString >= r.startDate && dateString <= r.endDate;
             });
             
@@ -2387,11 +2404,10 @@ function createDayCard(date, isWeekView = false) {
 
     // --- START: Added complete filtering logic ---
     let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
         return dateString >= r.startDate && dateString <= r.endDate;
     }) : [];
     
-    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
+    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
 
     if (calendarPositionFilter) {
         dayEvents = dayEvents.filter(event => {
@@ -2414,11 +2430,11 @@ function createDayCard(date, isWeekView = false) {
             if (user) {
                 // Harmonized the display format to match the month view
                 if (event.leaveType) { // Full-day leave
-                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    eventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    eventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
+                    eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2463,13 +2479,12 @@ window.showMoreEventsModal = function(dateString) {
     const date = new Date(dateString + 'T00:00:00');
     
     const dayEvents = allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
         const startDate = new Date(r.startDate + 'T00:00:00');
         const endDate = new Date(r.endDate + 'T00:00:00');
         return date >= startDate && date <= endDate;
     });
 
-    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString && r.confirmed);
+    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString);
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '<div class="space-y-2">';
@@ -2477,11 +2492,11 @@ window.showMoreEventsModal = function(dateString) {
         const user = users.find(u => u.nickname === event.userNickname);
         if (user) {
             if (event.leaveType) { // Full-day leave
-                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
             } else { // Hourly leave
                 const dot = event.type === 'leave' ? '🔴' : '🟢';
                 const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                eventsHtml += `<div class="calendar-event hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
+                eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
             }
         }
     });
@@ -2535,301 +2550,19 @@ window.previousMonth = function() { currentDate.setMonth(currentDate.getMonth() 
 window.nextMonth = function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
 
 
-/* ========= Leave/Hourly Detail Modal Patch (appended) =========
-   Feature: Click on any leave/hourly item on the calendar to open a detail modal
-   showing the time range and computed duration, e.g.:
-   "ลาชั่วโมง 08.30-09.00 น. (0 ชั่วโมง 30 นาที)"
-   The patch is DOM-agnostic and attempts to read from data-* attributes or
-   look up by record id in global arrays (allHourlyRecords/allLeaveRecords).
-=============================================================== */
-(function () {
-  // 1) Inject minimal modal CSS (idempotent)
-  try {
-    var styleId = "leave-detail-modal-style";
-    if (!document.getElementById(styleId)) {
-      var st = document.createElement("style");
-      st.id = styleId;
-      st.textContent = [
-        "#leave-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:9999}",
-        "#leave-detail-overlay.active{display:flex}",
-        ".leave-detail-modal{background:#fff;max-width:520px;width:92%;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}",
-        ".leave-detail-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eee}",
-        ".leave-detail-title{font-size:16px;font-weight:700;line-height:1.35}",
-        ".leave-detail-close{appearance:none;border:0;background:transparent;font-size:18px;cursor:pointer;padding:6px;line-height:1}",
-        ".leave-detail-body{padding:14px 16px;display:grid;grid-template-columns:110px 1fr;grid-row-gap:8px;grid-column-gap:12px}",
-        ".leave-detail-label{color:#666}",
-        ".status-chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid transparent}",
-        ".status-approved{color:#116329;background:#e8f5ee;border-color:#bfe3d2}",
-        ".status-pending{color:#8f6a00;background:#fff6db;border-color:#f3de8a}",
-        ".time-strong{font-weight:700}"
-      ].join("");
-      document.head.appendChild(st);
-    }
-  } catch (e) { /* no-op */ }
-
-  // 2) Modal root (idempotent)
-  function ensureModalRoot() {
-    var root = document.getElementById("leave-detail-overlay");
-    if (root) return root;
-    root = document.createElement("div");
-    root.id = "leave-detail-overlay";
-    root.innerHTML = [
-      '<div class="leave-detail-modal" role="dialog" aria-modal="true" aria-labelledby="leave-detail-title">',
-      '  <div class="leave-detail-header">',
-      '    <div id="leave-detail-title" class="leave-detail-title"></div>',
-      '    <button class="leave-detail-close" aria-label="ปิด">&times;</button>',
-      '  </div>',
-      '  <div class="leave-detail-body">',
-      '    <div class="leave-detail-label">วันที่</div>     <div id="leave-detail-date"></div>',
-      '    <div class="leave-detail-label">เวลา</div>      <div id="leave-detail-time"></div>',
-      '    <div class="leave-detail-label">ระยะเวลา</div>  <div id="leave-detail-duration"></div>',
-      '    <div class="leave-detail-label">ผู้ขอ</div>      <div id="leave-detail-user"></div>',
-      '    <div class="leave-detail-label">ประเภท</div>    <div id="leave-detail-type"></div>',
-      '    <div class="leave-detail-label">สถานะ</div>     <div id="leave-detail-status"></div>',
-      '  </div>',
-      '</div>'
-    ].join("");
-    document.body.appendChild(root);
-    // Close behaviors
-    root.addEventListener("click", function (e) {
-      if (e.target === root) closeModal();
-    });
-    root.querySelector(".leave-detail-close").addEventListener("click", closeModal);
-    document.addEventListener("keydown", function onEsc(ev) {
-      if (ev.key === "Escape") closeModal();
-    });
-    return root;
-  }
-  function closeModal() {
-    var overlay = document.getElementById("leave-detail-overlay");
-    if (overlay) overlay.classList.remove("active");
-  }
-
-  // 3) Utils
-  function pad2(n){ return (n<10?"0":"")+n; }
-  function formatThaiDate(iso) {
-    // iso 'YYYY-MM-DD'
-    try {
-      var parts = (iso||"").split("-");
-      var d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-      // Use short Thai format e.g. 7 ก.ย. 2568
-      var opts = { day:"numeric", month:"short", year:"numeric" };
-      return d.toLocaleDateString("th-TH", opts);
-    } catch (e) { return iso || ""; }
-  }
-  function normalizeTimeStr(t) {
-    // Accept "8:30", "08:30", "8.30", "08.30" -> "08:30"
-    if (!t) return "";
-    t = String(t).trim();
-    var m = t.match(/^(\d{1,2})[:.](\d{2})$/);
-    if (!m) return "";
-    var h = Math.max(0, Math.min(23, parseInt(m[1],10)));
-    var mi = Math.max(0, Math.min(59, parseInt(m[2],10)));
-    return pad2(h)+":"+pad2(mi);
-  }
-  function toThaiClock(t) {
-    // "HH:MM" -> "HH.MM น."
-    if (!t) return "";
-    var parts = t.split(":");
-    return pad2(parseInt(parts[0],10))+"."+pad2(parseInt(parts[1],10))+" น.";
-  }
-  function parseTimeRangeFromText(text) {
-    // Try to find "08.30-09.00" or "08:30-09:00" in text
-    if (!text) return null;
-    var m = text.match(/(\d{1,2})[.:](\d{2})\s*[-–]\s*(\d{1,2})[.:](\d{2})/);
-    if (!m) return null;
-    var s = pad2(parseInt(m[1],10))+":"+pad2(parseInt(m[2],10));
-    var e = pad2(parseInt(m[3],10))+":"+pad2(parseInt(m[4],10));
-    return { start: s, end: e };
-    }
-  function diffMinutes(dateIso, start, end) {
-    // dateIso 'YYYY-MM-DD', start/end 'HH:MM'
-    if (!dateIso || !start || !end) return 0;
-    try {
-      var s = new Date(dateIso+"T"+start+":00");
-      var e = new Date(dateIso+"T"+end+":00");
-      var ms = Math.max(0, e - s);
-      return Math.round(ms/60000);
-    } catch (e) { return 0; }
-  }
-  function humanDurationTH(mins) {
-    var h = Math.floor(mins/60), m = mins % 60;
-    return h+" ชั่วโมง "+m+" นาที";
-  }
-  function isPendingLike(obj, el) {
-    // Decide pending vs approved
-    var s = (obj.status||"").toLowerCase();
-    var confirmed = (""+obj.confirmed).toLowerCase();
-    if (s.includes("pending") || s.includes("รอ") || confirmed==="false") return true;
-    // check element hints
-    if (el) {
-      if (el.classList.contains("pending") || el.classList.contains("is-pending") || el.classList.contains("status-pending")) return true;
-      var ds = el.dataset || {};
-      if (ds.status==="pending" || ds.state==="pending" || ds.confirmed==="false" || ds.approved==="false") return true;
-      if (el.getAttribute("data-status")==="pending" || el.getAttribute("data-confirmed")==="false" || el.getAttribute("data-approved")==="false") return true;
-    }
-    return false;
-  }
-
-  function gatherDataFromElement(el) {
-    var ds = el.dataset || {};
-    var rec = {
-      id: ds.recordId || ds.id || "",
-      kind: ds.kind || ds.type || "",  // 'hourly' | 'use' | 'leave' etc.
-      date: ds.date || "",
-      startTime: normalizeTimeStr(ds.startTime || ds.start || ""),
-      endTime: normalizeTimeStr(ds.endTime || ds.end || ""),
-      startDate: ds.startDate || "",
-      endDate: ds.endDate || "",
-      userNickname: ds.user || ds.nickname || ds.userNickname || "",
-      leaveType: ds.leaveType || ds.category || ds.leave || "",
-      status: ds.status || "",
-      confirmed: (typeof ds.confirmed!=="undefined" ? ds.confirmed : "")
-    };
-
-    // If we have a record id, try to look it up in globals
-    try {
-      var id = rec.id;
-      if (id && (window.allHourlyRecords || window.allLeaveRecords)) {
-        var found = null;
-        if (Array.isArray(window.allHourlyRecords)) {
-          found = window.allHourlyRecords.find(function(r){ return r.id===id || r.recordId===id; }) || found;
-        }
-        if (!found && Array.isArray(window.allLeaveRecords)) {
-          found = window.allLeaveRecords.find(function(r){ return r.id===id || r.recordId===id; }) || found;
-        }
-        if (found) {
-          // hydrate missing fields
-          rec.kind = rec.kind || (found.type || found.kind || "");
-          rec.date = rec.date || found.date || "";
-          rec.startTime = rec.startTime || normalizeTimeStr(found.startTime || found.start || "");
-          rec.endTime = rec.endTime || normalizeTimeStr(found.endTime || found.end || "");
-          rec.startDate = rec.startDate || found.startDate || "";
-          rec.endDate = rec.endDate || found.endDate || "";
-          rec.userNickname = rec.userNickname || found.userNickname || found.user || "";
-          rec.leaveType = rec.leaveType || found.leaveType || found.category || "";
-          rec.status = rec.status || found.status || "";
-          if (rec.confirmed==="") rec.confirmed = (typeof found.confirmed!=="undefined" ? String(found.confirmed) : "");
-        }
-      }
-    } catch (e) { /* ignore lookup errors */ }
-
-    // Fallback: try parsing time from text
-    if ((!rec.startTime || !rec.endTime) && rec.date) {
-      var t = parseTimeRangeFromText(el.textContent || "");
-      if (t) {
-        rec.startTime = rec.startTime || t.start;
-        rec.endTime = rec.endTime || t.end;
-      }
-    }
-
-    // Guess kind if still missing
-    if (!rec.kind) {
-      // If has times -> hourly-ish
-      if (rec.startTime && rec.endTime) {
-        // If explicit ds.type==='use' then "ใช้ชั่วโมง"
-        rec.kind = (ds.type==="use" || /ใช้/.test((el.textContent||""))) ? "use" : "hourly";
-      } else {
-        rec.kind = "leave";
-      }
-    }
-
-    return rec;
-  }
-
-  function buildTitle(rec, pending) {
-    var icon = pending ? "⏳ " : (rec.confirmed==="true" ? "✔️ " : "");
-    var label;
-    if (rec.kind === "use") {
-      label = "ใช้ชั่วโมง";
-    } else if (rec.kind === "hourly") {
-      label = "ลาชั่วโมง";
-    } else {
-      label = rec.leaveType || "ใบลา";
-    }
-    // Show time range if available
-    var range = "";
-    if (rec.startTime && rec.endTime) {
-      range = " " + toThaiClock(rec.startTime).replace(" น.","") + "-" + toThaiClock(rec.endTime);
-    } else if (rec.startDate && rec.endDate) {
-      if (rec.startDate === rec.endDate) {
-        range = " (1 วัน)";
-      } else {
-        range = " ("+formatThaiDate(rec.startDate)+" – "+formatThaiDate(rec.endDate)+")";
-      }
-    }
-    return icon + label + range;
-  }
-
-  function openDetailModal(rec, sourceEl) {
-    var overlay = ensureModalRoot();
-
-    // Compute date & duration
-    var dateStr = rec.date || rec.startDate || "";
-    var dateLabel = dateStr ? formatThaiDate(dateStr) : (rec.startDate ? (formatThaiDate(rec.startDate) + (rec.endDate && rec.endDate!==rec.startDate ? " – "+formatThaiDate(rec.endDate) : "")) : "-");
-
-    var timeLabel = "-";
-    var durationLabel = "-";
-    if (rec.startTime && rec.endTime && dateStr) {
-      timeLabel = '<span class="time-strong">'+toThaiClock(rec.startTime).replace(" น.","") + " - " + toThaiClock(rec.endTime) + "</span>";
-      var mins = diffMinutes(dateStr, rec.startTime, rec.endTime);
-      durationLabel = humanDurationTH(mins);
-    } else if (rec.startDate && rec.endDate) {
-      timeLabel = "ทั้งวัน";
-      try {
-        var sd = new Date(rec.startDate+"T00:00:00");
-        var ed = new Date(rec.endDate+"T00:00:00");
-        var days = Math.floor((ed - sd)/86400000) + 1;
-        durationLabel = days + " วัน";
-      } catch (e) { /* keep "-" */ }
-    }
-
-    var pending = isPendingLike(rec, sourceEl);
-    var statusHtml = pending
-      ? '<span class="status-chip status-pending">⏳ รออนุมัติ</span>'
-      : '<span class="status-chip status-approved">✔️ อนุมัติแล้ว</span>';
-
-    // Fill content
-    overlay.querySelector("#leave-detail-title").textContent = buildTitle(rec, pending);
-    overlay.querySelector("#leave-detail-date").textContent = dateLabel;
-    overlay.querySelector("#leave-detail-time").innerHTML = timeLabel;
-    overlay.querySelector("#leave-detail-duration").textContent = durationLabel;
-    overlay.querySelector("#leave-detail-user").textContent = rec.userNickname || "-";
-    overlay.querySelector("#leave-detail-type").textContent = rec.leaveType || (rec.kind==="use" ? "ใช้ชั่วโมง" : (rec.kind==="hourly" ? "ลาชั่วโมง" : "ใบลา"));
-    overlay.querySelector("#leave-detail-status").innerHTML = statusHtml;
-
-    overlay.classList.add("active");
-  }
-
-  // 4) Event delegation: click on calendar items
-  var selectors = [
-    ".hourly-item",            // likely class for hourly items
-    ".full-leave-item",       // likely class for full-day leave
-    ".calendar-event",        // generic event element
-    ".event-item",            // generic
-    ".leave-item",            // generic
-    "[data-kind='hourly']",
-    "[data-type='hourly']",
-    "[data-kind='use']",
-    "[data-type='use']",
-    "[data-leave]"            // fallback generic
-  ];
-
-  document.addEventListener("click", function (e) {
-    var target = e.target;
-    var el = target.closest(selectors.join(","));
-    if (!el) return;
-    // prevent day-cell click handlers and link navigations
-    e.preventDefault();
-    e.stopPropagation();
-
-    var rec = gatherDataFromElement(el);
-    // If we still don't have any meaningful info, try the parent (sometimes event is nested)
-    if (!rec.date && !rec.startDate && el.parentElement) {
-      var rec2 = gatherDataFromElement(el.parentElement);
-      if ((rec2.date || rec2.startDate) && (rec2.startTime || rec2.endTime || rec2.startDate || rec2.endDate)) rec = rec2;
-    }
-    openDetailModal(rec, el);
-  }, true); // capture to intercept before other handlers if needed
-})();
-/* ========= End Leave/Hourly Detail Modal Patch ========= */
+// === Click empty day cell to open "all events for that day" (added) ===
+document.addEventListener('click', function(e){
+    const grid = document.getElementById('calendar-grid');
+    if (!grid || !grid.contains(e.target)) return;
+    // Detect clicks on existing event items or "show more" to avoid double handling
+    if (e.target.closest('.calendar-event') || e.target.closest('.show-more-btn') || e.target.closest('button')) return;
+    const cell = e.target.closest('.calendar-day');
+    if (!cell || cell.classList.contains('other-month-day')) return;
+    // The first child div usually contains the day number
+    let dayNumberEl = cell.querySelector(':scope > div');
+    let dayNum = dayNumberEl ? parseInt(dayNumberEl.textContent.trim(), 10) : NaN;
+    if (!dayNum || isNaN(dayNum)) return;
+    const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
+    const dateString = toLocalISOString(dateObj);
+    try { showMoreEventsModal(dateString); } catch(_) {}
+});
