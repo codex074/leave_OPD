@@ -44,32 +44,7 @@ let holidays = [];
 let currentCalendarView = 'month'; // 'day', 'week', 'month', 'year'
 let showFullDayLeaveOnCalendar = true;
 let showHourlyLeaveOnCalendar = true;
-let calendarPositionFilter = ''; // '' means all positions;
-
-let __connectionWatchdogTimer = null;
-let __hasConnectedToFirebase = false;
-function startConnectivityWatchdog(){
-  try{
-    if(__connectionWatchdogTimer) clearTimeout(__connectionWatchdogTimer);
-    __connectionWatchdogTimer = setTimeout(()=>{
-      if(!__hasConnectedToFirebase){
-        const dbStatus = document.getElementById('db-status');
-        if (dbStatus){
-          dbStatus.textContent = '⚠️ Offline mode';
-          dbStatus.className = 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';
-        }
-        console.warn('Firebase connection timeout -> switching to offline mode');
-        __hasConnectedToFirebase = true; if(__connectionWatchdogTimer) clearTimeout(__connectionWatchdogTimer); hideInitialLoader();
-        // Try to render whatever can be rendered without data
-        try{ applyUserFiltersAndRender(); }catch(e){}
-        try{ renderLeaveSection(); }catch(e){}
-        try{ renderHourlySummary(); }catch(e){}
-        try{ (); }catch(e){}
-      }
-    }, 12000); // 12s fallback
-  }catch(e){ console.error(e); }
-}
-
+let calendarPositionFilter = ''; // '' means all positions
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -81,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     updateDateTime();
     setInterval(updateDateTime, 1000);
- startConnectivityWatchdog();
 });
 
 function setupEventListeners() {
@@ -195,7 +169,7 @@ async function initializeDataListeners() {
         populateApproverDropdowns();
     }, (error) => {
         console.error("Error fetching admins: ", error);
-        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้อนุมัติได้'); const dbStatus=document.getElementById('db-status'); if(dbStatus){dbStatus.textContent='⚠️ Offline mode'; dbStatus.className='bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';} 
+        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้อนุมัติได้');
     });
 
     if (usersUnsubscribe) usersUnsubscribe();
@@ -216,10 +190,10 @@ async function initializeDataListeners() {
         dbStatus.textContent = '✅ Connected to Firebase';
         dbStatus.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
         
-        __hasConnectedToFirebase = true; if(__connectionWatchdogTimer) clearTimeout(__connectionWatchdogTimer); hideInitialLoader();
+        hideInitialLoader();
     }, (error) => {
         console.error("Error fetching users: ", error);
-        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้ใช้ได้'); const dbStatus=document.getElementById('db-status'); if(dbStatus){dbStatus.textContent='⚠️ Offline mode'; dbStatus.className='bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';} hideInitialLoader();
+        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้ใช้ได้');
     });
 
     await loadHolidays();
@@ -2252,15 +2226,9 @@ function renderMonthView() {
             dayEventsHtml += `<div class="holiday-event">${holidayInfo.name}</div>`;
         }
         
-        let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-            if (r.status !== 'อนุมัติแล้ว') return false;
-            return dateString >= r.startDate && dateString <= r.endDate;
-        }) : [];
+        let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => dateString >= r.startDate && dateString <= r.endDate) : [];
         
-        // --- START: โค้ดที่แก้ไข ---
-        // Removed '&& r.confirmed' to show all hourly records
         let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
-        // --- END: โค้ดที่แก้ไข ---
 
         if (calendarPositionFilter) {
             dayEvents = dayEvents.filter(event => {
@@ -2275,18 +2243,16 @@ function renderMonthView() {
         
         const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
+        // --- START: โค้ดที่แก้ไข ---
         combinedEvents.slice(0, 3).forEach(event => {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
                 if (event.leaveType) { // Full-day leave
-                    dayEventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    dayEventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)} ${getStatusClass(event)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
-                    // --- START: โค้ดที่แก้ไข ---
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    const pendingClass = event.confirmed ? '' : 'opacity-60'; // Add class if pending
-                    dayEventsHtml += `<div class="calendar-event hourly-leave cursor-pointer ${pendingClass}" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
-                    // --- END: โค้ดที่แก้ไข ---
+                    dayEventsHtml += `<div class="calendar-event hourly-leave ${getStatusClass(event)} cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${getStatusIcon(event)} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2294,6 +2260,7 @@ function renderMonthView() {
         if (combinedEvents.length > 3) {
             dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - 3} เพิ่มเติม</div>`;
         }
+        // --- END: โค้ดที่แก้ไข ---
 
         gridHtml += `
             <div class="calendar-day border p-2 min-h-[120px] flex flex-col ${isHolidayClass} ${isWeekendClass} ${isTodayClass}">
@@ -2312,6 +2279,7 @@ function renderMonthView() {
 
     calendarGrid.innerHTML = gridHtml;
 }
+
 
 function renderDayView() {
     const container = document.getElementById('calendar-grid-container');
@@ -2389,10 +2357,7 @@ function renderYearView() {
             const date = new Date(year, month, day);
             const dateString = toLocalISOString(date);
             
-            const hasLeave = allLeaveRecords.some(r => {
-                if (r.status !== 'อนุมัติแล้ว') return false;
-                return dateString >= r.startDate && dateString <= r.endDate;
-            });
+            const hasLeave = allLeaveRecords.some(r => (dateString >= r.startDate && dateString <= r.endDate)) || allHourlyRecords.some(r => r.date === dateString);
             
             const dayCell = document.createElement('div');
             dayCell.className = 'day-cell-mini';
@@ -2414,15 +2379,10 @@ function createDayCard(date, isWeekView = false) {
     const container = document.createElement('div');
     const dateString = toLocalISOString(date);
 
-    let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
-        return dateString >= r.startDate && dateString <= r.endDate;
-    }) : [];
+    // --- START: Added complete filtering logic ---
+    let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => dateString >= r.startDate && dateString <= r.endDate) : [];
     
-    // --- START: โค้ดที่แก้ไข ---
-    // Removed '&& r.confirmed' to show all hourly records
     let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
-    // --- END: โค้ดที่แก้ไข ---
 
     if (calendarPositionFilter) {
         dayEvents = dayEvents.filter(event => {
@@ -2434,6 +2394,7 @@ function createDayCard(date, isWeekView = false) {
             return user && user.position === calendarPositionFilter;
         });
     }
+    // --- END: Added complete filtering logic ---
 
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
@@ -2442,15 +2403,13 @@ function createDayCard(date, isWeekView = false) {
         combinedEvents.forEach(event => {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
+                // Harmonized the display format to match the month view
                 if (event.leaveType) { // Full-day leave
-                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)} ${getStatusClass(event)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
-                    // --- START: โค้ดที่แก้ไข ---
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    const pendingClass = event.confirmed ? '' : 'opacity-60'; // Add class if pending
-                    eventsHtml += `<div class="calendar-event hourly-leave cursor-pointer ${pendingClass}" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
-                    // --- END: โค้ดที่แก้ไข ---
+                    eventsHtml += `<div class="calendar-event hourly-leave ${getStatusClass(event)} cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${getStatusIcon(event)} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2460,6 +2419,7 @@ function createDayCard(date, isWeekView = false) {
 
     if (isWeekView) {
         container.className = `calendar-day border p-2 min-h-[120px] flex flex-col ${dateString === toLocalISOString(new Date()) ? 'today-day bg-white' : 'bg-white'}`;
+        // Add a simple day number for context in week view
         const dayNumber = date.getDate();
         container.innerHTML = `<div class="text-sm text-gray-500 mb-1">${dayNumber}</div><div class="events-list">${eventsHtml}</div>`;
     } else { // Day view
@@ -2477,6 +2437,7 @@ function createDayCard(date, isWeekView = false) {
     }
     return container;
 }
+
 function getWeekDays(date) {
     const startOfWeek = new Date(date);
     startOfWeek.setDate(date.getDate() - date.getDay());
@@ -2492,14 +2453,9 @@ function getWeekDays(date) {
 window.showMoreEventsModal = function(dateString) {
     const date = new Date(dateString + 'T00:00:00');
     
-    const dayEvents = allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
-        const startDate = new Date(r.startDate + 'T00:00:00');
-        const endDate = new Date(r.endDate + 'T00:00:00');
-        return date >= startDate && date <= endDate;
-    });
+    const dayEvents = allLeaveRecords.filter(r => { const startDate = new Date(r.startDate + 'T00:00:00'); const endDate = new Date(r.endDate + 'T00:00:00'); return date >= startDate && date <= endDate; });
 
-    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString && r.confirmed);
+    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString);
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '<div class="space-y-2">';
@@ -2507,11 +2463,11 @@ window.showMoreEventsModal = function(dateString) {
         const user = users.find(u => u.nickname === event.userNickname);
         if (user) {
             if (event.leaveType) { // Full-day leave
-                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getEventClass(event.leaveType)} ${getStatusClass(event)}">${getStatusIcon(event)} ${user.nickname}(${user.position})-${event.leaveType}</div>`;
             } else { // Hourly leave
                 const dot = event.type === 'leave' ? '🔴' : '🟢';
                 const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                eventsHtml += `<div class="calendar-event hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
+                eventsHtml += `<div class="calendar-event hourly-leave ${getStatusClass(event)}">${dot} ${getStatusIcon(event)} ${user.nickname} (${shortType})</div>`;
             }
         }
     });
@@ -2556,6 +2512,19 @@ window.showLeaveDetailModal = function(id) {
 }
 
 
+
+function getStatusClass(event) {
+    if (event.leaveType) {
+        return event.status === 'อนุมัติแล้ว' ? 'approved' : 'pending';
+    }
+    return event.confirmed ? 'approved' : 'pending';
+}
+function getStatusIcon(event) {
+    if (event.leaveType) {
+        return event.status === 'อนุมัติแล้ว' ? '✔️' : '⏳';
+    }
+    return event.confirmed ? '✔️' : '⏳';
+}
 function getEventClass(leaveType) {
     if (leaveType.includes('ป่วย')) return 'sick-leave'; if (leaveType.includes('พักผ่อน')) return 'vacation-leave';
     if (leaveType.includes('กิจ')) return 'personal-leave'; if (leaveType.includes('คลอด')) return 'maternity-leave';
