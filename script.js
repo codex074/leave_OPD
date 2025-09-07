@@ -983,7 +983,7 @@ async function sendHourlyTelegramNotification(hourlyData, user) {
     const durationDisplay = formatHoursAndMinutes(hourlyData.duration);
 
     const message = `
-⏰ <b>มีรายการแจ้งลาชั่วโมงใหม่</b> ⏰
+🔵⏰ <b>มีรายการแจ้งลาชั่วโมงใหม่</b> ⏰🔵
 --------------------------------------
 <b>ชื่อ:</b> ${user.fullname} (${user.nickname})-${user.position}
 <b>ประเภท:</b> ${typeDisplay}
@@ -991,7 +991,7 @@ async function sendHourlyTelegramNotification(hourlyData, user) {
 <b>เวลา:</b> ${hourlyData.startTime} - ${hourlyData.endTime} (${durationDisplay})
 <b>หมายเหตุ:</b> ${hourlyData.note || '-'}
 --------------------------------------
-👤 <b>ผู้อนุมัติ:</b> ${hourlyData.approver}
+👩‍⚕️ <b>ผู้อนุมัติ:</b> ${hourlyData.approver}
 <i>*กรุณาตรวจสอบและอนุมัติในระบบ*</i>
     `;
 
@@ -1044,14 +1044,14 @@ async function sendTelegramNotification(leaveData, user, leaveDays) {
     }
 
     const message = `
-📅 <b>มีรายการแจ้งลาใหม่</b> 📅 
+🔔📅 <b>มีรายการแจ้งลาใหม่</b> 📅 🔔
 --------------------------------------
 <b>ผู้ลา:</b> ${user.fullname} (${user.nickname})-${user.position}
 <b>ประเภท:</b> ${leaveData.leaveType}
 <b>วันที่:</b> ${dateDisplay} ${periodDisplay} (${leaveDays} วัน)
 <b>หมายเหตุ:</b> ${leaveData.note || '-'}
 --------------------------------------
-👤 <b>ผู้อนุมัติ:</b> ${leaveData.approver}
+👩‍⚕️ <b>ผู้อนุมัติ:</b> ${leaveData.approver}
 <i>*กรุณาตรวจสอบและอนุมัติในระบบ*</i>
     `;
 
