@@ -2382,17 +2382,31 @@ function createDayCard(date, isWeekView = false) {
     const container = document.createElement('div');
     const dateString = toLocalISOString(date);
 
-    const dayEvents = allLeaveRecords.filter(r => {
+    // --- START: เพิ่มโค้ดกรองข้อมูลที่ขาดไป ---
+    let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
         if (r.status !== 'อนุมัติแล้ว') return false;
         return dateString >= r.startDate && dateString <= r.endDate;
-    });
+    }) : [];
+    
+    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
 
-    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString && r.confirmed);
+    if (calendarPositionFilter) {
+        dayEvents = dayEvents.filter(event => {
+            const user = users.find(u => u.nickname === event.userNickname);
+            return user && user.position === calendarPositionFilter;
+        });
+        hourlyDayEvents = hourlyDayEvents.filter(event => {
+            const user = users.find(u => u.nickname === event.userNickname);
+            return user && user.position === calendarPositionFilter;
+        });
+    }
+    // --- END: เพิ่มโค้ดกรองข้อมูลที่ขาดไป ---
 
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '';
     if (combinedEvents.length > 0) {
+        // ไม่มีการจำกัดจำนวนรายการในมุมมองวันและสัปดาห์
         combinedEvents.forEach(event => {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
@@ -2401,7 +2415,7 @@ function createDayCard(date, isWeekView = false) {
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    eventsHtml += `<div class="calendar-event hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
+                    eventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2427,7 +2441,6 @@ function createDayCard(date, isWeekView = false) {
     }
     return container;
 }
-
 
 function getWeekDays(date) {
     const startOfWeek = new Date(date);
