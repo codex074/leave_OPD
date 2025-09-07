@@ -1366,3 +1366,11 @@ button[type="submit"]:active, .generic-button:active {
   color:#065f46;                 /* emerald-900 */
   border-left:4px solid #34d399; /* emerald-400 */
 }
+
+/* === Modal overrides for left strip colors === */
+.modal-left-green{ border-left:6px solid #22c55e !important; } /* green-500 */
+.modal-left-blue{  border-left:6px solid #3b82f6 !important; } /* blue-500 */
+
+/* Hourly text colors */
+.hourly-text-red{   color:#dc2626 !important; }  /* red-600 */
+.hourly-text-green{ color:#16a34a !important; }  /* green-600 */
