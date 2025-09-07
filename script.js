@@ -234,7 +234,10 @@ function loadHourlyData(fiscalYear) {
      hourlyRecordsUnsubscribe = onSnapshot(hourlyQuery, (snapshot) => {
         allHourlyRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         applyHourlyFiltersAndRender();
-     }, (error) => console.error('Error in hourlyRecords listener: ', error); hideInitialLoader());
+     }, (error) => { 
+        console.error('Error in hourlyRecords listener: ', error); 
+        hideInitialLoader(); 
+     });
 }
 
 function loadLeaveData() {
@@ -247,7 +250,10 @@ function loadLeaveData() {
         if (calendarContent && !calendarContent.classList.contains('hidden')) {
             renderCalendar();
         }
-    }, (error) => console.error('Error in leaveRecords listener: ', error); hideInitialLoader());
+    }, (error) => { 
+        console.error('Error in leaveRecords listener: ', error); 
+        hideInitialLoader();
+    });
 }
 
 function populateFiscalYearFilters() {
