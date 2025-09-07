@@ -2287,8 +2287,11 @@ function renderMonthView() {
 function renderDayView() {
     const container = document.getElementById('calendar-grid-container');
     document.getElementById('calendar-title').textContent = new Intl.DateTimeFormat('th-TH', {dateStyle: 'full'}).format(currentDate);
-    container.innerHTML = '';
-    container.appendChild(createDayCard(currentDate));
+    container.innerHTML = ''; // Clear previous content
+    
+    // Create the day card with the corrected logic
+    const dayCard = createDayCard(currentDate, false);
+    container.appendChild(dayCard);
 }
 
 function renderWeekView() {
@@ -2299,14 +2302,16 @@ function renderWeekView() {
     let gridHtml = '<div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">';
     week.forEach(day => {
         const dayName = new Intl.DateTimeFormat('th-TH', { weekday: 'short' }).format(day);
-        gridHtml += `<div>${dayName}${day.getDate()}</div>`;
+        gridHtml += `<div>${dayName} ${day.getDate()}</div>`; // Show date number in header
     });
     gridHtml += '</div><div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>';
     container.innerHTML = gridHtml;
 
     const calendarGrid = document.getElementById('calendar-grid');
     week.forEach(day => {
-        calendarGrid.appendChild(createDayCard(day, true));
+        // Create each day card with the corrected logic
+        const dayCard = createDayCard(day, true);
+        calendarGrid.appendChild(dayCard);
     });
 }
 
@@ -2382,7 +2387,7 @@ function createDayCard(date, isWeekView = false) {
     const container = document.createElement('div');
     const dateString = toLocalISOString(date);
 
-    // --- START: เพิ่มโค้ดกรองข้อมูลที่ขาดไป ---
+    // --- START: Added complete filtering logic ---
     let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
         if (r.status !== 'อนุมัติแล้ว') return false;
         return dateString >= r.startDate && dateString <= r.endDate;
@@ -2400,18 +2405,18 @@ function createDayCard(date, isWeekView = false) {
             return user && user.position === calendarPositionFilter;
         });
     }
-    // --- END: เพิ่มโค้ดกรองข้อมูลที่ขาดไป ---
+    // --- END: Added complete filtering logic ---
 
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '';
     if (combinedEvents.length > 0) {
-        // ไม่มีการจำกัดจำนวนรายการในมุมมองวันและสัปดาห์
         combinedEvents.forEach(event => {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
+                // Harmonized the display format to match the month view
                 if (event.leaveType) { // Full-day leave
-                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname} - ${event.leaveType}</div>`;
+                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
@@ -2424,9 +2429,11 @@ function createDayCard(date, isWeekView = false) {
     }
 
     if (isWeekView) {
-        container.className = `border p-2 min-h-[120px] flex flex-col ${dateString === toLocalISOString(new Date()) ? 'today-day' : ''}`;
-        container.innerHTML = `<div class="events-list">${eventsHtml}</div>`;
-    } else {
+        container.className = `calendar-day border p-2 min-h-[120px] flex flex-col ${dateString === toLocalISOString(new Date()) ? 'today-day bg-white' : 'bg-white'}`;
+        // Add a simple day number for context in week view
+        const dayNumber = date.getDate();
+        container.innerHTML = `<div class="text-sm text-gray-500 mb-1">${dayNumber}</div><div class="events-list">${eventsHtml}</div>`;
+    } else { // Day view
         const dayName = new Intl.DateTimeFormat('th-TH', {weekday: 'long'}).format(date);
         const dateFormatted = new Intl.DateTimeFormat('th-TH', {dateStyle: 'long'}).format(date);
         container.innerHTML = `
