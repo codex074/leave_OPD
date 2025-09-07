@@ -2246,7 +2246,8 @@ function renderMonthView() {
         
         const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
-        combinedEvents.slice(0, 5).forEach(event => {
+        // --- START: โค้ดที่แก้ไข ---
+        combinedEvents.slice(0, 3).forEach(event => {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
                 if (event.leaveType) { // Full-day leave
@@ -2259,9 +2260,10 @@ function renderMonthView() {
             }
         });
 
-        if (combinedEvents.length > 5) {
-            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - 5} เพิ่มเติม</div>`;
+        if (combinedEvents.length > 3) {
+            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - 3} เพิ่มเติม</div>`;
         }
+        // --- END: โค้ดที่แก้ไข ---
 
         gridHtml += `
             <div class="calendar-day border p-2 min-h-[120px] flex flex-col ${isHolidayClass} ${isWeekendClass} ${isTodayClass}">
