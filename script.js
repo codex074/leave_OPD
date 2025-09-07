@@ -27,17 +27,33 @@ let currentDate = new Date();
 function isApproved(rec) {
     try {
         if (!rec || typeof rec !== 'object') return false;
-        // Full-day leave records have 'leaveType' and use 'status' text
+
+        // ----- Full-day leave: expect textual status in Thai/English
         if ('leaveType' in rec) {
-            const s = (rec.status || '').toString();
-            return s.includes('อนุมัติ') || s.toLowerCase() === 'approved' || s === 'อนุมัติแล้ว';
+            const raw = (rec.status || rec.approvalStatus || '').toString().trim();
+            const lower = raw.toLowerCase();
+
+            // Explicit approved states ONLY (avoid substring matches like "รออนุมัติ")
+            const approvedTH = /^(อนุมัติ(แล้ว)?|ยืนยัน(แล้ว)?|ผ่านการอนุมัติ)$/;
+            if (approvedTH.test(raw)) return true;
+            if (lower === 'approved' || lower === 'approve' || lower === 'confirmed' || lower === 'confirm') return true;
+
+            // Otherwise treat as not approved
+            return false;
         }
-        // Hourly records use boolean 'confirmed'
+
+        // ----- Hourly records: boolean confirmed or explicit text
         if ('confirmed' in rec) {
-            return !!rec.confirmed;
+            if (typeof rec.confirmed === 'boolean') return rec.confirmed;
+            const txt = String(rec.confirmed).toLowerCase();
+            return txt === 'true' || txt === 'approved' || txt === 'confirmed';
         }
+
+        // Default
         return false;
-    } catch (e) { return false; }
+    } catch (e) {
+        return false;
+    }
 }
 function getStatusClass(rec) { return isApproved(rec) ? 'approved' : 'pending'; }
 
@@ -72,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDataListeners();
     initializePinListener();
     setDefaultDate();
-    setupFormConstraints();
     setupEventListeners();
     updateDateTime();
     setInterval(updateDateTime, 1000);
@@ -207,7 +222,7 @@ async function initializeDataListeners() {
         loadLeaveData(); 
 
         const dbStatus = document.getElementById('db-status');
-        dbStatus.textContent = '✅ Connected';
+        dbStatus.textContent = '✅ Connected to Firebase';
         dbStatus.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
         
         hideInitialLoader();
@@ -352,52 +367,6 @@ function setDefaultDate() {
     if(leaveStartEl) leaveStartEl.value = today;
     if(leaveEndEl) leaveEndEl.value = today;
 }
-
-function setupFormConstraints(){
-    // ----- Full-day leave: end date >= start date -----
-    const startDateEl = document.getElementById('leave-start-date');
-    const endDateEl   = document.getElementById('leave-end-date');
-    if (startDateEl && endDateEl){
-        const applyMin = () => {
-            if (startDateEl.value){
-                endDateEl.min = startDateEl.value;
-                if (endDateEl.value && endDateEl.value < startDateEl.value){
-                    endDateEl.value = startDateEl.value;
-                }
-            }
-        };
-        startDateEl.addEventListener('change', applyMin);
-        // run once on load
-        applyMin();
-    }
-
-    // ----- Hourly: end time > start time -----
-    const startTimeEl = document.getElementById('hourly-start');
-    const endTimeEl   = document.getElementById('hourly-end');
-    if (startTimeEl && endTimeEl){
-        const applyMinTime = () => {
-            if (startTimeEl.value){
-                endTimeEl.min = startTimeEl.value;
-                // strictly later: if equal or earlier, clear end time
-                if (endTimeEl.value && endTimeEl.value <= startTimeEl.value){
-                    endTimeEl.value = '';
-                }
-            }
-        };
-        startTimeEl.addEventListener('change', applyMinTime);
-        endTimeEl.addEventListener('change', () => {
-            if (startTimeEl.value && endTimeEl.value <= startTimeEl.value){
-                // force end > start
-                endTimeEl.setCustomValidity('กรุณาเลือกเวลาสิ้นสุดหลังเวลาเริ่มต้น');
-            }else{
-                endTimeEl.setCustomValidity('');
-            }
-        });
-        // run once
-        applyMinTime();
-    }
-}
-
 
 // --- PIN Management ---
 function renderPinManagementPage() {
@@ -735,7 +704,9 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
 
     if (sDate > eDate) return 0;
 
-    // Helper
+    let leaveDayCount = 0;
+    const currentDate = new Date(sDate);
+
     const toYYYYMMDD = (d) => {
         const year = d.getFullYear();
         const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -743,20 +714,10 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
         return `${year}-${month}-${day}`;
     };
 
-    // === Special case: same start & end date ===
-    if (sDate.getTime() === eDate.getTime()) {
-        // นโยบายใหม่: วันเดียวกันให้คิดตามประเภทตรง ๆ ไม่สนเสาร์-อาทิตย์/วันหยุด
-        const isHalf = (startPeriod && startPeriod.includes('ครึ่งวัน')) || (endPeriod && endPeriod.includes('ครึ่งวัน'));
-        return isHalf ? 0.5 : 1;
-    }
-
-    // === Multi-day logic (original) ===
-    let leaveDayCount = 0;
-    const currentDate = new Date(sDate);
-
     while (currentDate <= eDate) {
+        const dayOfWeek = currentDate.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const dateString = toYYYYMMDD(currentDate);
-        const isWeekend = (currentDate.getDay() === 0 || currentDate.getDay() === 6);
         const isHoliday = holidays.find(h => h.date === dateString);
 
         if (!isWeekend && !isHoliday) {
@@ -766,20 +727,20 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // Adjust for half-day at start
     const sDateString = toYYYYMMDD(sDate);
     const sDateIsWorkday = (sDate.getDay() !== 0 && sDate.getDay() !== 6 && !holidays.find(h => h.date === sDateString));
     if (sDateIsWorkday && startPeriod && startPeriod.includes('ครึ่งวัน')) {
-        leaveDayCount -= 0.5;
+         leaveDayCount -= 0.5;
     }
 
-    // Adjust for half-day at end
-    const eDateString = toYYYYMMDD(eDate);
-    const eDateIsWorkday = (eDate.getDay() !== 0 && eDate.getDay() !== 6 && !holidays.find(h => h.date === eDateString));
-    if (eDateIsWorkday && endPeriod && endPeriod.includes('ครึ่งวัน')) {
-        leaveDayCount -= 0.5;
+    if (sDate.getTime() !== eDate.getTime()) {
+        const eDateString = toYYYYMMDD(eDate);
+        const eDateIsWorkday = (eDate.getDay() !== 0 && eDate.getDay() !== 6 && !holidays.find(h => h.date === eDateString));
+        if (eDateIsWorkday && endPeriod && endPeriod.includes('ครึ่งวัน')) {
+             leaveDayCount -= 0.5;
+        }
     }
-
+    
     return Math.max(0, leaveDayCount);
 }
 
@@ -893,14 +854,7 @@ async function handleHourlySubmit(e) {
         return showErrorPopup('กรุณาเลือกผู้อนุมัติ');
     }
 
-    
-    // Validate time order: end > start
-    const startTimeVal = document.getElementById('hourly-start').value;
-    const endTimeVal   = document.getElementById('hourly-end').value;
-    if (startTimeVal && endTimeVal && endTimeVal <= startTimeVal){
-        return showErrorPopup('กรุณาเลือกเวลาสิ้นสุดหลังจากเวลาเริ่มต้น');
-    }
-const formData = {
+    const formData = {
         fiscalYear: parseInt(document.getElementById('hourly-filter-fiscal-year').value),
         userNickname: tomSelectHourly.getValue(), 
         date: document.getElementById('hourly-date').value,
@@ -1081,14 +1035,7 @@ async function handleLeaveSubmit(e) {
         return;
     }
     
-    
-    // Validate date order: endDate >= startDate
-    const sDateVal = document.getElementById('leave-start-date').value;
-    const eDateVal = document.getElementById('leave-end-date').value;
-    if (sDateVal && eDateVal && eDateVal < sDateVal){
-        return showErrorPopup('กรุณาเลือกวันที่สิ้นสุดไม่น้อยกว่าวันที่เริ่มต้น');
-    }
-const formData = {
+    const formData = {
         fiscalYear: parseInt(document.getElementById('leave-filter-fiscal-year').value),
         userNickname: tomSelectLeave.getValue(), 
         leaveType: currentFullDayLeaveType,
@@ -2546,7 +2493,7 @@ function getWeekDays(date) {
 
 window.showMoreEventsModal = function(dateString) {
     const date = new Date(dateString + 'T00:00:00');
-
+    
     const dayEvents = allLeaveRecords.filter(r => {
         const startDate = new Date(r.startDate + 'T00:00:00');
         const endDate = new Date(r.endDate + 'T00:00:00');
@@ -2556,41 +2503,17 @@ window.showMoreEventsModal = function(dateString) {
     const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString);
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
-    function leaveTypeToTagClass(leaveType) {
-        const t = String(leaveType || '').trim();
-        if (/พักผ่อน/i.test(t)) return 'modal-tag-green';       // Vacation
-        if (/ป่วย/i.test(t))    return 'modal-tag-red';         // Sick
-        if (/คลอด/i.test(t))    return 'modal-tag-pink';        // Maternity
-        if (/กิจ/i.test(t))     return 'modal-tag-purple';      // Personal/Emergency
-        return 'modal-tag-green'; // default
-    }
-
     let eventsHtml = '<div class="space-y-2">';
     combinedEvents.forEach(event => {
         const user = users.find(u => u.nickname === event.userNickname);
-        if (!user) return;
-
-        const statusClass = getStatusClass(event);
-        const pendingEmoji = statusClass === 'pending' ? '⏳ ' : '';
-
-        if (event.leaveType) { // Full-day leave (แจ้งลา/ลาล่วงหน้า) => left strip GREEN + tag color by type
-            const tagClass = leaveTypeToTagClass(event.leaveType);
-            eventsHtml += `<div class="calendar-event ${statusClass} modal-left-green"
-                            onclick="Swal.close(); showLeaveDetailModal('${event.id || ''}')">
-                              ${pendingEmoji}<span class="modal-tag ${tagClass}">${event.leaveType}</span>
-                              &nbsp; ${user.nickname} (${user.position || ''})
-                           </div>`;
-        } else { // Hourly leave/use => left strip BLUE ; text + tag color by action
-            const isLeaveHour = event.type === 'leave'; // true = ลาชั่วโมง, false = ใช้ชั่วโมง
-            const label = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
-            const timeText = event.startTime && event.endTime ? ` (${event.startTime}-${event.endTime})` : '';
-            const textClass = isLeaveHour ? 'hourly-text-red' : 'hourly-text-green';
-            const tagClass  = isLeaveHour ? 'modal-tag-red'    : 'modal-tag-green';
-            eventsHtml += `<div class="calendar-event ${statusClass} modal-left-blue"
-                            onclick="Swal.close(); showHourlyDetailModal('${event.id || ''}')">
-                              ${pendingEmoji}<span class="modal-tag ${tagClass}">${label}</span>
-                              &nbsp; <span class="${textClass}">${user.nickname}${timeText}</span>
-                           </div>`;
+        if (user) {
+            if (event.leaveType) { // Full-day leave
+                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+            } else { // Hourly leave
+                const dot = event.type === 'leave' ? '🔴' : '🟢';
+                const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
+                eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
+            }
         }
     });
     eventsHtml += '</div>';
@@ -2600,7 +2523,7 @@ window.showMoreEventsModal = function(dateString) {
         html: eventsHtml,
         confirmButtonText: 'ปิด'
     });
-};;;
+}
 
 window.showLeaveDetailModal = function(id) {
     const record = allLeaveRecords.find(r => r.id === id);
