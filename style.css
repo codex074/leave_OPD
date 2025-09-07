@@ -1297,7 +1297,7 @@ button[type="submit"]:active, .generic-button:active {
 .bg-theme-register { background-color: #dcfce7; }  /* Slightly Deeper Green, e.g., green-100 */
 .bg-theme-pin { background-color: #fffde6; }        /* Slightly Deeper Yellow, e.g., yellow-50 */
 
-@media (max-width: 780px) {
+@media (max-width: 768px) {
     .header-animated-orange a {
         position: static;       /* ยกเลิก absolute */
         display: block;
@@ -1307,3 +1307,11 @@ button[type="submit"]:active, .generic-button:active {
     }
 }
 
+.hourly-leave {
+    background-color: #e0f2fe; /* Tailwind's sky-100 */
+    color: #0369a1; /* Tailwind's sky-700 */
+    border-color: #38bdf8; /* Tailwind's sky-400 */
+}
+.hourly-leave:hover {
+    background-color: #bae6fd; /* Tailwind's sky-200 */
+}
