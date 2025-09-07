@@ -44,7 +44,32 @@ let holidays = [];
 let currentCalendarView = 'month'; // 'day', 'week', 'month', 'year'
 let showFullDayLeaveOnCalendar = true;
 let showHourlyLeaveOnCalendar = true;
-let calendarPositionFilter = ''; // '' means all positions
+let calendarPositionFilter = ''; // '' means all positions;
+
+let __connectionWatchdogTimer = null;
+let __hasConnectedToFirebase = false;
+function startConnectivityWatchdog(){
+  try{
+    if(__connectionWatchdogTimer) clearTimeout(__connectionWatchdogTimer);
+    __connectionWatchdogTimer = setTimeout(()=>{
+      if(!__hasConnectedToFirebase){
+        const dbStatus = document.getElementById('db-status');
+        if (dbStatus){
+          dbStatus.textContent = '⚠️ Offline mode';
+          dbStatus.className = 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';
+        }
+        console.warn('Firebase connection timeout -> switching to offline mode');
+        __hasConnectedToFirebase = true; if(__connectionWatchdogTimer) clearTimeout(__connectionWatchdogTimer); hideInitialLoader();
+        // Try to render whatever can be rendered without data
+        try{ applyUserFiltersAndRender(); }catch(e){}
+        try{ renderLeaveSection(); }catch(e){}
+        try{ renderHourlySummary(); }catch(e){}
+        try{ renderMonthView(); }catch(e){}
+      }
+    }, 12000); // 12s fallback
+  }catch(e){ console.error(e); }
+}
+
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -56,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     updateDateTime();
     setInterval(updateDateTime, 1000);
+ startConnectivityWatchdog();
 });
 
 function setupEventListeners() {
@@ -169,7 +195,7 @@ async function initializeDataListeners() {
         populateApproverDropdowns();
     }, (error) => {
         console.error("Error fetching admins: ", error);
-        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้อนุมัติได้');
+        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้อนุมัติได้'); const dbStatus=document.getElementById('db-status'); if(dbStatus){dbStatus.textContent='⚠️ Offline mode'; dbStatus.className='bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';} 
     });
 
     if (usersUnsubscribe) usersUnsubscribe();
@@ -190,10 +216,10 @@ async function initializeDataListeners() {
         dbStatus.textContent = '✅ Connected to Firebase';
         dbStatus.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
         
-        hideInitialLoader();
+        __hasConnectedToFirebase = true; if(__connectionWatchdogTimer) clearTimeout(__connectionWatchdogTimer); hideInitialLoader();
     }, (error) => {
         console.error("Error fetching users: ", error);
-        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้ใช้ได้');
+        showErrorPopup('ไม่สามารถเชื่อมต่อฐานข้อมูลผู้ใช้ได้'); const dbStatus=document.getElementById('db-status'); if(dbStatus){dbStatus.textContent='⚠️ Offline mode'; dbStatus.className='bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium';} hideInitialLoader();
     });
 
     await loadHolidays();
@@ -591,19 +617,6 @@ function toLocalISOStringInThailand(date) {
     };
     return new Intl.DateTimeFormat('en-CA', options).format(date);
 }
-
-/** Helper: date-range overlap for YYYY-MM-DD strings */
-function isRangeOverlap(startA, endA, startB, endB) {
-    const aStart = new Date(startA + 'T00:00:00');
-    const aEnd   = new Date(endA   + 'T23:59:59');
-    const bStart = new Date(startB + 'T00:00:00');
-    const bEnd   = new Date(endB   + 'T23:59:59');
-    return aStart <= bEnd && bStart <= aEnd;
-}
-
-/** Helper: exact same day for YYYY-MM-DD strings */
-function isSameDay(a, b) { return a === b; }
-
 
 function updateDateTime() {
     const now = new Date();
@@ -1534,26 +1547,16 @@ function applyLeaveFiltersAndRender() {
     const recordsStart = document.getElementById('records-filter-start')?.value || '';
     const recordsEnd = document.getElementById('records-filter-end')?.value || '';
 
-    
-filteredLeaveRecords = allLeaveRecords.filter(record => {
+    filteredLeaveRecords = allLeaveRecords.filter(record => {
         if (record.fiscalYear !== fiscalYear) return false;
         const user = users.find(u => u.nickname === record.userNickname);
         if (!user) return false;
         const nameMatch = user.fullname.toLowerCase().includes(recordsSearchTerm) || user.nickname.toLowerCase().includes(recordsSearchTerm);
         const positionMatch = !recordsPosition || user.position === recordsPosition;
-        
-        // Optional leaveType filter
-        const typeEl = document.getElementById('records-filter-leave-type');
-        const leaveTypeFilter = typeEl ? (typeEl.value || '') : '';
-        const typeMatch = !leaveTypeFilter || record.leaveType === leaveTypeFilter;
-
-        // date overlap (support multi-day leaves)
-        const startOk = !recordsStart || isRangeOverlap(recordsStart, recordsStart, record.startDate, record.endDate);
-        const endOk   = !recordsEnd   || isRangeOverlap(recordsEnd, recordsEnd, record.startDate, record.endDate);
-
-        return nameMatch && positionMatch && typeMatch && startOk && endOk;
+        const startDateMatch = !recordsStart || record.startDate >= recordsStart;
+        const endDateMatch = !recordsEnd || record.endDate <= recordsEnd;
+        return nameMatch && positionMatch && startDateMatch && endDateMatch;
     });
-);
     
     renderLeaveSection(fiscalYear, filteredLeaveRecords, filteredSummaryUsers);
 }
