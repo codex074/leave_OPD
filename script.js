@@ -2227,11 +2227,10 @@ function renderMonthView() {
         }
         
         let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-            if (r.status !== 'อนุมัติแล้ว') return false;
             return dateString >= r.startDate && dateString <= r.endDate;
         }) : [];
         
-        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
+        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
 
         if (calendarPositionFilter) {
             dayEvents = dayEvents.filter(event => {
@@ -2251,17 +2250,17 @@ function renderMonthView() {
             const user = users.find(u => u.nickname === event.userNickname);
             if (user) {
                 if (event.leaveType) { // Full-day leave
-                    dayEventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="event.stopPropagation(); showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    dayEventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    dayEventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="event.stopPropagation(); showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
+                    dayEventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
 
         if (combinedEvents.length > 3) {
-            dayEventsHtml += `<div class="show-more-btn" onclick="event.stopPropagation(); showMoreEventsModal('${dateString}')">+${combinedEvents.length - 3} เพิ่มเติม</div>`;
+            dayEventsHtml += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${combinedEvents.length - 3} เพิ่มเติม</div>`;
         }
         // --- END: โค้ดที่แก้ไข ---
 
@@ -2281,39 +2280,6 @@ function renderMonthView() {
     }
 
     calendarGrid.innerHTML = gridHtml;
-
-    // === Enable click on empty area of a day cell to open the day's full list ===
-    try {
-        // Attach data-date to current-month cells
-        const labels = calendarGrid.querySelectorAll('.calendar-day .current-month-day');
-        labels.forEach(lbl => {
-            const dayNum = parseInt(lbl.textContent.trim(), 10);
-            if (!isNaN(dayNum)) {
-                const dateObj = new Date(year, month, dayNum);
-                const dateStr = toLocalISOString(dateObj);
-                const cell = lbl.closest('.calendar-day');
-                if (cell) cell.setAttribute('data-date', dateStr);
-            }
-        });
-        // Delegate click: open list when clicking empty space inside the day cell
-        calendarGrid.addEventListener('click', (ev) => {
-            // Ignore clicks on events or "more" button
-            if (ev.target.closest('.calendar-event') || ev.target.closest('.show-more-btn')) return;
-            const cell = ev.target.closest('.calendar-day');
-            if (!cell) return;
-            const ds = cell.getAttribute('data-date');
-            if (ds) {
-                // Open the same modal used by the "+เพิ่มเติม" link
-                if (typeof window.showMoreEventsModal === 'function') {
-                    window.showMoreEventsModal(ds);
-                }
-            }
-        });
-    } catch (e) {
-        console.error('Month cell click setup failed:', e);
-    }
-    // === End click-to-open for day cell ===
-
 }
 
 
@@ -2394,7 +2360,6 @@ function renderYearView() {
             const dateString = toLocalISOString(date);
             
             const hasLeave = allLeaveRecords.some(r => {
-                if (r.status !== 'อนุมัติแล้ว') return false;
                 return dateString >= r.startDate && dateString <= r.endDate;
             });
             
@@ -2420,11 +2385,10 @@ function createDayCard(date, isWeekView = false) {
 
     // --- START: Added complete filtering logic ---
     let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
         return dateString >= r.startDate && dateString <= r.endDate;
     }) : [];
     
-    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
+    let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString) : [];
 
     if (calendarPositionFilter) {
         dayEvents = dayEvents.filter(event => {
@@ -2447,11 +2411,11 @@ function createDayCard(date, isWeekView = false) {
             if (user) {
                 // Harmonized the display format to match the month view
                 if (event.leaveType) { // Full-day leave
-                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="event.stopPropagation(); showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
+                    eventsHtml += `<div class="calendar-event ${getEventClass(event.leaveType)}" onclick="showLeaveDetailModal('${event.id}')">${user.nickname}(${user.position})-${event.leaveType}</div>`;
                 } else { // Hourly leave
                     const dot = event.type === 'leave' ? '🔴' : '🟢';
                     const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                    eventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="event.stopPropagation(); showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
+                    eventsHtml += `<div class="calendar-event hourly-leave cursor-pointer" onclick="showHourlyDetailModal('${event.id}')">${dot} ${user.nickname} (${shortType})</div>`;
                 }
             }
         });
@@ -2477,20 +2441,7 @@ function createDayCard(date, isWeekView = false) {
             </div>
         `;
     }
-    
-    // Allow clicking empty area to open the full list for this day
-    try {
-        container.addEventListener('click', (ev) => {
-            // Ignore clicks on explicit event items or "more" buttons
-            if (ev.target.closest('.calendar-event') || ev.target.closest('.show-more-btn')) return;
-            if (typeof window.showMoreEventsModal === 'function') {
-                window.showMoreEventsModal(dateString);
-            }
-        });
-    } catch (e) {
-        console.error('Day card click setup failed:', e);
-    }
-return container;
+    return container;
 }
 
 function getWeekDays(date) {
@@ -2509,13 +2460,12 @@ window.showMoreEventsModal = function(dateString) {
     const date = new Date(dateString + 'T00:00:00');
     
     const dayEvents = allLeaveRecords.filter(r => {
-        if (r.status !== 'อนุมัติแล้ว') return false;
         const startDate = new Date(r.startDate + 'T00:00:00');
         const endDate = new Date(r.endDate + 'T00:00:00');
         return date >= startDate && date <= endDate;
     });
 
-    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString && r.confirmed);
+    const hourlyDayEvents = allHourlyRecords.filter(r => r.date === dateString);
     const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 
     let eventsHtml = '<div class="space-y-2">';
