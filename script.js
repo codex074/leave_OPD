@@ -698,11 +698,7 @@ function calculateLeaveDays(startDate, endDate, startPeriod, endPeriod) {
 
     // === Special case: same start & end date ===
     if (sDate.getTime() === eDate.getTime()) {
-        const dateString = toYYYYMMDD(sDate);
-        const isWeekend = (sDate.getDay() === 0 || sDate.getDay() === 6);
-        const isHoliday = holidays.find(h => h.date === dateString);
-        if (isWeekend || isHoliday) return 0;
-
+        // นโยบายใหม่: วันเดียวกันให้คิดตามประเภทตรง ๆ ไม่สนเสาร์-อาทิตย์/วันหยุด
         const isHalf = (startPeriod && startPeriod.includes('ครึ่งวัน')) || (endPeriod && endPeriod.includes('ครึ่งวัน'));
         return isHalf ? 0.5 : 1;
     }
