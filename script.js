@@ -44,7 +44,7 @@ let holidays = [];
 let currentCalendarView = 'month'; // 'day', 'week', 'month', 'year'
 let showFullDayLeaveOnCalendar = true;
 let showHourlyLeaveOnCalendar = true;
-
+let calendarPositionFilter = ''; // '' means all positions
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -1834,8 +1834,6 @@ window.showLeaveRecordDetailsModal = function(id) {
     });
 }
 
-// ... All remaining functions (calendar rendering, editUser, etc.) should be here ...
-
 // --- USER & RECORD MANAGEMENT ---
 window.changeHourlyPage = function(direction) {
     hourlyRecordsCurrentPage += direction;
@@ -2089,9 +2087,16 @@ window.toggleCalendarFilter = function(type, btnElement) {
     } else if (type === 'hourly') {
         showHourlyLeaveOnCalendar = !showHourlyLeaveOnCalendar;
     }
+    // The new CSS in style.css will handle the color based on the 'active' class
     btnElement.classList.toggle('active');
     renderCalendar();
 }
+
+window.filterCalendarByPosition = function(position) {
+    calendarPositionFilter = position;
+    renderCalendar();
+}
+
 
 window.showHourlyDetailModal = function(id) {
     const record = allHourlyRecords.find(r => r.id === id);
@@ -2099,12 +2104,17 @@ window.showHourlyDetailModal = function(id) {
 
     const user = users.find(u => u.nickname === record.userNickname) || {};
     const durationText = formatHoursAndMinutes(record.duration);
+    
+    // --- START: โค้ดที่แก้ไข ---
     const typeText = record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง';
+    const typeClass = record.type === 'leave' ? 'text-red-600 font-bold' : 'text-green-600 font-bold';
+    const typeHtml = `<span class="${typeClass}">${typeText}</span>`;
+    // --- END: โค้ดที่แก้ไข ---
 
     const html = `
         <div class="space-y-2 text-left p-2">
             <p><strong>ผู้บันทึก:</strong> ${user.fullname || record.userNickname}</p>
-            <p><strong>ประเภท:</strong> ${typeText}</p>
+            <p><strong>ประเภท:</strong> ${typeHtml}</p>
             <hr class="my-2">
             <p><strong>วันที่:</strong> ${formatDateThaiShort(record.date)}</p>
             <p><strong>ช่วงเวลา:</strong> ${record.startTime} - ${record.endTime}</p>
@@ -2216,12 +2226,23 @@ function renderMonthView() {
             dayEventsHtml += `<div class="holiday-event">${holidayInfo.name}</div>`;
         }
         
-        const dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
+        let dayEvents = showFullDayLeaveOnCalendar ? allLeaveRecords.filter(r => {
             if (r.status !== 'อนุมัติแล้ว') return false;
             return dateString >= r.startDate && dateString <= r.endDate;
         }) : [];
         
-        const hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
+        let hourlyDayEvents = showHourlyLeaveOnCalendar ? allHourlyRecords.filter(r => r.date === dateString && r.confirmed) : [];
+
+        if (calendarPositionFilter) {
+            dayEvents = dayEvents.filter(event => {
+                const user = users.find(u => u.nickname === event.userNickname);
+                return user && user.position === calendarPositionFilter;
+            });
+            hourlyDayEvents = hourlyDayEvents.filter(event => {
+                const user = users.find(u => u.nickname === event.userNickname);
+                return user && user.position === calendarPositionFilter;
+            });
+        }
         
         const combinedEvents = [...dayEvents, ...hourlyDayEvents];
 

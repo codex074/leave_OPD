@@ -263,16 +263,23 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-4 mb-4 pb-4 border-b">
+                    <div class="flex flex-wrap items-center gap-4 mb-4 pb-4 border-b">
                         <span class="font-semibold text-gray-700">ตัวกรอง:</span>
-                        <button onclick="toggleCalendarFilter('fullDay', this)" class="calendar-view-btn active">
+                        <button onclick="toggleCalendarFilter('fullDay', this)" class="calendar-view-btn filter-btn-fullday active">
                             แสดงลาเต็มวัน
                         </button>
-                        <button onclick="toggleCalendarFilter('hourly', this)" class="calendar-view-btn active">
+                        <button onclick="toggleCalendarFilter('hourly', this)" class="calendar-view-btn filter-btn-hourly active">
                             แสดงลาชั่วโมง
                         </button>
+                        <div class="ml-auto">
+                            <select id="calendar-filter-position" onchange="filterCalendarByPosition(this.value)" class="p-2 border rounded-lg text-sm">
+                                <option value="">ทุกตำแหน่ง</option>
+                                <option value="เภสัช">เภสัช</option>
+                                <option value="จพง">จพง</option>
+                                <option value="จนท">จนท</option>
+                            </select>
+                        </div>
                     </div>
-
                     <div id="calendar-grid-container"></div>
                     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"><div class="flex items-center"><div class="w-4 h-4 sick-leave rounded mr-2"></div><span class="text-sm">ลาป่วย</span></div><div class="flex items-center"><div class="w-4 h-4 vacation-leave rounded mr-2"></div><span class="text-sm">ลาพักผ่อน</span></div><div class="flex items-center"><div class="w-4 h-4 personal-leave rounded mr-2"></div><span class="text-sm">ลากิจ</span></div><div class="flex items-center"><div class="w-4 h-4 maternity-leave rounded mr-2"></div><span class="text-sm">ลาคลอด</span></div></div>
                 </div>

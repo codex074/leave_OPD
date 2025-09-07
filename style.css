@@ -1315,3 +1315,21 @@ button[type="submit"]:active, .generic-button:active {
 .hourly-leave:hover {
     background-color: #bae6fd; /* Tailwind's sky-200 */
 }
+/* --- Custom Filter Button Colors --- */
+.filter-btn-fullday.active {
+    background-color: #16a34a; /* Green */
+    color: white;
+    border-color: #15803d;
+}
+.filter-btn-fullday.active:hover {
+    background-color: #15803d;
+}
+
+.filter-btn-hourly.active {
+    background-color: #2563eb; /* Blue */
+    color: white;
+    border-color: #1d4ed8;
+}
+.filter-btn-hourly.active:hover {
+    background-color: #1d4ed8;
+}
