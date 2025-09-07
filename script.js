@@ -2477,7 +2477,7 @@ function getWeekDays(date) {
 
 window.showMoreEventsModal = function(dateString) {
     const date = new Date(dateString + 'T00:00:00');
-    
+
     const dayEvents = allLeaveRecords.filter(r => {
         const startDate = new Date(r.startDate + 'T00:00:00');
         const endDate = new Date(r.endDate + 'T00:00:00');
@@ -2490,14 +2490,24 @@ window.showMoreEventsModal = function(dateString) {
     let eventsHtml = '<div class="space-y-2">';
     combinedEvents.forEach(event => {
         const user = users.find(u => u.nickname === event.userNickname);
-        if (user) {
-            if (event.leaveType) { // Full-day leave
-                eventsHtml += `<div onclick="Swal.close(); showLeaveDetailModal('${event.id}')" class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}">${user.nickname}(${user.position})-${event.leaveType}</div>`;
-            } else { // Hourly leave
-                const dot = event.type === 'leave' ? '🔴' : '🟢';
-                const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
-                eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave">${dot} ${user.nickname} (${shortType})</div>`;
-            }
+        if (!user) return;
+
+        const pendingEmoji = isApproved(event) ? '' : '🟡 ';
+
+        if (event.leaveType) { // Full-day leave (แจ้งลา/ลาล่วงหน้า)
+            eventsHtml += `<div class="calendar-event ${getStatusClass(event)} ${getEventClass(event.leaveType)}"
+                            onclick="Swal.close(); showLeaveDetailModal('${event.id || ''}')">
+                              ${pendingEmoji}<span class="modal-tag modal-tag-green">แจ้งลา</span>
+                              &nbsp; ${user.nickname} (${user.position}) - ${event.leaveType}
+                           </div>`;
+        } else { // Hourly leave (ลาชั่วโมง/ใช้ชั่วโมง)
+            const shortType = event.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
+            const timeText = event.startTime && event.endTime ? ` (${event.startTime}-${event.endTime})` : '';
+            eventsHtml += `<div class="calendar-event ${getStatusClass(event)} hourly-leave"
+                            onclick="Swal.close(); showHourlyDetailModal('${event.id || ''}')">
+                              ${pendingEmoji}<span class="modal-tag modal-tag-blue">${shortType}</span>
+                              &nbsp; ${user.nickname}${timeText}
+                           </div>`;
         }
     });
     eventsHtml += '</div>';
@@ -2507,7 +2517,7 @@ window.showMoreEventsModal = function(dateString) {
         html: eventsHtml,
         confirmButtonText: 'ปิด'
     });
-}
+};
 
 window.showLeaveDetailModal = function(id) {
     const record = allLeaveRecords.find(r => r.id === id);
