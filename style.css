@@ -1344,3 +1344,25 @@ button[type="submit"]:active, .generic-button:active {
     background: rgba(245, 158, 11, 0.12);
 }
 
+/* === Tags for items in "รายการลาทั้งหมด" modal === */
+.modal-tag{
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:9999px;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  vertical-align:middle;
+}
+/* ลาชั่วโมง / ใช้ชั่วโมง */
+.modal-tag-blue{
+  background:#dbeafe;           /* blue-100 */
+  color:#1e40af;                 /* blue-800 */
+  border-left:4px solid #60a5fa; /* blue-400 */
+}
+/* แจ้งลา / ลาล่วงหน้า */
+.modal-tag-green{
+  background:#dcfce7;            /* emerald-100 */
+  color:#065f46;                 /* emerald-900 */
+  border-left:4px solid #34d399; /* emerald-400 */
+}
