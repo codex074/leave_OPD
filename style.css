@@ -141,6 +141,7 @@ button[type="submit"]:active, .generic-button:active {
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     animation: slideUp 0.8s ease-out;
+    overflow: hidden;
 }
 
 @keyframes slideUp {
@@ -155,6 +156,8 @@ button[type="submit"]:active, .generic-button:active {
     text-align: center;
     position: relative;
     overflow: hidden;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 
 .header-animated::before {
@@ -261,8 +264,8 @@ button[type="submit"]:active, .generic-button:active {
 }
 
 .radio-option-animated .radio-label {
-    flex: 1;                /* ขยายเต็มพื้นที่ปุ่ม */
-    text-align: center;      /* จัดข้อความให้อยู่กึ่งกลาง */
+    flex: 1;                /* à¸‚à¸¢à¸²à¸¢à¹€à¸•à¹‡à¸¡à¸žà¸·à¹‰à¸™à¸—à¸µà¹ˆà¸›à¸¸à¹ˆà¸¡ */
+    text-align: center;      /* à¸ˆà¸±à¸”à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¹ƒà¸«à¹‰à¸­à¸¢à¸¹à¹ˆà¸à¸¶à¹ˆà¸‡à¸à¸¥à¸²à¸‡ */
     font-weight: 600;
 }
 
@@ -618,15 +621,15 @@ button[type="submit"]:active, .generic-button:active {
     text-align: center;
     min-width: 60px;
 }
-.pos-เภสัช {
+.pos-à¹€à¸ à¸ªà¸±à¸Š {
     background-color: #f3e8ff;
     color: #7e22ce;
 }
-.pos-จพง {
+.pos-à¸ˆà¸žà¸‡ {
     background-color: #e0e7ff;
     color: #3730a3;
 }
-.pos-จนท {
+.pos-à¸ˆà¸™à¸— {
     background-color: #ffedd5;
     color: #9a3412;
 }
@@ -858,36 +861,36 @@ button[type="submit"]:active, .generic-button:active {
         padding: 0;
     }
     main.container {
-        padding: 80px 15px 30px 15px; /* ปรับระยะห่างรอบ main content */
+        padding: 80px 15px 30px 15px; /* à¸›à¸£à¸±à¸šà¸£à¸°à¸¢à¸°à¸«à¹ˆà¸²à¸‡à¸£à¸­à¸š main content */
     }
     h1 {
-        font-size: 1.5rem; /* ลดขนาดหัวข้อหลัก */
+        font-size: 1.5rem; /* à¸¥à¸”à¸‚à¸™à¸²à¸”à¸«à¸±à¸§à¸‚à¹‰à¸­à¸«à¸¥à¸±à¸ */
     }
     #datetime-display {
-        display: none; /* ซ่อนวันที่/เวลา บนมือถือเพื่อประหยัดพื้นที่ */
+        display: none; /* à¸‹à¹ˆà¸­à¸™à¸§à¸±à¸™à¸—à¸µà¹ˆ/à¹€à¸§à¸¥à¸² à¸šà¸™à¸¡à¸·à¸­à¸–à¸·à¸­à¹€à¸žà¸·à¹ˆà¸­à¸›à¸£à¸°à¸«à¸¢à¸±à¸”à¸žà¸·à¹‰à¸™à¸—à¸µà¹ˆ */
     }
 
     /* --- Sidebar Menu --- */
     #sidebar {
-        width: 280px; /* ลดขนาดเมนูด้านข้างเล็กน้อย */
+        width: 280px; /* à¸¥à¸”à¸‚à¸™à¸²à¸”à¹€à¸¡à¸™à¸¹à¸”à¹‰à¸²à¸™à¸‚à¹‰à¸²à¸‡à¹€à¸¥à¹‡à¸à¸™à¹‰à¸­à¸¢ */
     }
 
     /* --- Hourly Leave Form (Animated) --- */
     .form-container-animated {
-        padding: 25px; /* ลด padding ในฟอร์ม */
+        padding: 25px; /* à¸¥à¸” padding à¹ƒà¸™à¸Ÿà¸­à¸£à¹Œà¸¡ */
     }
     .radio-group-animated {
-        flex-direction: column; /* ทำให้ปุ่ม "ลาชั่วโมง/ใช้ชั่วโมง" เป็นแนวตั้ง */
+        flex-direction: column; /* à¸—à¸³à¹ƒà¸«à¹‰à¸›à¸¸à¹ˆà¸¡ "à¸¥à¸²à¸Šà¸±à¹ˆà¸§à¹‚à¸¡à¸‡/à¹ƒà¸Šà¹‰à¸Šà¸±à¹ˆà¸§à¹‚à¸¡à¸‡" à¹€à¸›à¹‡à¸™à¹à¸™à¸§à¸•à¸±à¹‰à¸‡ */
         gap: 15px;
     }
     .time-group-animated {
-        grid-template-columns: 1fr; /* ทำให้ช่องเวลาเริ่มต้น/สิ้นสุดเป็นแนวตั้ง */
+        grid-template-columns: 1fr; /* à¸—à¸³à¹ƒà¸«à¹‰à¸Šà¹ˆà¸­à¸‡à¹€à¸§à¸¥à¸²à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™/à¸ªà¸´à¹‰à¸™à¸ªà¸¸à¸”à¹€à¸›à¹‡à¸™à¹à¸™à¸§à¸•à¸±à¹‰à¸‡ */
         gap: 20px;
     }
 
     /* --- Full Day Leave Form --- */
     #leave-form {
-        grid-template-columns: 1fr; /* ทำให้ฟอร์มลาเต็มวันเป็น 1 คอลัมน์ */
+        grid-template-columns: 1fr; /* à¸—à¸³à¹ƒà¸«à¹‰à¸Ÿà¸­à¸£à¹Œà¸¡à¸¥à¸²à¹€à¸•à¹‡à¸¡à¸§à¸±à¸™à¹€à¸›à¹‡à¸™ 1 à¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œ */
     }
     #leave-type-buttons-new {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -896,16 +899,16 @@ button[type="submit"]:active, .generic-button:active {
 
     /* --- PIN Management Page --- */
     #pin-content .grid {
-        grid-template-columns: 1fr; /* ทำให้ส่วนจัดการ PIN เป็น 1 คอลัมน์ */
+        grid-template-columns: 1fr; /* à¸—à¸³à¹ƒà¸«à¹‰à¸ªà¹ˆà¸§à¸™à¸ˆà¸±à¸”à¸à¸²à¸£ PIN à¹€à¸›à¹‡à¸™ 1 à¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œ */
     }
 
     /* --- Tables --- */
     .table-container, .table-container-no-scroll {
-        max-height: none; /* เอาความสูงสูงสุดออก ให้แสดงผลเต็มที่ */
+        max-height: none; /* à¹€à¸­à¸²à¸„à¸§à¸²à¸¡à¸ªà¸¹à¸‡à¸ªà¸¹à¸‡à¸ªà¸¸à¸”à¸­à¸­à¸ à¹ƒà¸«à¹‰à¹à¸ªà¸”à¸‡à¸œà¸¥à¹€à¸•à¹‡à¸¡à¸—à¸µà¹ˆ */
     }
     table th, table td {
-        padding: 10px 8px; /* ลด padding ในตาราง */
-        font-size: 0.8rem; /* ลดขนาดตัวอักษรในตาราง */
+        padding: 10px 8px; /* à¸¥à¸” padding à¹ƒà¸™à¸•à¸²à¸£à¸²à¸‡ */
+        font-size: 0.8rem; /* à¸¥à¸”à¸‚à¸™à¸²à¸”à¸•à¸±à¸§à¸­à¸±à¸à¸©à¸£à¹ƒà¸™à¸•à¸²à¸£à¸²à¸‡ */
     }
     .position-badge {
         padding: 2px 8px;
@@ -914,14 +917,14 @@ button[type="submit"]:active, .generic-button:active {
 
     /* --- Calendar --- */
     #calendar-content .flex.justify-between {
-        flex-direction: column; /* ทำให้ปุ่มเลื่อนเดือนเป็นแนวตั้ง */
+        flex-direction: column; /* à¸—à¸³à¹ƒà¸«à¹‰à¸›à¸¸à¹ˆà¸¡à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹€à¸”à¸·à¸­à¸™à¹€à¸›à¹‡à¸™à¹à¸™à¸§à¸•à¸±à¹‰à¸‡ */
         gap: 10px;
     }
     #calendar-grid {
         min-height: auto;
     }
     #calendar-grid > div {
-        min-height: 80px; /* ลดความสูงขั้นต่ำของแต่ละวัน */
+        min-height: 80px; /* à¸¥à¸”à¸„à¸§à¸²à¸¡à¸ªà¸¹à¸‡à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³à¸‚à¸­à¸‡à¹à¸•à¹ˆà¸¥à¸°à¸§à¸±à¸™ */
         padding: 4px;
     }
     .calendar-event {
@@ -1299,9 +1302,9 @@ button[type="submit"]:active, .generic-button:active {
 
 @media (max-width: 768px) {
     .header-animated-orange a {
-        position: static;       /* ยกเลิก absolute */
+        position: static;       /* à¸¢à¸à¹€à¸¥à¸´à¸ absolute */
         display: block;
-        margin: 10px auto 0;    /* จัดกึ่งกลางและเว้นระยะ */
+        margin: 10px auto 0;    /* à¸ˆà¸±à¸”à¸à¸¶à¹ˆà¸‡à¸à¸¥à¸²à¸‡à¹à¸¥à¸°à¹€à¸§à¹‰à¸™à¸£à¸°à¸¢à¸° */
         text-align: center;
         width: fit-content;
     }
@@ -1342,52 +1345,4 @@ button[type="submit"]:active, .generic-button:active {
 .calendar-event.pending {
     border-left: 4px solid #f59e0b; /* amber */
     background: rgba(245, 158, 11, 0.12);
-}
-
-/* === Tags for items in "รายการลาทั้งหมด" modal === */
-.modal-tag{
-  display:inline-block;
-  padding:2px 10px;
-  border-radius:9999px;
-  font-size:12px;
-  font-weight:700;
-  line-height:1;
-  vertical-align:middle;
-}
-/* ลาชั่วโมง / ใช้ชั่วโมง */
-.modal-tag-blue{
-  background:#dbeafe;           /* blue-100 */
-  color:#1e40af;                 /* blue-800 */
-  border-left:4px solid #60a5fa; /* blue-400 */
-}
-/* แจ้งลา / ลาล่วงหน้า */
-.modal-tag-green{
-  background:#dcfce7;            /* emerald-100 */
-  color:#065f46;                 /* emerald-900 */
-  border-left:4px solid #34d399; /* emerald-400 */
-}
-
-/* === Modal overrides for left strip colors === */
-.modal-left-green{ border-left:6px solid #22c55e !important; } /* green-500 */
-.modal-left-blue{  border-left:6px solid #3b82f6 !important; } /* blue-500 */
-
-/* Hourly text colors */
-.hourly-text-red{   color:#dc2626 !important; }  /* red-600 */
-.hourly-text-green{ color:#16a34a !important; }  /* green-600 */
-
-/* === Extra tag colors for leave types === */
-.modal-tag-red{
-  background:#fee2e2;            /* red-100 */
-  color:#991b1b;                 /* red-800 */
-  border-left:4px solid #f87171; /* red-400 */
-}
-.modal-tag-purple{
-  background:#ede9fe;            /* violet-100 */
-  color:#5b21b6;                 /* violet-800 */
-  border-left:4px solid #a78bfa; /* violet-400 */
-}
-.modal-tag-pink{
-  background:#ffe4e6;            /* pink-100 */
-  color:#9d174d;                 /* pink-800 */
-  border-left:4px solid #f472b6; /* pink-400 */
 }
