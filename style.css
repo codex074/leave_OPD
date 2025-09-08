@@ -1395,3 +1395,4 @@ button[type="submit"]:active, .generic-button:active {
   color:#9d174d;                 /* pink-800 */
   border-left:4px solid #f472b6; /* pink-400 */
 }
+.swal-left { text-align: left !important; }
