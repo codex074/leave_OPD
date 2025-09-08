@@ -1396,3 +1396,8 @@ button[type="submit"]:active, .generic-button:active {
   border-left:4px solid #f472b6; /* pink-400 */
 }
 .swal-left { text-align: left !important; }
+
+.leave-card-vacation { background-color: #bbf7d0; }   /* เขียวอ่อน */
+.leave-card-sick     { background-color: #fecaca; }   /* แดงอ่อน */
+.leave-card-personal { background-color: #ddd6fe; }   /* ม่วงอ่อน */
+.leave-card-maternity{ background-color: #fbcfe8; }   /* ชมพูอ่อน */

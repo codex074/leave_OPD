@@ -1839,6 +1839,122 @@ function renderLeaveSummary(summaryData) {
     if(pageInfo) pageInfo.textContent = `หน้า ${leaveSummaryCurrentPage} / ${totalPages}`;
     if(prevBtn) prevBtn.disabled = leaveSummaryCurrentPage === 1;
     if(nextBtn) nextBtn.disabled = leaveSummaryCurrentPage === totalPages;
+    window.showLeaveDetailPopup = function(nickname) {
+  const fyEl = document.getElementById('leave-filter-fiscal-year');
+  const fiscalYear = fyEl ? parseInt(fyEl.value) : getCurrentFiscalYear();
+
+  const user = users.find(u => u.nickname === nickname);
+  if (!user) return showErrorPopup('ไม่พบผู้ใช้');
+
+  const getTypeKey = (t='') => {
+    const s = String(t).trim();
+    if (/พักผ่อน/i.test(s)) return 'vacation';
+    if (/ป่วย/i.test(s))    return 'sick';
+    if (/คลอด/i.test(s))    return 'maternity';
+    return 'personal';
+  };
+
+  const totals = { vacation: 0, sick: 0, personal: 0, maternity: 0 };
+
+  const records = allLeaveRecords
+    .filter(r => r.userNickname === nickname && r.fiscalYear === fiscalYear && r.status === 'อนุมัติแล้ว')
+    .map(r => {
+      const sPeriod = r.startPeriod || r.period;
+      const ePeriod = r.endPeriod || r.period;
+      const days = calculateLeaveDays(r.startDate, r.endDate, sPeriod, ePeriod);
+      const key  = getTypeKey(r.leaveType);
+      totals[key] += days;
+      return { ...r, days, key };
+    })
+    .sort((a,b) => (b.createdDate?.toDate?.() || new Date(b.startDate)) - (a.createdDate?.toDate?.() || new Date(a.startDate)));
+
+  const card = (label, value, extra='') => `
+    <div class="rounded-xl shadow-md p-4 text-center text-gray-800 ${extra}">
+      <div class="text-sm mb-1">${label}</div>
+      <div class="text-3xl font-extrabold">${value}</div>
+      <div class="text-xs mt-1">วัน (อนุมัติ)</div>
+    </div>`;
+
+  const cardsHtml = `
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      ${card('ลาพักผ่อน', totals.vacation, 'leave-card-vacation')}
+      ${card('ลาป่วย',     totals.sick,     'leave-card-sick')}
+      ${card('ลากิจ/ฉุกเฉิน', totals.personal, 'leave-card-personal')}
+      ${card('ลาคลอด',    totals.maternity,'leave-card-maternity')}
+    </div>
+  `;
+
+  // === Pagination ===
+  let currentPage = 1;
+  const perPage = 10;
+  const totalPages = Math.max(1, Math.ceil(records.length / perPage));
+
+  const renderTable = () => {
+    const start = (currentPage - 1) * perPage;
+    const pageRecords = records.slice(start, start + perPage);
+
+    const rows = pageRecords.map(r => {
+      const dateText = (r.startDate === r.endDate)
+        ? `${formatDateThaiShort(r.startDate)} (${r.startPeriod || r.period})`
+        : `${formatDateThaiShort(r.startDate)} (${r.startPeriod || r.period}) - ${formatDateThaiShort(r.endDate)} (${r.endPeriod || r.period})`;
+
+      const tagClass =
+        r.key === 'vacation'  ? 'modal-tag modal-tag-green'   :
+        r.key === 'sick'      ? 'modal-tag modal-tag-red'     :
+        r.key === 'maternity' ? 'modal-tag modal-tag-pink'    :
+                                'modal-tag modal-tag-purple';
+
+      return `
+        <tr class="border-b">
+          <td class="px-3 py-2"><span class="${tagClass}">${r.leaveType}</span></td>
+          <td class="px-3 py-2">${dateText}</td>
+          <td class="px-3 py-2 text-center font-semibold">${r.days}</td>
+          <td class="px-3 py-2">${r.approver || '-'}</td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="4" class="px-3 py-6 text-center text-gray-500">ไม่มีข้อมูล</td></tr>`;
+
+    const pager = `
+      <div class="flex justify-between items-center mt-2">
+        <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300" ${currentPage===1?'disabled':''} onclick="document.querySelector('#leave-table-body').dispatchEvent(new CustomEvent('changePage',{detail:-1}))">ก่อนหน้า</button>
+        <div class="text-sm">หน้า ${currentPage} / ${totalPages}</div>
+        <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300" ${currentPage===totalPages?'disabled':''} onclick="document.querySelector('#leave-table-body').dispatchEvent(new CustomEvent('changePage',{detail:1}))">ถัดไป</button>
+      </div>`;
+
+    return `
+      <div class="bg-gray-50 border rounded-lg">
+        <div class="px-3 py-2 text-sm font-semibold text-gray-700">รายการวันลา</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-white sticky top-0">
+              <tr class="text-gray-600">
+                <th class="px-3 py-2 text-left">ประเภท</th>
+                <th class="px-3 py-2 text-left">ช่วงวัน/เวลา</th>
+                <th class="px-3 py-2 w-24">วันลา</th>
+                <th class="px-3 py-2">ผู้อนุมัติ</th>
+              </tr>
+            </thead>
+            <tbody id="leave-table-body">${rows}</tbody>
+          </table>
+        </div>
+        ${pager}
+      </div>`;
+  };
+
+  Swal.fire({
+    title: `สรุปวันลาของ ${user.fullname} (${user.nickname}) – ปีงบ ${fiscalYear}`,
+    html: cardsHtml + renderTable(),
+    width: Math.min(window.innerWidth - 32, 900),
+    confirmButtonText: 'ปิด',
+    didOpen: () => {
+      const body = document.getElementById('leave-table-body');
+      body.addEventListener('changePage', e => {
+        currentPage = Math.min(Math.max(1, currentPage + e.detail), totalPages);
+        Swal.update({ html: cardsHtml + renderTable() });
+      });
+    }
+  });
+};
+
 }
 
 function renderLeaveRecords(records) {
