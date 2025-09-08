@@ -2612,7 +2612,8 @@ window.showMoreEventsModal = function(dateString) {
     Swal.fire({
         title: `รายการลาทั้งหมดวันที่ ${formatDateThaiShort(date)}`,
         html: eventsHtml,
-        confirmButtonText: 'ปิด'
+        confirmButtonText: 'ปิด',
+        customClass: { htmlContainer: 'swal-left' } 
     });
 };;;
 
