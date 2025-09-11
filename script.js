@@ -171,6 +171,15 @@ function setupEventListeners() {
             }
         });
     }
+
+  // mark fiscal-year selects as user-selected when changed (to avoid overwriting on data updates)
+  ;['leave-filter-fiscal-year','hourly-filter-fiscal-year'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset._fyListenerBound) {
+      el.addEventListener('change', () => { el.dataset.userSelected = '1'; });
+      el.dataset._fyListenerBound = '1';
+    }
+  });
 }
 
 function initializePinListener() {
@@ -233,6 +242,7 @@ function loadHourlyData(fiscalYear) {
      const hourlyQuery = query(collection(db, "hourlyRecords"), where("fiscalYear", "==", fiscalYear));
      hourlyRecordsUnsubscribe = onSnapshot(hourlyQuery, (snapshot) => {
         allHourlyRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        updateFiscalYearFiltersFromData();
         applyHourlyFiltersAndRender();
      }, (error) => { 
         console.error('Error in hourlyRecords listener: ', error); 
@@ -245,6 +255,7 @@ function loadLeaveData() {
     const leaveQuery = query(collection(db, "leaveRecords"));
     leaveRecordsUnsubscribe = onSnapshot(leaveQuery, (snapshot) => {
         allLeaveRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        updateFiscalYearFiltersFromData();
         applyLeaveFiltersAndRender();
         const calendarContent = document.getElementById('calendar-content');
         if (calendarContent && !calendarContent.classList.contains('hidden')) {
@@ -256,21 +267,73 @@ function loadLeaveData() {
     });
 }
 
+
+// === Fiscal Year Helpers (INSERTED) ===
+function computeFiscalYearFromDateString(isoDateStr) {
+  if (!isoDateStr) return null;
+  const d = new Date(isoDateStr + 'T00:00:00');
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0=Jan ... 11=Dec
+  return (month >= 9 ? year + 544 : year + 543); // ต.ค.เริ่มปีงบฯ และใช้ พ.ศ.
+}
+
+function setFiscalYearOptions(selectEl, years, currentFiscalYear) {
+  if (!selectEl) return;
+  const hadUserValue = !!selectEl.dataset.userSelected;
+  selectEl.innerHTML = '';
+  years.forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    selectEl.add(opt);
+  });
+  if (!hadUserValue || !years.includes(parseInt(selectEl.value))) {
+    selectEl.value = currentFiscalYear;
+  }
+}
+
+function updateFiscalYearFiltersFromData() {
+  const leaveFYEl  = document.getElementById('leave-filter-fiscal-year');
+  const hourlyFYEl = document.getElementById('hourly-filter-fiscal-year');
+  if (!leaveFYEl && !hourlyFYEl) return;
+  const currentFiscalYear = getCurrentFiscalYear();
+
+  const fromHourly = (Array.isArray(allHourlyRecords) ? allHourlyRecords : [])
+    .map(r => parseInt(r.fiscalYear))
+    .filter(Number.isFinite);
+
+  const fromLeave = (Array.isArray(allLeaveRecords) ? allLeaveRecords : [])
+    .map(r => {
+      const fy = parseInt(r.fiscalYear);
+      if (Number.isFinite(fy)) return fy;
+      if (r.startDate) return computeFiscalYearFromDateString(r.startDate);
+      if (r.endDate) return computeFiscalYearFromDateString(r.endDate);
+      return null;
+    })
+    .filter(Number.isFinite);
+
+  const setYears = new Set([...fromHourly, ...fromLeave, currentFiscalYear]);
+  const years = Array.from(setYears).sort((a,b) => b - a);
+
+  setFiscalYearOptions(leaveFYEl, years, currentFiscalYear);
+  setFiscalYearOptions(hourlyFYEl, years, currentFiscalYear);
+}
+// === End Fiscal Year Helpers ===
 function populateFiscalYearFilters() {
-    const selects = [document.getElementById('leave-filter-fiscal-year'), document.getElementById('hourly-filter-fiscal-year')];
-    const currentFiscalYear = getCurrentFiscalYear();
-    selects.forEach(select => {
-        if (!select) return;
-        select.innerHTML = '';
-        for (let i = 2; i >= -2; i--) {
-            const year = currentFiscalYear + i;
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            select.add(option);
-        }
-        select.value = currentFiscalYear;
-    });
+  const selects = [
+    document.getElementById('leave-filter-fiscal-year'),
+    document.getElementById('hourly-filter-fiscal-year')
+  ];
+  const currentFiscalYear = getCurrentFiscalYear();
+  selects.forEach(select => {
+    if (!select) return;
+    select.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = currentFiscalYear;
+    opt.textContent = currentFiscalYear;
+    select.add(opt);
+    select.value = currentFiscalYear;
+  });
 }
 
 function hideInitialLoader() {
