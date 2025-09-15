@@ -27,19 +27,29 @@ let __initialLoaderTimer = null;
 
 // === Approval helpers (added) ===
 function isApproved(rec) {
-    try {
-        if (!rec || typeof rec !== 'object') return false;
-        // Full-day leave records have 'leaveType' and use 'status' text
-        if ('leaveType' in rec) {
-            const s = (rec.status || '').toString();
-            return s.includes('อนุมัติ') || s.toLowerCase() === 'approved' || s === 'อนุมัติแล้ว';
-        }
-        // Hourly records use boolean 'confirmed'
-        if ('confirmed' in rec) {
-            return !!rec.confirmed;
-        }
-        return false;
-    } catch (e) { return false; }
+    if (!rec || typeof rec !== 'object') return false;
+
+    // กรณีลาเต็มวัน (มี leaveType)
+    if ('leaveType' in rec) {
+        const raw = (rec.status || '').toString().trim();
+        const s = raw.replace(/\s/g, '').toLowerCase();
+
+        // ถ้ายังไม่ระบุหรือเป็นสถานะรอ → ถือว่ายังไม่อนุมัติ
+        if (!s) return false;
+        if (/(รอ|ยังไม่|ไม่อนุมัติ|ปฏิเสธ|reject|pending)/.test(s)) return false;
+
+        // อนุมัติจริง ๆ
+        if (/(อนุมัติแล้ว|อนุมัติ|approved|approve)/.test(s)) return true;
+
+        return false; // fallback
+    }
+
+    // กรณีลาชั่วโมง (มี confirmed)
+    if ('confirmed' in rec) {
+        return !!rec.confirmed;
+    }
+
+    return false;
 }
 function getStatusClass(rec) { return isApproved(rec) ? 'approved' : 'pending'; }
 
@@ -2385,10 +2395,41 @@ window.showHourlyDetailModal = function(id) {
     const durationText = formatHoursAndMinutes(record.duration);
     
     // --- START: โค้ดที่แก้ไข ---
-    const typeText = record.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง';
-    const typeClass = record.type === 'leave' ? 'text-red-600 font-bold' : 'text-green-600 font-bold';
-    const typeHtml = `<span class="${typeClass}">${typeText}</span>`;
-    // --- END: โค้ดที่แก้ไข ---
+// แสดงอีเวนต์บนช่องวัน (ในกริด) สูงสุด 3 รายการ พร้อมไอคอน ⏳ ถ้ายังไม่อนุมัติ
+dayEventsHtml += (function() {
+    let html = '';
+    combinedEvents.slice(0, 3).forEach(event => {
+        const user = users.find(u => u.nickname === event.userNickname);
+        if (!user) return;
+
+        const statusClass = getStatusClass(event);
+        const pendingEmoji = statusClass === 'pending' ? '⏳ ' : '';
+
+        if (event.leaveType) {
+            // Full-day leave (แจ้งลา/ลาล่วงหน้า)
+            const tagClass = leaveTypeToTagClass(event.leaveType);
+            html += `<div class="calendar-event ${statusClass} ${tagClass}"
+                        onclick="showLeaveDetailModal('${event.id || ''}')">
+                        ${pendingEmoji}${user.nickname} (${event.leaveType})
+                     </div>`;
+        } else {
+            // Hourly leave (ลาชั่วโมง/ใช้ชั่วโมง)
+            const isLeaveHour = (event.type === 'leave');
+            const label = isLeaveHour ? 'ลาชม.' : 'ใช้ชม.';
+            html += `<div class="calendar-event ${statusClass}"
+                        onclick="showHourlyDetailModal('${event.id || ''}')">
+                        ${pendingEmoji}${user.nickname} (${label})
+                     </div>`;
+        }
+    });
+
+    if (combinedEvents.length > 3) {
+        const more = combinedEvents.length - 3;
+        html += `<div class="show-more-btn" onclick="showMoreEventsModal('${dateString}')">+${more} เพิ่มเติม</div>`;
+    }
+    return html;
+})();
+// --- END: โค้ดที่แก้ไข ---
 
     const html = `
         <div class="space-y-2 text-left p-2">
@@ -2768,7 +2809,7 @@ window.showMoreEventsModal = function(dateString) {
             const tagClass = leaveTypeToTagClass(event.leaveType);
             eventsHtml += `<div class="calendar-event ${statusClass} modal-left-green"
                             onclick="Swal.close(); showLeaveDetailModal('${event.id || ''}')">
-                              ${pendingEmoji}<span class="modal-tag ${tagClass}">${event.leaveType}</span>
+                              <span class="modal-tag ${tagClass}">${pendingEmoji}${event.leaveType}</span>
                               &nbsp; ${user.nickname} (${user.position || ''})
                            </div>`;
         } else { // Hourly leave/use => left strip BLUE ; text + tag color by action
@@ -2781,7 +2822,7 @@ window.showMoreEventsModal = function(dateString) {
             const tagClass  = isLeaveHour ? 'modal-tag-red'    : 'modal-tag-green';
             eventsHtml += `<div class="calendar-event ${statusClass} modal-left-blue"
                             onclick="Swal.close(); showHourlyDetailModal('${event.id || ''}')">
-                              ${pendingEmoji}<span class="modal-tag ${tagClass}">${label}</span>
+                              <span class="modal-tag ${tagClass}">${pendingEmoji}${label}</span>
                               &nbsp; <span class="${textClass}">${user.nickname}${user.position ? ' ('+user.position+')' : ''}${timeText}${durationText}</span>
                            </div>`;
         }
