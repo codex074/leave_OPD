@@ -220,11 +220,10 @@ async function initializeDataListeners() {
         populateUserDropdowns();
         applyUserFiltersAndRender();
         
-        const hourlyFiscalYearEl = document.getElementById('hourly-filter-fiscal-year');
-        if (hourlyFiscalYearEl) {
-            const hourlyFiscalYear = parseInt(hourlyFiscalYearEl.value);
-            if(hourlyFiscalYear) loadHourlyData(hourlyFiscalYear);
-        }
+        // ========== START: EDITED CODE BLOCK ==========
+        // Load all hourly data initially
+        loadHourlyData();
+        // ========== END: EDITED CODE BLOCK ==========
         
         loadLeaveData(); 
 
@@ -246,10 +245,11 @@ async function initializeDataListeners() {
     }
 }
 
-function loadHourlyData(fiscalYear) {
-     if (!fiscalYear) return;
+// ========== START: EDITED FUNCTION ==========
+// This function now loads ALL hourly records, and filtering is handled by applyHourlyFiltersAndRender()
+function loadHourlyData() {
      if (hourlyRecordsUnsubscribe) hourlyRecordsUnsubscribe();
-     const hourlyQuery = query(collection(db, "hourlyRecords"), where("fiscalYear", "==", fiscalYear));
+     const hourlyQuery = query(collection(db, "hourlyRecords"));
      hourlyRecordsUnsubscribe = onSnapshot(hourlyQuery, (snapshot) => {
         allHourlyRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         updateFiscalYearFiltersFromData();
@@ -259,6 +259,7 @@ function loadHourlyData(fiscalYear) {
         hideInitialLoader(); 
      });
 }
+// ========== END: EDITED FUNCTION ==========
 
 function loadLeaveData() {
     if (leaveRecordsUnsubscribe) leaveRecordsUnsubscribe();
