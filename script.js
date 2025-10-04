@@ -76,6 +76,8 @@ let currentCalendarView = 'month'; // 'day', 'week', 'month', 'year'
 let showFullDayLeaveOnCalendar = true;
 let showHourlyLeaveOnCalendar = true;
 let calendarPositionFilter = ''; // '' means all positions
+let pendingFilterType = 'all';
+let pendingApproverFilter = 'all';
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -195,6 +197,39 @@ function setupEventListeners() {
   const exportBtn = document.getElementById('export-btn');
   if (exportBtn) {
     exportBtn.addEventListener('click', exportAllDataToExcel);
+  }
+
+  // Listeners for Admin Dashboard new functions
+  document.querySelectorAll('.filter-btn-group .filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn-group .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          pendingFilterType = btn.dataset.filterType;
+          renderAdminDashboard();
+      });
+  });
+
+  const approverFilterEl = document.getElementById('pending-approver-filter');
+  if (approverFilterEl) {
+      approverFilterEl.addEventListener('change', (e) => {
+          pendingApproverFilter = e.target.value;
+          renderAdminDashboard();
+      });
+  }
+  
+  const selectAllCheckbox = document.getElementById('select-all-pending');
+  if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('click', (e) => {
+          document.querySelectorAll('#pending-requests-list input[type="checkbox"]').forEach(checkbox => {
+              checkbox.checked = e.target.checked;
+          });
+          updateBatchApproveButtonState();
+      });
+  }
+  
+  const batchApproveBtn = document.getElementById('batch-approve-btn');
+  if (batchApproveBtn) {
+      batchApproveBtn.addEventListener('click', handleBatchApprove);
   }
 }
 
@@ -416,6 +451,9 @@ window.showTab = function(tabName) {
              const userOptions = users.map(user => ({ value: user.nickname, text: `${user.nickname} (${user.fullname})`}));
              tomSelectPinUser = new TomSelect(pinUserEl, { options: userOptions, create: false });
         }
+    }
+    if (tabName === 'admin-dashboard') {
+        renderAdminDashboard();
     }
     closeSidebar();
 }
@@ -1875,7 +1913,6 @@ function renderHourlyRecords(records) {
             <td class="px-4 py-3">${r.approver || '-'}</td>
             <td class="px-4 py-3 font-semibold ${statusClass}">${statusText}</td>
             <td class="px-4 py-3 flex items-center space-x-1">
-                ${!r.confirmed ? `<button onclick="manageRecord('approveHourly', '${r.id}')" class="p-2 rounded-full hover:bg-green-100 text-green-600" title="อนุมัติ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` : ''}
                 <button onclick="manageRecord('deleteHourly', '${r.id}')" class="p-2 rounded-full hover:bg-red-100 text-red-600" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
             </td>
         </tr>`;
@@ -2061,7 +2098,6 @@ function renderLeaveRecords(records) {
             <td class="px-4 py-3">${r.approver}</td>
             <td class="px-4 py-3 font-semibold ${r.status === 'อนุมัติแล้ว' ? 'text-green-500' : 'text-yellow-500'}">${r.status}</td>
             <td class="px-4 py-3 flex items-center space-x-1">
-                ${r.status === 'รออนุมัติ' ? `<button onclick="event.stopPropagation(); manageRecord('approveLeave', '${r.id}')" class="p-2 rounded-full hover:bg-green-100 text-green-600" title="อนุมัติ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` : ''}
                 <button onclick="event.stopPropagation(); manageRecord('deleteLeave', '${r.id}')" class="p-2 rounded-full hover:bg-red-100 text-red-600" title="ลบ"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
             </td>
         </tr>`;
@@ -2907,7 +2943,6 @@ async function exportAllDataToExcel() {
             'ชื่อ-สกุล': u.fullname,
             'ชื่อเล่น': u.nickname,
             'ตำแหน่ง': u.position
-            // ไม่ Export PIN เพื่อความปลอดภัย
         }));
 
         // --- 2. เตรียมข้อมูลการลาเต็มวัน (Leave Records) ---
@@ -2999,12 +3034,12 @@ async function exportAllDataToExcel() {
         XLSX.utils.book_append_sheet(wb, wsUsers, 'รายชื่อผู้ใช้');
 
         // --- 6. สร้างไฟล์และดาวน์โหลด ---
-const today = toLocalISOStringInThailand(new Date());
-const filename = `leave-opd-backup-${today}.xlsx`;
-XLSX.writeFile(wb, filename);
+        const today = toLocalISOStringInThailand(new Date());
+        const filename = `leave-opd-backup-${today}.xlsx`;
+        XLSX.writeFile(wb, filename);
 
-// ปิดหน้าต่าง "กำลังโหลด" หลังจากดาวน์โหลดไฟล์สำเร็จ
-Swal.close();
+        // ปิดหน้าต่าง "กำลังโหลด" หลังจากดาวน์โหลดไฟล์สำเร็จ
+        Swal.close();
 
     } catch (error) {
         console.error("Backup failed:", error);
@@ -3012,3 +3047,185 @@ Swal.close();
     }
 }
 // ========== END: ฟังก์ชันสำหรับ Backup ข้อมูล (เวอร์ชันล่าสุด) ==========
+
+
+// ========== START: ฟังก์ชันใหม่สำหรับ Admin Dashboard ==========
+function renderAdminDashboard() {
+    const today = new Date();
+    const todayString = toLocalISOStringInThailand(today);
+    document.getElementById('today-date-display').textContent = formatDateThaiShort(today);
+
+    // Populate approver filter dropdown if it's empty
+    const approverFilterEl = document.getElementById('pending-approver-filter');
+    if (approverFilterEl && approverFilterEl.options.length <= 1) {
+        approverFilterEl.innerHTML = '<option value="all">Admin ทั้งหมด</option>';
+        admins.forEach(admin => {
+            const option = document.createElement('option');
+            option.value = admin.username;
+            option.textContent = admin.username;
+            approverFilterEl.appendChild(option);
+        });
+    }
+    approverFilterEl.value = pendingApproverFilter;
+
+    // 1. Filter pending requests based on current filters
+    let allPending = [];
+    if (pendingFilterType === 'all' || pendingFilterType === 'leave') {
+        allPending.push(...allLeaveRecords.filter(r => r.status === 'รออนุมัติ'));
+    }
+    if (pendingFilterType === 'all' || pendingFilterType === 'hourly') {
+        allPending.push(...allHourlyRecords.filter(r => !r.confirmed));
+    }
+
+    if (pendingApproverFilter !== 'all') {
+        allPending = allPending.filter(r => r.approver === pendingApproverFilter);
+    }
+
+    allPending.sort((a, b) => {
+        const dateA = a.createdDate?.seconds || a.timestamp?.seconds || 0;
+        const dateB = b.createdDate?.seconds || b.timestamp?.seconds || 0;
+        return dateB - dateA;
+    });
+
+    // 2. Find who is on leave today (no changes here)
+    const onLeaveToday = allLeaveRecords.filter(r => todayString >= r.startDate && todayString <= r.endDate && r.status === 'อนุมัติแล้ว');
+    const onHourlyLeaveToday = allHourlyRecords.filter(r => r.date === todayString && r.confirmed);
+    const allOnLeaveToday = [...onLeaveToday, ...onHourlyLeaveToday];
+
+    // 3. Update pending count
+    document.getElementById('pending-count').textContent = allPending.length;
+
+    // 4. Render pending requests list with new features
+    const pendingListEl = document.getElementById('pending-requests-list');
+    if (allPending.length === 0) {
+        pendingListEl.innerHTML = `<div class="db-list-placeholder">ไม่มีรายการที่รออนุมัติ</div>`;
+    } else {
+        pendingListEl.innerHTML = allPending.map(r => {
+            const user = users.find(u => u.nickname === r.userNickname) || {};
+            let title, meta, approveType, deleteType, recordType, recordId = r.id;
+
+            if (r.leaveType) { // Full-day leave
+                title = `${user.fullname}(${user.nickname})-${user.position}: ${r.leaveType}`;
+                const days = calculateLeaveDays(r.startDate, r.endDate, r.startPeriod, r.endPeriod);
+                meta = `${formatDateThaiShort(r.startDate)} - ${formatDateThaiShort(r.endDate)} (${days} วัน)`;
+                approveType = 'approveLeave';
+                deleteType = 'deleteLeave';
+                recordType = 'leave';
+            } else { // Hourly leave
+                const typeText = r.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง';
+                title = `${user.fullname}(${user.nickname})-${user.position}: ${typeText}`;
+                meta = `${formatDateThaiShort(r.date)} (${r.startTime} - ${r.endTime})`;
+                approveType = 'approveHourly';
+                deleteType = 'deleteHourly';
+                recordType = 'hourly';
+            }
+
+            return `
+            <div class="db-list-item">
+                <div class="db-list-item-selector">
+                    <input type="checkbox" class="pending-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" data-id="${recordId}" data-type="${recordType}" onchange="updateBatchApproveButtonState()">
+                </div>
+                <div class="db-list-item-content">
+                    <p>${title}</p>
+                    <span class="meta">ผู้อนุมัติ: ${r.approver} | ${meta}</span>
+                </div>
+                <div class="db-list-item-actions">
+                    <button onclick="manageRecord('${approveType}', '${recordId}')" class="approve-btn text-green-600" title="อนุมัติ">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
+                    <button onclick="manageRecord('${deleteType}', '${recordId}')" class="delete-btn text-red-600" title="ปฏิเสธ/ลบ">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    
+    // Reset select all checkbox and batch button
+    document.getElementById('select-all-pending').checked = false;
+    updateBatchApproveButtonState();
+
+    // 5. Render "who is on leave today" list
+    const todayListEl = document.getElementById('today-on-leave-list');
+    if (allOnLeaveToday.length === 0) {
+        todayListEl.innerHTML = `<div class="db-list-placeholder">ไม่มีบุคลากรที่ลาในวันนี้</div>`;
+    } else {
+        todayListEl.innerHTML = allOnLeaveToday.map(r => {
+            const user = users.find(u => u.nickname === r.userNickname) || {};
+            let title, meta;
+
+            if (r.leaveType) {
+                title = `${user.nickname} (${user.position})`;
+                meta = `${r.leaveType} (${r.startPeriod})`;
+            } else {
+                const typeText = r.type === 'leave' ? 'ลาชม.' : 'ใช้ชม.';
+                title = `${user.nickname} (${user.position})`;
+                meta = `${typeText} (${r.startTime} - ${r.endTime})`;
+            }
+            
+            return `
+            <div class="db-list-item">
+                <div class="db-list-item-content">
+                    <p>${title}</p>
+                    <span class="meta">${meta}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+}
+
+
+window.updateBatchApproveButtonState = function() {
+    const selectedCount = document.querySelectorAll('.pending-checkbox:checked').length;
+    const btn = document.getElementById('batch-approve-btn');
+    btn.disabled = selectedCount === 0;
+}
+
+async function handleBatchApprove() {
+    const selectedCheckboxes = document.querySelectorAll('.pending-checkbox:checked');
+    if (selectedCheckboxes.length === 0) return;
+
+    const { value: adminUsername } = await Swal.fire({
+        title: `อนุมัติ ${selectedCheckboxes.length} รายการ`,
+        input: 'select',
+        inputOptions: Object.fromEntries(admins.map(admin => [admin.username, admin.username])),
+        inputPlaceholder: 'เลือกชื่อผู้อนุมัติ',
+        showCancelButton: true,
+        confirmButtonText: 'ต่อไป',
+        cancelButtonText: 'ยกเลิก',
+        inputValidator: (value) => {
+            return new Promise((resolve) => {
+                if (value) {
+                    resolve();
+                } else {
+                    resolve('กรุณาเลือกชื่อผู้อนุมัติ');
+                }
+            });
+        }
+    });
+
+    if (adminUsername) {
+        const isPinCorrect = await confirmWithAdminPin(adminUsername, `<p>ยืนยันการอนุมัติ <b>${selectedCheckboxes.length}</b> รายการที่เลือก</p>`);
+        if (!isPinCorrect) return;
+
+        showLoadingPopup(`กำลังอนุมัติ ${selectedCheckboxes.length} รายการ...`);
+        const updatePromises = [];
+        selectedCheckboxes.forEach(checkbox => {
+            const { id, type } = checkbox.dataset;
+            if (type === 'leave') {
+                updatePromises.push(updateDoc(doc(db, "leaveRecords", id), { status: 'อนุมัติแล้ว' }));
+            } else if (type === 'hourly') {
+                updatePromises.push(updateDoc(doc(db, "hourlyRecords", id), { confirmed: true }));
+            }
+        });
+
+        try {
+            await Promise.all(updatePromises);
+            showSuccessPopup(`อนุมัติ ${selectedCheckboxes.length} รายการสำเร็จ`);
+        } catch (error) {
+            console.error("Batch approve failed: ", error);
+            showErrorPopup('เกิดข้อผิดพลาดในการอนุมัติ');
+        }
+    }
+}
+// ========== END: ฟังก์ชันใหม่สำหรับ Admin Dashboard ==========

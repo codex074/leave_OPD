@@ -67,6 +67,15 @@
                     </div>
                 </div>
             </button>
+            <button onclick="showTab('admin-dashboard')" class="menu-item menu-item-gray w-full text-left bg-white rounded-xl p-4 shadow-md" id="admin-dashboard-tab">
+                <div class="flex items-center">
+                    <div class="text-3xl mr-4">👑</div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Admin Dashboard</h3>
+                        <p class="text-sm text-gray-600">สรุปภาพรวมและจัดการ</p>
+                    </div>
+                </div>
+            </button>
         </div>
     </nav>
 
@@ -354,6 +363,63 @@
                         <form id="change-personal-pin-form"><div class="mb-4"><label for="change-pin-user" class="block text-sm font-medium text-gray-700 mb-2">เลือกผู้ใช้</label><select id="change-pin-user" placeholder="ค้นหาหรือเลือกผู้ใช้..." required></select></div><div class="mb-4"><label for="old-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN เดิม</label><input type="password" id="old-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-4"><label for="new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ใหม่ (4 หลัก)</label><input type="password" id="new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-6"><label for="confirm-new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN ใหม่</label><input type="password" id="confirm-new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><button type="submit" class="w-full bg-blue-600">เปลี่ยนรหัส PIN</button></form></div>
             
                     <div id="system-pin-management-container" class="hover-lift"></div>
+                </div>
+            </div>
+
+            <div id="admin-dashboard-content" class="tab-content hidden">
+                <div class="fade-in">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-6">👑 Admin Dashboard</h1>
+        
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="db-card">
+                                <div class="db-card-header">
+                                    <h2 class="db-card-title">
+                                        ⏳ รายการที่รออนุมัติ (<span id="pending-count" class="text-amber-500">0</span>)
+                                    </h2>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" id="select-all-pending" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <label for="select-all-pending" class="text-sm text-gray-600">เลือกทั้งหมด</label>
+                                    </div>
+                                </div>
+            
+                                <div class="db-filters">
+                                    <div class="flex-1">
+                                        <label class="filter-label">ประเภท:</label>
+                                        <div class="filter-btn-group">
+                                            <button class="filter-btn active" data-filter-type="all">ทั้งหมด</button>
+                                            <button class="filter-btn" data-filter-type="leave">แจ้งลา</button>
+                                            <button class="filter-btn" data-filter-type="hourly">ลาชั่วโมง</button>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label for="pending-approver-filter" class="filter-label">ผู้อนุมัติ:</label>
+                                        <select id="pending-approver-filter" class="filter-select"></select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                     <button id="batch-approve-btn" class="batch-approve-button" disabled>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                        อนุมัติรายการที่เลือก
+                                    </button>
+                                </div>
+            
+                                <div id="pending-requests-list" class="db-list mt-4">
+                                    </div>
+                            </div>
+                        </div>
+        
+                        <div class="space-y-6">
+                            <div class="db-card">
+                                <h2 class="db-card-title">
+                                    ☀️ สรุปข้อมูลวันนี้ (<span id="today-date-display"></span>)
+                                </h2>
+                                <div id="today-on-leave-list" class="db-list">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
