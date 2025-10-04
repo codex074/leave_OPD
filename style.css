@@ -312,6 +312,10 @@ button[type="submit"]:active, .generic-button:active {
     grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
+.time-group-animated label {
+    display: block;
+    margin-bottom: 8px;
+}
 
 .form-container-animated textarea {
     resize: vertical;
