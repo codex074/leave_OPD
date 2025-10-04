@@ -156,8 +156,8 @@ button[type="submit"]:active, .generic-button:active {
   text-align: center;
   position: relative;
   overflow: hidden;
-  border-top-left-radius: 20px;  /* เพิ่มบรรทัดนี้ */
-  border-top-right-radius: 20px; /* เพิ่มบรรทัดนี้ */
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 
 
@@ -249,7 +249,6 @@ button[type="submit"]:active, .generic-button:active {
     margin-top: 10px;
 }
 
-/* --- START: CODE EDITED FOR CENTERING & BORDER --- */
 .radio-option-animated {
     display: flex;
     align-items: center;
@@ -265,8 +264,8 @@ button[type="submit"]:active, .generic-button:active {
 }
 
 .radio-option-animated .radio-label {
-    flex: 1;                /* ขยายเต็มพื้นที่ปุ่ม */
-    text-align: center;      /* จัดข้อความให้อยู่กึ่งกลาง */
+    flex: 1;
+    text-align: center;
     font-weight: 600;
 }
 
@@ -305,13 +304,13 @@ button[type="submit"]:active, .generic-button:active {
 .radio-option-animated.selected.use-hour:hover {
     background-color: #047857;
 }
-/* --- END: CODE EDITED FOR CENTERING & BORDER --- */
 
 .time-group-animated {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
+
 .time-group-animated label {
     display: block;
     margin-bottom: 8px;
@@ -1307,9 +1306,9 @@ button[type="submit"]:active, .generic-button:active {
 
 @media (max-width: 768px) {
     .header-animated-orange a {
-        position: static;       /* ยกเลิก absolute */
+        position: static;
         display: block;
-        margin: 10px auto 0;    /* จัดกึ่งกลางและเว้นระยะ */
+        margin: 10px auto 0;
         text-align: center;
         width: fit-content;
     }
@@ -1364,44 +1363,90 @@ button[type="submit"]:active, .generic-button:active {
 }
 /* ลาชั่วโมง / ใช้ชั่วโมง */
 .modal-tag-blue{
-  background:#dbeafe;           /* blue-100 */
-  color:#1e40af;                 /* blue-800 */
-  border-left:4px solid #60a5fa; /* blue-400 */
+  background:#dbeafe;
+  color:#1e40af;
+  border-left:4px solid #60a5fa;
 }
 /* แจ้งลา / ลาล่วงหน้า */
 .modal-tag-green{
-  background:#dcfce7;            /* emerald-100 */
-  color:#065f46;                 /* emerald-900 */
-  border-left:4px solid #34d399; /* emerald-400 */
+  background:#dcfce7;
+  color:#065f46;
+  border-left:4px solid #34d399;
 }
 
 /* === Modal overrides for left strip colors === */
-.modal-left-green{ border-left:6px solid #22c55e !important; } /* green-500 */
-.modal-left-blue{  border-left:6px solid #3b82f6 !important; } /* blue-500 */
+.modal-left-green{ border-left:6px solid #22c55e !important; }
+.modal-left-blue{  border-left:6px solid #3b82f6 !important; }
 
 /* Hourly text colors */
-.hourly-text-red{   color:#dc2626 !important; }  /* red-600 */
-.hourly-text-green{ color:#16a34a !important; }  /* green-600 */
+.hourly-text-red{   color:#dc2626 !important; }
+.hourly-text-green{ color:#16a34a !important; }
 
 /* === Extra tag colors for leave types === */
 .modal-tag-red{
-  background:#fee2e2;            /* red-100 */
-  color:#991b1b;                 /* red-800 */
-  border-left:4px solid #f87171; /* red-400 */
+  background:#fee2e2;
+  color:#991b1b;
+  border-left:4px solid #f87171;
 }
 .modal-tag-purple{
-  background:#ede9fe;            /* violet-100 */
-  color:#5b21b6;                 /* violet-800 */
-  border-left:4px solid #a78bfa; /* violet-400 */
+  background:#ede9fe;
+  color:#5b21b6;
+  border-left:4px solid #a78bfa;
 }
 .modal-tag-pink{
-  background:#ffe4e6;            /* pink-100 */
-  color:#9d174d;                 /* pink-800 */
-  border-left:4px solid #f472b6; /* pink-400 */
+  background:#ffe4e6;
+  color:#9d174d;
+  border-left:4px solid #f472b6;
 }
 .swal-left { text-align: left !important; }
 
-.leave-card-vacation { background-color: #bbf7d0; }   /* เขียวอ่อน */
-.leave-card-sick     { background-color: #fecaca; }   /* แดงอ่อน */
-.leave-card-personal { background-color: #ddd6fe; }   /* ม่วงอ่อน */
-.leave-card-maternity{ background-color: #fbcfe8; }   /* ชมพูอ่อน */
+.leave-card-vacation { background-color: #bbf7d0; }
+.leave-card-sick     { background-color: #fecaca; }
+.leave-card-personal { background-color: #ddd6fe; }
+.leave-card-maternity{ background-color: #fbcfe8; }
+
+/* Green menu item for backup button */
+.menu-item-green {
+    border-left: 5px solid #22c55e; /* Green accent */
+}
+
+.menu-item-green:hover {
+    background-color: #f0fdf4; /* Light green on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+}
+/* Sidebar Menu Item Accent Colors */
+.menu-item-blue {
+    border-left: 5px solid #3b82f6; /* Blue */
+}
+.menu-item-blue:hover {
+    background-color: #eff6ff;
+}
+
+.menu-item-orange {
+    border-left: 5px solid #f97316; /* Orange */
+}
+.menu-item-orange:hover {
+    background-color: #fff7ed;
+}
+
+.menu-item-purple {
+    border-left: 5px solid #8b5cf6; /* Purple */
+}
+.menu-item-purple:hover {
+    background-color: #f5f3ff;
+}
+
+.menu-item-yellow {
+    border-left: 5px solid #f59e0b; /* Amber/Yellow */
+}
+.menu-item-yellow:hover {
+    background-color: #fffbeb;
+}
+
+.menu-item-green {
+    border-left: 5px solid #22c55e; /* Green */
+}
+.menu-item-green:hover {
+    background-color: #f0fdf4; /* Light green on hover */
+}

@@ -18,6 +18,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -41,20 +43,29 @@
     <nav id="sidebar" class="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
         <div class="p-6 border-b border-gray-200"><h2 class="text-xl font-bold text-gray-800">.</h2></div>
         <div class="p-4 space-y-3">
-            <button onclick="showTab('hourly')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="hourly-tab">
+            <button onclick="showTab('hourly')" class="menu-item menu-item-blue w-full text-left bg-white rounded-xl p-4 shadow-md" id="hourly-tab">
                 <div class="flex items-center"><div class="text-3xl mr-4">⏰</div><div><h3 class="text-lg font-semibold text-gray-800">แจ้งลาชั่วโมง</h3><p class="text-sm text-gray-600">จัดการการลาและใช้ชั่วโมง</p></div></div>
             </button>
-            <button onclick="showTab('leave')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="leave-tab">
+            <button onclick="showTab('leave')" class="menu-item menu-item-orange w-full text-left bg-white rounded-xl p-4 shadow-md" id="leave-tab">
                 <div class="flex items-center"><div class="text-3xl mr-4">📢</div><div><h3 class="text-lg font-semibold text-gray-800">แจ้งลา/ลาล่วงหน้า</h3><p class="text-sm text-gray-600">ยื่นคำขอลาประเภทต่างๆ</p></div></div>
             </button>
-            <button onclick="showTab('calendar')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="calendar-tab">
+            <button onclick="showTab('calendar')" class="menu-item menu-item-purple w-full text-left bg-white rounded-xl p-4 shadow-md" id="calendar-tab">
                 <div class="flex items-center"><div class="text-3xl mr-4">📅</div><div><h3 class="text-lg font-semibold text-gray-800">ปฏิทินแจ้งลา</h3><p class="text-sm text-gray-600">ดูปฏิทินการลาทั้งหมด</p></div></div>
             </button>
-            <button onclick="showTab('register')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="register-tab">
+            <button onclick="showTab('register')" class="menu-item menu-item-green w-full text-left bg-white rounded-xl p-4 shadow-md" id="register-tab">
                 <div class="flex items-center"><div class="text-3xl mr-4">👤</div><div><h3 class="text-lg font-semibold text-gray-800">ลงทะเบียน</h3><p class="text-sm text-gray-600">ลงทะเบียนผู้ใช้ใหม่</p></div></div>
             </button>
-            <button onclick="showTab('pin')" class="menu-item w-full text-left bg-white rounded-xl p-4 shadow-md" id="pin-tab">
+            <button onclick="showTab('pin')" class="menu-item menu-item-yellow w-full text-left bg-white rounded-xl p-4 shadow-md" id="pin-tab">
                 <div class="flex items-center"><div class="text-3xl mr-4">🔑</div><div><h3 class="text-lg font-semibold text-gray-800">จัดการ PIN</h3><p class="text-sm text-gray-600">ตั้งค่ารหัส PIN </p></div></div>
+            </button>
+            <button id="export-btn" class="menu-item menu-item-green w-full text-left bg-white rounded-xl p-4 shadow-md">
+                <div class="flex items-center">
+                    <div class="text-3xl mr-4">💾</div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Backup ข้อมูล</h3>
+                        <p class="text-sm text-gray-600">ส่งออกข้อมูลเป็นไฟล์ Excel</p>
+                    </div>
+                </div>
             </button>
         </div>
     </nav>
@@ -338,7 +349,10 @@
 
             <div id="pin-content" class="tab-content hidden">
                 <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-white rounded-xl shadow-lg p-6 hover-lift"><h2 class="text-xl font-bold text-gray-800 mb-4 text-center">เปลี่ยน PIN ส่วนบุคคล</h2><form id="change-personal-pin-form"><div class="mb-4"><label for="change-pin-user" class="block text-sm font-medium text-gray-700 mb-2">เลือกผู้ใช้</label><select id="change-pin-user" placeholder="ค้นหาหรือเลือกผู้ใช้..." required></select></div><div class="mb-4"><label for="old-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN เดิม</label><input type="password" id="old-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-4"><label for="new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ใหม่ (4 หลัก)</label><input type="password" id="new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-6"><label for="confirm-new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN ใหม่</label><input type="password" id="confirm-new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><button type="submit" class="w-full bg-blue-600">เปลี่ยนรหัส PIN</button></form></div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover-lift">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">เปลี่ยน PIN ส่วนบุคคล</h2>
+                        <form id="change-personal-pin-form"><div class="mb-4"><label for="change-pin-user" class="block text-sm font-medium text-gray-700 mb-2">เลือกผู้ใช้</label><select id="change-pin-user" placeholder="ค้นหาหรือเลือกผู้ใช้..." required></select></div><div class="mb-4"><label for="old-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN เดิม</label><input type="password" id="old-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-4"><label for="new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">PIN ใหม่ (4 หลัก)</label><input type="password" id="new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><div class="mb-6"><label for="confirm-new-personal-pin" class="block text-sm font-medium text-gray-700 mb-2">ยืนยัน PIN ใหม่</label><input type="password" id="confirm-new-personal-pin" class="w-full" required maxlength="4" pattern="\d{4}"></div><button type="submit" class="w-full bg-blue-600">เปลี่ยนรหัส PIN</button></form></div>
+            
                     <div id="system-pin-management-container" class="hover-lift"></div>
                 </div>
             </div>

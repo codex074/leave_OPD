@@ -190,6 +190,12 @@ function setupEventListeners() {
       el.dataset._fyListenerBound = '1';
     }
   });
+
+  // Event listener for the new backup button in the sidebar
+  const exportBtn = document.getElementById('export-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportAllDataToExcel);
+  }
 }
 
 function initializePinListener() {
@@ -220,10 +226,7 @@ async function initializeDataListeners() {
         populateUserDropdowns();
         applyUserFiltersAndRender();
         
-        // ========== START: EDITED CODE BLOCK ==========
-        // Load all hourly data initially
         loadHourlyData();
-        // ========== END: EDITED CODE BLOCK ==========
         
         loadLeaveData(); 
 
@@ -245,8 +248,6 @@ async function initializeDataListeners() {
     }
 }
 
-// ========== START: EDITED FUNCTION ==========
-// This function now loads ALL hourly records, and filtering is handled by applyHourlyFiltersAndRender()
 function loadHourlyData() {
      if (hourlyRecordsUnsubscribe) hourlyRecordsUnsubscribe();
      const hourlyQuery = query(collection(db, "hourlyRecords"));
@@ -259,7 +260,6 @@ function loadHourlyData() {
         hideInitialLoader(); 
      });
 }
-// ========== END: EDITED FUNCTION ==========
 
 function loadLeaveData() {
     if (leaveRecordsUnsubscribe) leaveRecordsUnsubscribe();
@@ -2895,3 +2895,120 @@ document.addEventListener('click', function(e){
     const dateString = toLocalISOString(dateObj);
     try { showMoreEventsModal(dateString); } catch(_) {}
 });
+
+
+// ========== START: ฟังก์ชันสำหรับ Backup ข้อมูล (เวอร์ชันล่าสุด) ==========
+async function exportAllDataToExcel() {
+    showLoadingPopup('กำลังเตรียมข้อมูล...');
+
+    try {
+        // --- 1. เตรียมข้อมูลผู้ใช้ ---
+        const usersData = users.map(u => ({
+            'ชื่อ-สกุล': u.fullname,
+            'ชื่อเล่น': u.nickname,
+            'ตำแหน่ง': u.position
+            // ไม่ Export PIN เพื่อความปลอดภัย
+        }));
+
+        // --- 2. เตรียมข้อมูลการลาเต็มวัน (Leave Records) ---
+        const leaveRecordsData = allLeaveRecords.map(r => {
+            const user = users.find(u => u.nickname === r.userNickname) || {};
+            const leaveDays = calculateLeaveDays(r.startDate, r.endDate, r.startPeriod, r.endPeriod);
+
+            return {
+                'ปีงบประมาณ': r.fiscalYear,
+                'วันที่บันทึก': r.createdDate ? new Date(r.createdDate.seconds * 1000) : 'N/A',
+                'ชื่อ-สกุล': user.fullname || r.userNickname,
+                'ชื่อเล่น': user.nickname || r.userNickname,
+                'ตำแหน่ง': user.position || 'N/A',
+                'ประเภทการลา': r.leaveType,
+                'วันลาเริ่มต้น': r.startDate,
+                'วันลาสิ้นสุด': r.endDate,
+                'ช่วงเวลาเริ่มต้น': r.startPeriod,
+                'ช่วงเวลาสิ้นสุด': r.endPeriod,
+                'จำนวนวันลา': leaveDays,
+                'สถานะ': r.status,
+                'ผู้อนุมัติ': r.approver
+            };
+        }).sort((a, b) => b['วันที่บันทึก'] - a['วันที่บันทึก']);
+
+        // --- 3. เตรียมข้อมูลการลาชั่วโมง (Hourly Records) ---
+        const hourlyRecordsData = allHourlyRecords.map(r => {
+            const user = users.find(u => u.nickname === r.userNickname) || {};
+            return {
+                'ปีงบประมาณ': r.fiscalYear,
+                'วันที่บันทึก': r.timestamp ? new Date(r.timestamp.seconds * 1000) : 'N/A',
+                'ชื่อ-สกุล': user.fullname || r.userNickname,
+                'ชื่อเล่น': user.nickname || r.userNickname,
+                'ตำแหน่ง': user.position || 'N/A',
+                'ประเภทรายการ': r.type === 'leave' ? 'ลาชั่วโมง' : 'ใช้ชั่วโมง',
+                'วันที่': r.date,
+                'เวลาเริ่มต้น': r.startTime,
+                'เวลาสิ้นสุด': r.endTime,
+                'ระยะเวลา (ชม.)': r.duration,
+                'สถานะ': r.confirmed ? 'อนุมัติแล้ว' : 'รออนุมัติ',
+                'ผู้อนุมัติ': r.approver
+            };
+        }).sort((a, b) => b['วันที่บันทึก'] - a['วันที่บันทึก']);
+        
+        // --- 4. เตรียมข้อมูลสรุปชั่วโมง ---
+        const fiscalYear = getCurrentFiscalYear();
+        const summaryMap = {};
+        users.forEach(u => {
+            summaryMap[u.nickname] = { nickname: u.nickname, position: u.position, leaveHours: 0, usedHours: 0 };
+        });
+        allHourlyRecords.forEach(r => {
+            if (r.fiscalYear === fiscalYear && summaryMap[r.userNickname] && r.confirmed) {
+                if (r.type === 'leave') summaryMap[r.userNickname].leaveHours += r.duration || 0;
+                else if (r.type === 'use') summaryMap[r.userNickname].usedHours += r.duration || 0;
+            }
+        });
+        const summaryData = Object.values(summaryMap).map(item => ({
+            'ชื่อเล่น': item.nickname,
+            'ตำแหน่ง': item.position,
+            'ชั่วโมงที่ลา (อนุมัติ)': item.leaveHours,
+            'ชั่วโมงที่ใช้ (อนุมัติ)': item.usedHours,
+            'คงเหลือ (ชม.)': item.usedHours - item.leaveHours,
+            'สถานะ': (item.usedHours - item.leaveHours) >= 0 ? 'ปกติ' : 'ติดลบ'
+        })).sort((a,b) => a['คงเหลือ (ชม.)'] - b['คงเหลือ (ชม.)']);
+
+
+        // --- 5. สร้าง Workbook และ Worksheets ---
+        const wb = XLSX.utils.book_new();
+        const wsUsers = XLSX.utils.json_to_sheet(usersData);
+        const wsLeaveRecords = XLSX.utils.json_to_sheet(leaveRecordsData);
+        const wsHourlyRecords = XLSX.utils.json_to_sheet(hourlyRecordsData);
+        const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+
+        const fitToColumn = (data) => {
+            if (!data || data.length === 0) return [];
+            const columnWidths = [];
+            for (const key in data[0]) {
+                columnWidths.push({ wch: Math.max(key.length, ...data.map(row => (row[key] || '').toString().length)) + 2 });
+            }
+            return columnWidths;
+        };
+        wsUsers['!cols'] = fitToColumn(usersData);
+        wsLeaveRecords['!cols'] = fitToColumn(leaveRecordsData);
+        wsHourlyRecords['!cols'] = fitToColumn(hourlyRecordsData);
+        wsSummary['!cols'] = fitToColumn(summaryData);
+
+        XLSX.utils.book_append_sheet(wb, wsSummary, `สรุปชั่วโมงปีงบ ${fiscalYear}`);
+        XLSX.utils.book_append_sheet(wb, wsHourlyRecords, 'ข้อมูลลาชั่วโมงทั้งหมด');
+        XLSX.utils.book_append_sheet(wb, wsLeaveRecords, 'ข้อมูลการลาทั้งหมด');
+        XLSX.utils.book_append_sheet(wb, wsUsers, 'รายชื่อผู้ใช้');
+
+        // --- 6. สร้างไฟล์และดาวน์โหลด ---
+const today = toLocalISOStringInThailand(new Date());
+const filename = `leave-opd-backup-${today}.xlsx`;
+XLSX.writeFile(wb, filename);
+
+// ปิดหน้าต่าง "กำลังโหลด" หลังจากดาวน์โหลดไฟล์สำเร็จ
+Swal.close();
+
+    } catch (error) {
+        console.error("Backup failed:", error);
+        showErrorPopup('การ Backup ข้อมูลล้มเหลว');
+    }
+}
+// ========== END: ฟังก์ชันสำหรับ Backup ข้อมูล (เวอร์ชันล่าสุด) ==========
