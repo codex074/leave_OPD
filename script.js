@@ -2400,6 +2400,7 @@ window.manageRecord = async function(action, id) {
                 await updateDoc(recordDoc, { confirmed: true });
             }
             showSuccessPopup('อนุมัติสำเร็จ');
+            renderAdminDashboard(); // Re-render the dashboard immediately
         } catch(error) {
             console.error("Error approving record:", error);
             showErrorPopup('เกิดข้อผิดพลาดในการอนุมัติ: ' + error.message);
@@ -3222,6 +3223,7 @@ async function handleBatchApprove() {
         try {
             await Promise.all(updatePromises);
             showSuccessPopup(`อนุมัติ ${selectedCheckboxes.length} รายการสำเร็จ`);
+            renderAdminDashboard(); // Re-render the dashboard immediately
         } catch (error) {
             console.error("Batch approve failed: ", error);
             showErrorPopup('เกิดข้อผิดพลาดในการอนุมัติ');
