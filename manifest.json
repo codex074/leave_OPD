@@ -1,0 +1,44 @@
+{
+  "name": "แจ้งลา OPD",
+  "short_name": "แจ้งลา OPD",
+  "description": "ระบบแจ้งลาสำหรับเจ้าหน้าที่ห้องยา OPD โรงพยาบาลอุตรดิตถ์",
+  "icons": [
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "scope": ".",
+  "id": ".",
+  "display": "standalone",
+  "background_color": "#f5f3ff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary"
+}
