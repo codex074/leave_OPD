@@ -10,6 +10,7 @@ import CalendarView from './components/CalendarView';
 import UserRegistration from './components/UserRegistration';
 import PinManagement from './components/PinManagement';
 import AdminDashboard from './components/AdminDashboard';
+import ReloadPrompt from './components/ReloadPrompt';
 import holidaysJson from './holidays.json';
 
 const holidays = holidaysJson as Record<string, string>;
@@ -235,6 +236,8 @@ const App: React.FC = () => {
           />
         )}
       </main>
+
+      <ReloadPrompt />
     </div>
   );
 };
